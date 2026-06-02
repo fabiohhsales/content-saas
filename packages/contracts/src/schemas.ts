@@ -3,6 +3,7 @@ import { z } from 'zod';
 export const SchemaVersionSchema = z.number().int().positive().default(1);
 
 export const WorkspaceRoleSchema = z.enum(['owner', 'admin', 'editor', 'viewer']);
+export const WorkspaceInvitationStatusSchema = z.enum(['pending', 'accepted', 'revoked', 'expired']);
 export const BrandStatusSchema = z.enum(['draft', 'active', 'archived']);
 export const BrandAssetCategorySchema = z.enum(['logo', 'photo', 'font', 'reference', 'document', 'other']);
 export const BrandAssetStatusSchema = z.enum(['uploaded', 'processing', 'ready', 'failed', 'archived']);
@@ -30,6 +31,19 @@ export const MemberSchema = z.object({
   workspace_id: z.string().uuid(),
   user_id: z.string().uuid(),
   role: WorkspaceRoleSchema,
+});
+
+export const WorkspaceInvitationSchema = z.object({
+  id: z.string().uuid(),
+  workspace_id: z.string().uuid(),
+  email: z.string().email(),
+  role: WorkspaceRoleSchema,
+  status: WorkspaceInvitationStatusSchema,
+  invite_token: z.string().min(16),
+  expires_at: z.string(),
+  accepted_by: z.string().uuid().nullable().optional(),
+  accepted_at: z.string().nullable().optional(),
+  metadata: z.record(z.unknown()).default({ schema_version: 1 }),
 });
 
 export const BrandSchema = z.object({
@@ -235,6 +249,7 @@ export const ApprovalSchema = z.object({
 
 export type Workspace = z.infer<typeof WorkspaceSchema>;
 export type Member = z.infer<typeof MemberSchema>;
+export type WorkspaceInvitation = z.infer<typeof WorkspaceInvitationSchema>;
 export type Brand = z.infer<typeof BrandSchema>;
 export type BrandAsset = z.infer<typeof BrandAssetSchema>;
 export type BrandAssetCategory = z.infer<typeof BrandAssetCategorySchema>;

@@ -15,6 +15,11 @@ export type Database = {
         Insert: { id?: string; workspace_id: string; user_id: string; role: 'owner' | 'admin' | 'editor' | 'viewer'; created_at?: string; updated_at?: string };
         Update: Partial<Database['public']['Tables']['members']['Insert']>;
       };
+      workspace_invitations: {
+        Row: { id: string; workspace_id: string; email: string; role: 'owner' | 'admin' | 'editor' | 'viewer'; status: 'pending' | 'accepted' | 'revoked' | 'expired'; invite_token: string; expires_at: string; accepted_by: string | null; accepted_at: string | null; metadata: Json; created_by: string | null; created_at: string; updated_at: string };
+        Insert: { id?: string; workspace_id: string; email: string; role?: 'owner' | 'admin' | 'editor' | 'viewer'; status?: 'pending' | 'accepted' | 'revoked' | 'expired'; invite_token: string; expires_at?: string; accepted_by?: string | null; accepted_at?: string | null; metadata?: Json; created_by?: string | null };
+        Update: Partial<Database['public']['Tables']['workspace_invitations']['Insert']>;
+      };
       brands: {
         Row: { id: string; workspace_id: string; name: string; slug: string; status: 'draft' | 'active' | 'archived'; industry: string | null; positioning: string | null; voice_notes: string | null; metadata: Json; created_by: string | null; created_at: string; updated_at: string };
         Insert: { id?: string; workspace_id: string; name: string; slug: string; status?: 'draft' | 'active' | 'archived'; industry?: string | null; positioning?: string | null; voice_notes?: string | null; metadata?: Json; created_by?: string | null };
@@ -62,9 +67,15 @@ export type Database = {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      accept_workspace_invitation: {
+        Args: { invite_token_input: string };
+        Returns: { workspace_id: string; member_id: string; role: 'owner' | 'admin' | 'editor' | 'viewer' }[];
+      };
+    };
     Enums: {
       workspace_role: 'owner' | 'admin' | 'editor' | 'viewer';
+      workspace_invitation_status: 'pending' | 'accepted' | 'revoked' | 'expired';
       brand_status: 'draft' | 'active' | 'archived';
       asset_category: 'logo' | 'photo' | 'font' | 'reference' | 'document' | 'other';
       asset_status: 'uploaded' | 'processing' | 'ready' | 'failed' | 'archived';

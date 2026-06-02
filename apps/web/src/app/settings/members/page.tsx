@@ -3,8 +3,14 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import { AppShell } from '@/components/app-shell';
 import { getCurrentWorkspace } from '@/lib/auth';
-import { demoMembers, isDemoMode } from '@/lib/demo';
-import { addWorkspaceMember, removeWorkspaceMember, updateWorkspaceMemberRole } from './actions';
+import { demoInvitations, demoMembers, isDemoMode } from '@/lib/demo';
+import {
+  addWorkspaceMember,
+  inviteWorkspaceMember,
+  removeWorkspaceMember,
+  revokeWorkspaceInvitation,
+  updateWorkspaceMemberRole,
+} from './actions';
 
 type MemberLike = {
   id: string;
@@ -14,6 +20,17 @@ type MemberLike = {
   email?: string | null;
   created_at: string;
   updated_at: string;
+};
+
+type InvitationLike = {
+  id: string;
+  workspace_id: string;
+  email: string;
+  role: string;
+  status: string;
+  invite_token: string;
+  expires_at: string;
+  created_at: string;
 };
 
 function roleLabel(role: string) {
@@ -82,15 +99,25 @@ export default async function MembersPage() {
   const workspace = Array.isArray(membership.workspaces) ? membership.workspaces[0] : membership.workspaces;
   const canManage = ['owner', 'admin'].includes(membership.role);
   let members: MemberLike[] = [];
+  let invitations: InvitationLike[] = [];
 
   if (isDemoMode()) {
     members = demoMembers;
+    invitations = demoInvitations;
   } else {
-    const { data } = await supabase
-      .from('members')
-      .select('id, workspace_id, user_id, role, created_at, updated_at')
-      .eq('workspace_id', membership.workspace_id)
-      .order('created_at', { ascending: true });
+    const [{ data }, { data: inviteRows }] = await Promise.all([
+      supabase
+        .from('members')
+        .select('id, workspace_id, user_id, role, created_at, updated_at')
+        .eq('workspace_id', membership.workspace_id)
+        .order('created_at', { ascending: true }),
+      supabase
+        .from('workspace_invitations')
+        .select('id, workspace_id, email, role, status, invite_token, expires_at, created_at')
+        .eq('workspace_id', membership.workspace_id)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false }),
+    ]);
 
     const rows = (data ?? []) as MemberLike[];
     const emailsByUserId = await getEmailsByUserId(rows.map((member) => member.user_id));
@@ -98,6 +125,7 @@ export default async function MembersPage() {
       ...member,
       email: emailsByUserId.get(member.user_id) ?? null,
     }));
+    invitations = (inviteRows ?? []) as InvitationLike[];
   }
 
   const summary = members.reduce<Record<string, number>>((acc, member) => {
@@ -127,6 +155,25 @@ export default async function MembersPage() {
       </section>
 
       <section className="grid two">
+        <form action={inviteWorkspaceMember} className="panel grid">
+          <h2>Convidar por e-mail</h2>
+          {isDemoMode() ? <p className="muted">No demo, a action apenas simula o convite.</p> : null}
+          {!canManage ? <p className="muted">Seu papel atual nao permite convidar membros.</p> : null}
+          <label>
+            E-mail
+            <input name="email" type="email" required placeholder="pessoa@empresa.com" disabled={!canManage} />
+          </label>
+          <label>
+            Papel
+            <select name="role" defaultValue="viewer" disabled={!canManage}>
+              <option value="admin">Admin</option>
+              <option value="editor">Editor</option>
+              <option value="viewer">Viewer</option>
+            </select>
+          </label>
+          <button type="submit" disabled={!canManage}>Criar convite</button>
+        </form>
+
         <form action={addWorkspaceMember} className="panel grid">
           <h2>Adicionar membro</h2>
           {isDemoMode() ? <p className="muted">No demo, a action apenas simula a atualizacao.</p> : null}
@@ -151,7 +198,9 @@ export default async function MembersPage() {
           </label>
           <button type="submit" disabled={!canManage}>Adicionar</button>
         </form>
+      </section>
 
+      <section className="grid two" style={{ marginTop: 18 }}>
         <div className="panel grid">
           <h2>Modelo de permissao</h2>
           <p className="muted">
@@ -163,7 +212,32 @@ export default async function MembersPage() {
             workspace_id: membership.workspace_id,
             current_role: membership.role,
             can_manage_members: canManage,
+            invitation_flow: '/invite/[token]',
           }, null, 2)}</pre>
+        </div>
+
+        <div className="panel grid">
+          <h2>Convites pendentes</h2>
+          {invitations.map((invitation) => (
+            <article className="card" key={invitation.id}>
+              <div className="toolbar" style={{ marginBottom: 8 }}>
+                <div>
+                  <small className="muted">Expira em {formatDate(invitation.expires_at)}</small>
+                  <h3 style={{ margin: '6px 0' }}>{invitation.email}</h3>
+                  <p className="muted">Papel: {roleLabel(invitation.role)}</p>
+                </div>
+                <span style={{ color: roleColor(invitation.role), fontWeight: 700 }}>{invitation.status}</span>
+              </div>
+              <pre>{JSON.stringify({
+                schema_version: 1,
+                invite_url: `/invite/${invitation.invite_token}`,
+              }, null, 2)}</pre>
+              <form action={revokeWorkspaceInvitation.bind(null, invitation.id)}>
+                <button className="secondary" type="submit" disabled={!canManage}>Revogar convite</button>
+              </form>
+            </article>
+          ))}
+          {invitations.length === 0 ? <p className="muted">Nenhum convite pendente.</p> : null}
         </div>
       </section>
 

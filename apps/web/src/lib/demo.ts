@@ -47,6 +47,23 @@ export const demoMembers = [
   },
 ];
 
+export const demoInvitations = [
+  {
+    id: 'demo-invitation-editor',
+    workspace_id: DEMO_WORKSPACE_ID,
+    email: 'convidado@content-saas.local',
+    role: 'editor',
+    status: 'pending',
+    invite_token: 'demo-invite-token',
+    expires_at: new Date(Date.now() + 1000 * 60 * 60 * 24 * 6).toISOString(),
+    accepted_by: null,
+    accepted_at: null,
+    metadata: { schema_version: 1 },
+    created_at: new Date(Date.now() - 1000 * 60 * 80).toISOString(),
+    updated_at: new Date(Date.now() - 1000 * 60 * 80).toISOString(),
+  },
+];
+
 export const demoBrands = [
   {
     id: DEMO_BRAND_ID,

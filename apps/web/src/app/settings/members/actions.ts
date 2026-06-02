@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { WorkspaceRoleSchema } from '@content-saas/contracts';
 import { getCurrentWorkspace } from '@/lib/auth';
@@ -10,6 +11,11 @@ const AdminRoles = ['owner', 'admin'] as const;
 
 const AddMemberFormSchema = z.object({
   user_id: z.string().uuid(),
+  role: WorkspaceRoleSchema.exclude(['owner']),
+});
+
+const InviteMemberFormSchema = z.object({
+  email: z.string().email(),
   role: WorkspaceRoleSchema.exclude(['owner']),
 });
 
@@ -53,6 +59,74 @@ export async function addWorkspaceMember(formData: FormData) {
 
   if (error) throw new Error(error.message);
   revalidatePath('/settings/members');
+}
+
+export async function inviteWorkspaceMember(formData: FormData) {
+  if (isDemoMode()) {
+    revalidatePath('/settings/members');
+    return;
+  }
+
+  const { supabase, user, membership } = await getCurrentWorkspace();
+  const currentMembership = requiredWorkspace(membership);
+  assertCanManageMembers(currentMembership.role);
+
+  const input = InviteMemberFormSchema.parse({
+    email: formData.get('email'),
+    role: formData.get('role'),
+  });
+
+  const inviteToken = `${crypto.randomUUID()}-${crypto.randomUUID()}`;
+  const { error } = await supabase
+    .from('workspace_invitations')
+    .insert({
+      workspace_id: currentMembership.workspace_id,
+      email: input.email.toLowerCase(),
+      role: input.role,
+      invite_token: inviteToken,
+      metadata: {
+        schema_version: 1,
+      },
+      created_by: user.id,
+    });
+
+  if (error) throw new Error(error.message);
+  revalidatePath('/settings/members');
+}
+
+export async function revokeWorkspaceInvitation(invitationId: string) {
+  if (isDemoMode()) {
+    revalidatePath('/settings/members');
+    return;
+  }
+
+  const { supabase, membership } = await getCurrentWorkspace();
+  const currentMembership = requiredWorkspace(membership);
+  assertCanManageMembers(currentMembership.role);
+
+  const { error } = await supabase
+    .from('workspace_invitations')
+    .update({ status: 'revoked' })
+    .eq('id', invitationId)
+    .eq('workspace_id', currentMembership.workspace_id);
+
+  if (error) throw new Error(error.message);
+  revalidatePath('/settings/members');
+}
+
+export async function acceptWorkspaceInvitation(token: string) {
+  if (isDemoMode()) {
+    redirect('/brands');
+  }
+
+  const { supabase } = await getCurrentWorkspace();
+  const { error } = await supabase.rpc('accept_workspace_invitation', {
+    invite_token_input: token,
+  });
+
+  if (error) throw new Error(error.message);
+  revalidatePath('/settings/members');
+  redirect('/brands');
 }
 
 export async function updateWorkspaceMemberRole(memberId: string, formData: FormData) {

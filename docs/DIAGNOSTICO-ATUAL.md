@@ -68,7 +68,8 @@ Responsavel pela experiencia do usuario:
 - Central de aprovacoes em `/approvals`.
 - Painel de jobs/logs em `/jobs`, com filtros e retry manual para jobs suportados.
 - Disparo de render preview a partir dos itens de `/plans/[planId]`.
-- Gestao inicial de membros em `/settings/members`.
+- Gestao de membros e convites em `/settings/members`.
+- Aceite de convite em `/invite/[token]`.
 - Healthcheck em `/api/health`.
 
 Arquivos-chave:
@@ -85,8 +86,9 @@ Arquivos-chave:
 - `apps/web/src/app/approvals/page.tsx`: central de aprovacao humana.
 - `apps/web/src/app/approvals/actions.ts`: acoes de aprovar ou pedir ajustes.
 - `apps/web/src/app/jobs/page.tsx`: painel operacional de jobs e logs.
-- `apps/web/src/app/settings/members/page.tsx`: membros, papeis e permissao do workspace.
-- `apps/web/src/app/settings/members/actions.ts`: adicionar, alterar papel e remover membros.
+- `apps/web/src/app/settings/members/page.tsx`: membros, convites, papeis e permissao do workspace.
+- `apps/web/src/app/settings/members/actions.ts`: convidar, aceitar, revogar, adicionar, alterar papel e remover membros.
+- `apps/web/src/app/invite/[token]/page.tsx`: aceite autenticado de convite.
 - `apps/web/src/components/app-shell.tsx`: shell de navegacao.
 
 Modo demo:
@@ -184,6 +186,7 @@ Arquivos-chave:
 Contem schemas Zod e tipos para:
 
 - Workspaces e members.
+- Workspace invitations.
 - Brands e brand assets.
 - Brand memories.
 - Templates.
@@ -223,6 +226,7 @@ Tabelas criadas:
 
 - `workspaces`
 - `members`
+- `workspace_invitations`
 - `brands`
 - `brand_assets`
 - `brand_memories`
@@ -252,6 +256,8 @@ RLS:
 - Usuario so acessa dados se for membro do workspace.
 - Escrita em marcas/assets/conteudo fica restrita a owner/admin/editor.
 - Workspace e members ficam restritos a owner/admin, com excecao da criacao inicial do owner.
+- Convites ficam restritos a owner/admin; invitee pode ler convite pendente pelo proprio e-mail autenticado.
+- Aceite de convite usa funcao `accept_workspace_invitation(token)` com `security definer` e validacao de e-mail.
 - Templates globais podem ser lidos quando `workspace_id is null`.
 
 Storage:
@@ -278,6 +284,7 @@ flowchart TD
   E --> K["Central /approvals com decisoes demo"]
   E --> L["Planos /plans com itens editoriais demo"]
   E --> M["Membros /settings/members com roles demo"]
+  M --> N["Convites /invite/[token]"]
 ```
 
 Objetivo:
@@ -389,6 +396,18 @@ flowchart TD
   E --> F
 ```
 
+### 6.9 Fluxo atual de convites
+
+```mermaid
+flowchart TD
+  A["Owner/admin cria convite por e-mail"] --> B["workspace_invitations pending"]
+  B --> C["Link /invite/[token]"]
+  C --> D["Usuario autenticado abre convite"]
+  D --> E["RPC accept_workspace_invitation valida token, status, expiracao e e-mail"]
+  E --> F["Cria ou atualiza members"]
+  F --> G["Marca convite como accepted"]
+```
+
 ## 7. Rotas atuais
 
 ### Web
@@ -410,6 +429,7 @@ flowchart TD
 | `/approvals` | funcional | central de aprovacoes, filtros e decisoes |
 | `/jobs` | funcional | painel de job_runs e automation_logs, filtros e retry; demo ativo |
 | `/settings/members` | funcional | lista/adiciona/altera/remove membros por user_id; demo ativo |
+| `/invite/[token]` | funcional | aceite autenticado de convite |
 | `/api/health` | funcional | healthcheck web |
 
 ### Orchestrator
@@ -511,6 +531,7 @@ Rotas demo verificadas com HTTP 200:
 - `/plans/demo-plan-aurora-2026-06`
 - `/jobs?queue=render-preview`
 - `/settings/members`
+- `/invite/demo-invite-token`
 - `/templates`
 - `/templates/photo-overlay-01`
 - `/approvals`
@@ -528,6 +549,7 @@ Rotas demo verificadas com HTTP 200:
 - Geracao mockada de planos e itens via orchestrator.
 - Fila inicial de render preview com persistencia em `generated_assets`.
 - Gestao inicial de membros e roles do workspace.
+- Convites por e-mail com aceite autenticado.
 - CI do monorepo com typecheck, testes e build.
 - Memoria de marca mockada.
 - Painel inicial de jobs/logs no web.
@@ -542,14 +564,15 @@ Rotas demo verificadas com HTTP 200:
 - Jobs: contrato, worker, painel visual e retry inicial existem, mas falta integracao ponta a ponta real em ambiente com Redis/Supabase.
 - Render preview: implementado no orchestrator/web, mas precisa ambiente real com Redis, Supabase Storage e render service rodando para teste ponta a ponta.
 - Geracao de plano: job mockado implementado, mas precisa provider IA real para producao.
-- Gestao de membros: CRUD inicial por `user_id`; ainda nao ha convite por e-mail nem fluxo de aceite.
+- Gestao de membros: CRUD inicial por `user_id` e convite por link existem, mas falta envio de e-mail transacional.
+- Convites: implementados no schema e web, mas ainda sem envio de e-mail transacional.
 
 ### Ainda nao implementado
 
 - IA real para memoria de marca.
 - IA real para geracao de planos e itens.
 - Render preview avancado com carrossel, escolha assistida de template e assets reais da marca.
-- Convites de membros por e-mail com aceite.
+- Envio de e-mail transacional para convites.
 - Testes SQL/RLS automatizados.
 
 ## 11. Riscos e pontos de atencao
@@ -583,7 +606,7 @@ Ordem sugerida:
 5. Integrar `generate_brand_memory` e `generate_content_plan` com provider IA.
 6. Evoluir render preview para selecionar templates/assets e suportar carrossel.
 7. Conectar aprovacoes aos detalhes reais de memoria, plano, item e asset gerado.
-8. Adicionar convites por e-mail e fluxo de aceite para membros.
+8. Adicionar envio transacional de e-mail para convites.
 9. Adicionar testes SQL/RLS automatizados.
 
 ## 13. Checklist de handoff
