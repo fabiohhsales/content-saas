@@ -59,7 +59,7 @@ Responsavel pela experiencia do usuario:
 - Detalhe/edicao de marca em `/brands/[brandId]`.
 - Wizard de onboarding da marca em `/brands/[brandId]/onboarding`.
 - Biblioteca de assets em `/brands/[brandId]/assets`.
-- Painel de jobs/logs em `/jobs`.
+- Painel de jobs/logs em `/jobs`, com filtros e retry manual para jobs suportados.
 - Healthcheck em `/api/health`.
 
 Arquivos-chave:
@@ -85,6 +85,7 @@ Responsavel por API interna e jobs assincronos:
 - `GET /health`: status do servico.
 - `POST /jobs/generate-brand-memory`: cria `job_runs` e enfileira job BullMQ.
 - `GET /jobs/:id`: consulta status do job.
+- `POST /jobs/:id/retry`: cria nova execucao a partir de job falho suportado.
 - Worker `brand-memory` consome fila e executa `generate_brand_memory`.
 
 Arquivos-chave:
@@ -294,7 +295,7 @@ flowchart TD
 | `/brands/[brandId]` | funcional | edita marca e mostra memorias |
 | `/brands/[brandId]/onboarding` | funcional | wizard inicial |
 | `/brands/[brandId]/assets` | funcional | biblioteca e upload |
-| `/jobs` | funcional | painel de job_runs e automation_logs; demo ativo |
+| `/jobs` | funcional | painel de job_runs e automation_logs, filtros e retry; demo ativo |
 | `/api/health` | funcional | healthcheck web |
 
 ### Orchestrator
@@ -304,6 +305,7 @@ flowchart TD
 | `GET /health` | funcional | healthcheck |
 | `POST /jobs/generate-brand-memory` | implementada | exige `x-internal-secret` |
 | `GET /jobs/:id` | implementada | consulta `job_runs` |
+| `POST /jobs/:id/retry` | implementada | retry para `generate_brand_memory` falho |
 
 ### Render
 
@@ -392,7 +394,7 @@ Rotas demo verificadas com HTTP 200:
 - Supabase schema/RLS: criado, mas ainda precisa ser aplicado/testado contra um projeto Supabase real/local.
 - Orchestrator: implementado, mas precisa Redis + Supabase real para fluxo ponta a ponta.
 - Upload real: implementado no web, mas depende de Supabase Storage configurado.
-- Jobs: contrato, worker e painel visual existem, mas falta retry manual e integracao ponta a ponta real em ambiente com Redis/Supabase.
+- Jobs: contrato, worker, painel visual e retry inicial existem, mas falta integracao ponta a ponta real em ambiente com Redis/Supabase.
 
 ### Ainda nao implementado
 
@@ -432,7 +434,7 @@ Ordem sugerida:
 1. Criar setup Supabase local com CLI e aplicar migration.
 2. Gerar tipos Supabase reais e substituir os tipos parciais.
 3. Criar seed real para workspace, marca, assets e memoria.
-4. Adicionar retry manual e filtros avancados no painel de jobs/logs.
+4. Subir Supabase/Redis local e validar fluxo real de `generate_brand_memory`.
 5. Integrar `generate_brand_memory` real com provider IA.
 6. Criar biblioteca de templates no web.
 7. Criar fluxo de render preview e salvar em `generated_assets`.

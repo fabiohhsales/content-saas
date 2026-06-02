@@ -52,6 +52,91 @@ app.post('/jobs/generate-brand-memory', requireInternalSecret, async (req, res) 
   res.status(202).json({ job_run_id: jobRun.id, bullmq_job_id: job.id, status: 'queued' });
 });
 
+app.post('/jobs/:id/retry', requireInternalSecret, async (req, res) => {
+  const params = z.object({ id: z.string().uuid() }).safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: 'Invalid job id' });
+    return;
+  }
+
+  const { data: original, error: originalError } = await supabase
+    .from('job_runs')
+    .select('*')
+    .eq('id', params.data.id)
+    .single();
+
+  if (originalError || !original) {
+    res.status(404).json({ error: originalError?.message ?? 'Job not found' });
+    return;
+  }
+
+  if (original.status !== 'failed') {
+    res.status(409).json({ error: 'Only failed jobs can be retried' });
+    return;
+  }
+
+  if (original.job_name !== 'generate_brand_memory' || original.queue_name !== 'brand-memory') {
+    res.status(422).json({ error: `Retry is not supported for ${original.job_name}` });
+    return;
+  }
+
+  const parsedInput = GenerateBrandMemoryInputSchema.safeParse(original.input_json);
+  if (!parsedInput.success) {
+    res.status(422).json({ error: 'Original job input is invalid', issues: parsedInput.error.issues });
+    return;
+  }
+
+  const { data: retryRun, error: retryError } = await supabase
+    .from('job_runs')
+    .insert({
+      workspace_id: original.workspace_id,
+      brand_id: original.brand_id,
+      job_name: original.job_name,
+      queue_name: original.queue_name,
+      status: 'queued',
+      input_json: parsedInput.data,
+      created_by: parsedInput.data.requested_by,
+      metadata: {
+        schema_version: 1,
+        retry_of_job_run_id: original.id,
+      },
+    })
+    .select('id')
+    .single();
+
+  if (retryError || !retryRun) {
+    res.status(500).json({ error: retryError?.message ?? 'Could not create retry job run' });
+    return;
+  }
+
+  const job = await brandMemoryQueue.add('generate_brand_memory', {
+    ...parsedInput.data,
+    job_run_id: retryRun.id,
+  }, {
+    jobId: retryRun.id,
+    attempts: 2,
+    backoff: { type: 'exponential', delay: 2000 },
+  });
+
+  await supabase.from('automation_logs').insert({
+    workspace_id: original.workspace_id,
+    job_run_id: retryRun.id,
+    level: 'info',
+    message: 'job retry queued',
+    context_json: {
+      retried_from_job_run_id: original.id,
+      bullmq_job_id: job.id,
+    },
+  });
+
+  res.status(202).json({
+    job_run_id: retryRun.id,
+    retried_from_job_run_id: original.id,
+    bullmq_job_id: job.id,
+    status: 'queued',
+  });
+});
+
 app.get('/jobs/:id', requireInternalSecret, async (req, res) => {
   const params = z.object({ id: z.string().uuid() }).safeParse(req.params);
   if (!params.success) {

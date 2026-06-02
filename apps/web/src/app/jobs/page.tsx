@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { AppShell } from '@/components/app-shell';
 import { getCurrentWorkspace } from '@/lib/auth';
 import { demoAutomationLogs, demoBrands, demoJobRuns, isDemoMode } from '@/lib/demo';
+import { retryJobRun } from './actions';
 
 type JobRunLike = {
   id: string;
@@ -64,7 +65,12 @@ function brandName(brandId: string | null) {
   return demoBrands.find((brand) => brand.id === brandId)?.name ?? brandId;
 }
 
-export default async function JobsPage() {
+export default async function JobsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string; queue?: string }>;
+}) {
+  const filters = await searchParams;
   const { supabase, membership } = await getCurrentWorkspace();
   if (!membership) redirect('/onboarding');
 
@@ -94,6 +100,16 @@ export default async function JobsPage() {
     logs = (logRows ?? []) as AutomationLogLike[];
   }
 
+  const filteredJobs = jobs.filter((job) => {
+    const statusMatches = !filters.status || job.status === filters.status;
+    const queueMatches = !filters.queue || job.queue_name === filters.queue;
+    return statusMatches && queueMatches;
+  });
+
+  const filteredJobIds = new Set(filteredJobs.map((job) => job.id));
+  const filteredLogs = logs.filter((log) => !log.job_run_id || filteredJobIds.has(log.job_run_id));
+  const queues = Array.from(new Set(jobs.map((job) => job.queue_name))).sort();
+
   const summary = jobs.reduce<Record<string, number>>((acc, job) => {
     acc[job.status] = (acc[job.status] ?? 0) + 1;
     return acc;
@@ -109,6 +125,34 @@ export default async function JobsPage() {
         <Link className="button secondary" href="/brands">Voltar para marcas</Link>
       </div>
 
+      <section className="panel" style={{ marginBottom: 18 }}>
+        <form className="grid two" action="/jobs">
+          <label>
+            Status
+            <select name="status" defaultValue={filters.status ?? ''}>
+              <option value="">Todos</option>
+              <option value="queued">Na fila</option>
+              <option value="running">Rodando</option>
+              <option value="completed">Concluido</option>
+              <option value="failed">Falhou</option>
+            </select>
+          </label>
+          <label>
+            Fila
+            <select name="queue" defaultValue={filters.queue ?? ''}>
+              <option value="">Todas</option>
+              {queues.map((queue) => (
+                <option value={queue} key={queue}>{queue}</option>
+              ))}
+            </select>
+          </label>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'end' }}>
+            <button type="submit">Filtrar</button>
+            <Link className="button secondary" href="/jobs">Limpar</Link>
+          </div>
+        </form>
+      </section>
+
       <section className="grid two" style={{ marginBottom: 18 }}>
         {['queued', 'running', 'completed', 'failed'].map((status) => (
           <article className="card" key={status}>
@@ -121,7 +165,7 @@ export default async function JobsPage() {
       <section className="panel" style={{ marginBottom: 18 }}>
         <h2>Execucoes recentes</h2>
         <div className="grid">
-          {jobs.map((job) => (
+          {filteredJobs.map((job) => (
             <article className="card" key={job.id}>
               <div className="toolbar" style={{ marginBottom: 8 }}>
                 <div>
@@ -130,7 +174,14 @@ export default async function JobsPage() {
                     {job.queue_name} · {brandName(job.brand_id)} · criado {formatDate(job.created_at)}
                   </p>
                 </div>
-                <span style={{ color: statusColor(job.status), fontWeight: 700 }}>{statusLabel(job.status)}</span>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                  <span style={{ color: statusColor(job.status), fontWeight: 700 }}>{statusLabel(job.status)}</span>
+                  {job.status === 'failed' ? (
+                    <form action={retryJobRun.bind(null, job.id)}>
+                      <button className="secondary" type="submit">Tentar de novo</button>
+                    </form>
+                  ) : null}
+                </div>
               </div>
               <div className="grid two">
                 <div>
@@ -144,14 +195,14 @@ export default async function JobsPage() {
               </div>
             </article>
           ))}
-          {jobs.length === 0 ? <p className="muted">Nenhum job registrado ainda.</p> : null}
+          {filteredJobs.length === 0 ? <p className="muted">Nenhum job encontrado para os filtros atuais.</p> : null}
         </div>
       </section>
 
       <section className="panel">
         <h2>Logs de automacao</h2>
         <div className="grid">
-          {logs.map((log) => (
+          {filteredLogs.map((log) => (
             <article className="card" key={log.id}>
               <div className="toolbar" style={{ marginBottom: 8 }}>
                 <strong style={{ color: log.level === 'error' ? '#b42318' : '#344054' }}>{log.message}</strong>
@@ -161,7 +212,7 @@ export default async function JobsPage() {
               <pre>{jsonPreview(log.context_json)}</pre>
             </article>
           ))}
-          {logs.length === 0 ? <p className="muted">Nenhum log registrado ainda.</p> : null}
+          {filteredLogs.length === 0 ? <p className="muted">Nenhum log encontrado para os filtros atuais.</p> : null}
         </div>
       </section>
     </AppShell>
