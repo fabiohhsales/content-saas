@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
+import { isDemoMode } from '@/lib/demo';
 import { createServerSupabaseClient } from '@/lib/supabase';
 
 const LoginSchema = z.object({
@@ -9,6 +10,10 @@ const LoginSchema = z.object({
 });
 
 export async function signInWithEmail(formData: FormData) {
+  if (isDemoMode()) {
+    redirect('/brands');
+  }
+
   const { email } = LoginSchema.parse({ email: formData.get('email') });
   const supabase = await createServerSupabaseClient();
   const origin = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';

@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { BrandAssetCategorySchema } from '@content-saas/contracts';
 import { brandAssetPath } from '@content-saas/supabase';
 import { getCurrentWorkspace, requireUser } from '@/lib/auth';
+import { DEMO_BRAND_ID, isDemoMode } from '@/lib/demo';
 import { slugify } from '@/lib/slug';
 
 const BrandFormSchema = z.object({
@@ -22,6 +23,10 @@ function requiredWorkspaceId(membership: Awaited<ReturnType<typeof getCurrentWor
 }
 
 export async function createBrand(formData: FormData) {
+  if (isDemoMode()) {
+    redirect(`/brands/${DEMO_BRAND_ID}/onboarding`);
+  }
+
   const { supabase, user, membership } = await getCurrentWorkspace();
   const workspaceId = requiredWorkspaceId(membership);
   const input = BrandFormSchema.parse({
@@ -52,6 +57,11 @@ export async function createBrand(formData: FormData) {
 }
 
 export async function updateBrand(brandId: string, formData: FormData) {
+  if (isDemoMode()) {
+    revalidatePath(`/brands/${brandId}`);
+    return;
+  }
+
   const { supabase, membership } = await getCurrentWorkspace();
   const workspaceId = requiredWorkspaceId(membership);
   const input = BrandFormSchema.parse({
@@ -79,6 +89,10 @@ export async function updateBrand(brandId: string, formData: FormData) {
 }
 
 export async function archiveBrand(brandId: string) {
+  if (isDemoMode()) {
+    redirect('/brands');
+  }
+
   const { supabase, membership } = await getCurrentWorkspace();
   const workspaceId = requiredWorkspaceId(membership);
   const { error } = await supabase
@@ -93,6 +107,10 @@ export async function archiveBrand(brandId: string) {
 }
 
 export async function completeBrandOnboarding(brandId: string) {
+  if (isDemoMode()) {
+    redirect(`/brands/${brandId}/assets`);
+  }
+
   const { supabase, membership } = await getCurrentWorkspace();
   const workspaceId = requiredWorkspaceId(membership);
   const { error } = await supabase
@@ -107,6 +125,12 @@ export async function completeBrandOnboarding(brandId: string) {
 }
 
 export async function uploadBrandAsset(brandId: string, formData: FormData) {
+  if (isDemoMode()) {
+    revalidatePath(`/brands/${brandId}/assets`);
+    revalidatePath(`/brands/${brandId}/onboarding`);
+    redirect(`/brands/${brandId}/assets`);
+  }
+
   const { supabase, user, membership } = await getCurrentWorkspace();
   const workspaceId = requiredWorkspaceId(membership);
   const category = BrandAssetCategorySchema.parse(formData.get('category'));
@@ -145,6 +169,11 @@ export async function uploadBrandAsset(brandId: string, formData: FormData) {
 }
 
 export async function requestBrandMemory(brandId: string) {
+  if (isDemoMode()) {
+    revalidatePath(`/brands/${brandId}`);
+    return;
+  }
+
   const { user, membership } = await getCurrentWorkspace();
   const workspaceId = requiredWorkspaceId(membership);
   const endpoint = process.env.ORCHESTRATOR_INTERNAL_URL ?? 'http://localhost:3002';
@@ -173,6 +202,10 @@ export async function requestBrandMemory(brandId: string) {
 }
 
 export async function signOutFromApp() {
+  if (isDemoMode()) {
+    redirect('/login');
+  }
+
   const { supabase } = await requireUser();
   await supabase.auth.signOut();
   redirect('/login');

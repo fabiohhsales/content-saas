@@ -2,18 +2,21 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { AppShell } from '@/components/app-shell';
 import { getCurrentWorkspace } from '@/lib/auth';
+import { demoBrands, isDemoMode } from '@/lib/demo';
 import { createBrand } from './actions';
 
 export default async function BrandsPage() {
   const { supabase, membership } = await getCurrentWorkspace();
   if (!membership) redirect('/onboarding');
 
-  const { data: brands } = await supabase
-    .from('brands')
-    .select('id, name, industry, status, created_at')
-    .eq('workspace_id', membership.workspace_id)
-    .neq('status', 'archived')
-    .order('created_at', { ascending: false });
+  const brands = isDemoMode()
+    ? demoBrands
+    : (await supabase
+      .from('brands')
+      .select('id, name, industry, status, created_at')
+      .eq('workspace_id', membership.workspace_id)
+      .neq('status', 'archived')
+      .order('created_at', { ascending: false })).data;
 
   return (
     <AppShell>
@@ -27,6 +30,7 @@ export default async function BrandsPage() {
       <section className="grid two">
         <form action={createBrand} className="panel grid">
           <h2>Nova marca</h2>
+          {isDemoMode() ? <p className="muted">No demo, este formulario leva para a marca ficticia ja preenchida.</p> : null}
           <label>
             Nome
             <input name="name" required minLength={2} />
@@ -47,7 +51,7 @@ export default async function BrandsPage() {
         </form>
 
         <div className="grid">
-          {(brands ?? []).map((brand) => (
+          {(brands ?? []).map((brand: any) => (
             <Link className="card" href={`/brands/${brand.id}`} key={brand.id}>
               <h3>{brand.name}</h3>
               <p className="muted">{brand.industry || 'Sem segmento definido'}</p>
