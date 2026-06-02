@@ -76,6 +76,51 @@ export async function createContentPlan(formData: FormData) {
   redirect(`/plans/${data.id}`);
 }
 
+export async function requestGeneratedContentPlan(formData: FormData) {
+  const input = ContentPlanFormSchema.parse({
+    brand_id: formData.get('brand_id'),
+    title: formData.get('title') || 'Plano gerado por IA',
+    period_start: formData.get('period_start'),
+    period_end: formData.get('period_end'),
+    objective: optionalText(formData.get('objective')),
+  });
+
+  if (isDemoMode()) {
+    redirect('/jobs?queue=content-plan');
+  }
+
+  const { user, membership } = await getCurrentWorkspace();
+  const workspaceId = requiredWorkspaceId(membership);
+  const endpoint = process.env.ORCHESTRATOR_INTERNAL_URL ?? 'http://localhost:3002';
+  const secret = process.env.INTERNAL_SECRET;
+  if (!secret) throw new Error('INTERNAL_SECRET is required');
+
+  const res = await fetch(`${endpoint}/jobs/generate-content-plan`, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-internal-secret': secret,
+    },
+    body: JSON.stringify({
+      workspace_id: workspaceId,
+      brand_id: input.brand_id,
+      requested_by: user.id,
+      period_start: input.period_start,
+      period_end: input.period_end,
+      objective: input.objective,
+    }),
+    cache: 'no-store',
+  });
+
+  if (!res.ok) {
+    throw new Error(`Could not enqueue content plan job: ${await res.text()}`);
+  }
+
+  revalidatePath('/plans');
+  revalidatePath('/jobs');
+  redirect('/jobs?queue=content-plan');
+}
+
 export async function createContentItem(planId: string, formData: FormData) {
   if (isDemoMode()) {
     revalidatePath(`/plans/${planId}`);

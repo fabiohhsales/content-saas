@@ -10,7 +10,7 @@ Estado atual:
 
 - Monorepo criado e publicado em `fabiohhsales/content-saas`.
 - `apps/web` roda localmente em modo demo sem Supabase real.
-- `apps/orchestrator` possui API interna e worker BullMQ para `generate_brand_memory`.
+- `apps/orchestrator` possui API interna e workers BullMQ para `generate_brand_memory` e `generate_content_plan`.
 - `apps/orchestrator` tambem possui fila inicial `render-preview` para gerar previews e abrir aprovacoes.
 - `apps/render` foi importado do render-service oficial e manteve os endpoints de render.
 - Migrations Supabase foram criadas com tabelas, RLS multi-tenant e bucket privado `brand-assets`.
@@ -104,9 +104,11 @@ Responsavel por API interna e jobs assincronos:
 
 - `GET /health`: status do servico.
 - `POST /jobs/generate-brand-memory`: cria `job_runs` e enfileira job BullMQ.
+- `POST /jobs/generate-content-plan`: cria `job_runs` e enfileira job BullMQ.
 - `GET /jobs/:id`: consulta status do job.
 - `POST /jobs/:id/retry`: cria nova execucao a partir de job falho suportado.
 - Worker `brand-memory` consome fila e executa `generate_brand_memory`.
+- Worker `content-plan` consome fila e executa `generate_content_plan`.
 - Worker `render-preview` consome fila, chama o render service, salva preview no Storage e abre aprovacao.
 
 Arquivos-chave:
@@ -114,6 +116,7 @@ Arquivos-chave:
 - `apps/orchestrator/src/index.ts`: API Express.
 - `apps/orchestrator/src/worker.ts`: worker BullMQ.
 - `apps/orchestrator/src/jobs/generate-brand-memory.ts`: job mockado.
+- `apps/orchestrator/src/jobs/generate-content-plan.ts`: job mockado de plano editorial.
 - `apps/orchestrator/src/jobs/render-preview.ts`: job de preview PNG/JPG.
 - `apps/orchestrator/src/queues.ts`: conexao Redis e filas.
 - `apps/orchestrator/src/supabase.ts`: client Supabase service role.
@@ -137,6 +140,16 @@ Estado atual do job `render_preview`:
 - Atualiza `generated_assets` para `ready`.
 - Cria `approvals` com `target_type = generated_asset`.
 - Registra `job_runs` e `automation_logs`.
+
+Estado atual do job `generate_content_plan`:
+
+- Recebe `{ workspace_id, brand_id, requested_by, period_start, period_end, objective }`.
+- Carrega marca e memoria de marca mais recente.
+- Gera plano editorial mockado e deterministico.
+- Salva `content_plans.plan_json` com `schema_version`.
+- Salva quatro `content_items.copy_json` com `schema_version`.
+- Atualiza `job_runs` para `completed` ou `failed`.
+- Registra eventos em `automation_logs`.
 
 ### 3.3 Render (`apps/render`)
 
@@ -178,6 +191,7 @@ Contem schemas Zod e tipos para:
 - Render requests/responses.
 - Job runs e approvals.
 - Payload do job `generate_brand_memory`.
+- Payload do job `generate_content_plan`.
 
 Principio atual:
 
@@ -322,7 +336,22 @@ flowchart TD
   J --> K["Abre aprovacao humana"]
 ```
 
-### 6.5 Fluxo futuro de render avancado
+### 6.5 Fluxo atual de geracao de plano
+
+```mermaid
+flowchart TD
+  A["Usuario preenche Gerar com IA em /plans"] --> B["Web chama orchestrator /jobs/generate-content-plan"]
+  B --> C["Orchestrator cria job_runs queued"]
+  C --> D["BullMQ enfileira generate_content_plan"]
+  D --> E["Worker carrega brand + brand_memory mais recente"]
+  E --> F["Gera plano mockado substituivel por IA real"]
+  F --> G["Salva content_plans"]
+  G --> H["Salva content_items"]
+  H --> I["Atualiza job_runs completed"]
+  I --> J["Registra automation_logs"]
+```
+
+### 6.6 Fluxo futuro de render avancado
 
 ```mermaid
 flowchart TD
@@ -334,7 +363,7 @@ flowchart TD
   F --> G["Abre aprovacao humana"]
 ```
 
-### 6.6 Fluxo atual de planejamento de conteudo
+### 6.7 Fluxo atual de planejamento de conteudo
 
 ```mermaid
 flowchart TD
@@ -347,7 +376,7 @@ flowchart TD
   G --> H["Cria approvals target_type=content_plan"]
 ```
 
-### 6.7 Fluxo atual de gestao de membros
+### 6.8 Fluxo atual de gestao de membros
 
 ```mermaid
 flowchart TD
@@ -389,6 +418,7 @@ flowchart TD
 |---|---|---|
 | `GET /health` | funcional | healthcheck |
 | `POST /jobs/generate-brand-memory` | implementada | exige `x-internal-secret` |
+| `POST /jobs/generate-content-plan` | implementada | gera plano e itens mockados |
 | `POST /jobs/render-preview` | implementada | enfileira preview PNG/JPG |
 | `GET /jobs/:id` | implementada | consulta `job_runs` |
 | `POST /jobs/:id/retry` | implementada | retry para `generate_brand_memory` falho |
@@ -467,6 +497,7 @@ Cobertura atual:
 - Typecheck nos pacotes e apps.
 - Smoke tests do render com templates locais.
 - Teste de contrato do job `generate_brand_memory`.
+- Teste de contrato do job `generate_content_plan`.
 - Build Next de producao.
 
 Rotas demo verificadas com HTTP 200:
@@ -494,6 +525,7 @@ Rotas demo verificadas com HTTP 200:
 - Biblioteca inicial de templates.
 - Central inicial de aprovacoes humanas.
 - Planejamento manual de conteudo com planos e itens.
+- Geracao mockada de planos e itens via orchestrator.
 - Fila inicial de render preview com persistencia em `generated_assets`.
 - Gestao inicial de membros e roles do workspace.
 - CI do monorepo com typecheck, testes e build.
@@ -509,11 +541,13 @@ Rotas demo verificadas com HTTP 200:
 - Upload real: implementado no web, mas depende de Supabase Storage configurado.
 - Jobs: contrato, worker, painel visual e retry inicial existem, mas falta integracao ponta a ponta real em ambiente com Redis/Supabase.
 - Render preview: implementado no orchestrator/web, mas precisa ambiente real com Redis, Supabase Storage e render service rodando para teste ponta a ponta.
+- Geracao de plano: job mockado implementado, mas precisa provider IA real para producao.
 - Gestao de membros: CRUD inicial por `user_id`; ainda nao ha convite por e-mail nem fluxo de aceite.
 
 ### Ainda nao implementado
 
 - IA real para memoria de marca.
+- IA real para geracao de planos e itens.
 - Render preview avancado com carrossel, escolha assistida de template e assets reais da marca.
 - Convites de membros por e-mail com aceite.
 - Testes SQL/RLS automatizados.
@@ -545,13 +579,12 @@ Ordem sugerida:
 1. Criar setup Supabase local com CLI e aplicar migration.
 2. Gerar tipos Supabase reais e substituir os tipos parciais.
 3. Criar seed real para workspace, marca, assets e memoria.
-4. Subir Supabase/Redis/render local e validar fluxos reais de `generate_brand_memory` e `render_preview`.
-5. Integrar `generate_brand_memory` real com provider IA.
+4. Subir Supabase/Redis/render local e validar fluxos reais de `generate_brand_memory`, `generate_content_plan` e `render_preview`.
+5. Integrar `generate_brand_memory` e `generate_content_plan` com provider IA.
 6. Evoluir render preview para selecionar templates/assets e suportar carrossel.
 7. Conectar aprovacoes aos detalhes reais de memoria, plano, item e asset gerado.
 8. Adicionar convites por e-mail e fluxo de aceite para membros.
-9. Adicionar geracao automatica de content plans/content items via orchestrator.
-10. Adicionar testes SQL/RLS automatizados.
+9. Adicionar testes SQL/RLS automatizados.
 
 ## 13. Checklist de handoff
 

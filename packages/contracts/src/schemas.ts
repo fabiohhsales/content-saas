@@ -179,6 +179,22 @@ export const GenerateBrandMemoryOutputSchema = z.object({
   confidence: z.number().min(0).max(1),
 });
 
+export const GenerateContentPlanInputSchema = z.object({
+  workspace_id: z.string().uuid(),
+  brand_id: z.string().uuid(),
+  requested_by: z.string().uuid(),
+  period_start: z.string().min(1),
+  period_end: z.string().min(1),
+  objective: z.string().optional(),
+});
+
+export const GenerateContentPlanOutputSchema = z.object({
+  content_plan_id: z.string().uuid(),
+  content_item_ids: z.array(z.string().uuid()),
+  title: z.string().min(1),
+  items_count: z.number().int().nonnegative(),
+});
+
 export const GenerateRenderPreviewInputSchema = z.object({
   workspace_id: z.string().uuid(),
   brand_id: z.string().uuid(),
@@ -233,6 +249,8 @@ export type RenderResponse = z.infer<typeof RenderResponseSchema>;
 export type GeneratedAsset = z.infer<typeof GeneratedAssetSchema>;
 export type GenerateBrandMemoryInput = z.infer<typeof GenerateBrandMemoryInputSchema>;
 export type GenerateBrandMemoryOutput = z.infer<typeof GenerateBrandMemoryOutputSchema>;
+export type GenerateContentPlanInput = z.infer<typeof GenerateContentPlanInputSchema>;
+export type GenerateContentPlanOutput = z.infer<typeof GenerateContentPlanOutputSchema>;
 export type GenerateRenderPreviewInput = z.infer<typeof GenerateRenderPreviewInputSchema>;
 export type GenerateRenderPreviewOutput = z.infer<typeof GenerateRenderPreviewOutputSchema>;
 export type JobRun = z.infer<typeof JobRunSchema>;

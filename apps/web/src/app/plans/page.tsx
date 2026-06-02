@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { AppShell } from '@/components/app-shell';
 import { getCurrentWorkspace } from '@/lib/auth';
 import { demoBrands, demoContentItems, demoContentPlans, isDemoMode } from '@/lib/demo';
-import { createContentPlan } from './actions';
+import { createContentPlan, requestGeneratedContentPlan } from './actions';
 
 type PlanLike = {
   id: string;
@@ -137,50 +137,84 @@ export default async function PlansPage({
         </form>
 
         <div className="panel grid">
-          <h2>Filtros</h2>
-          <form className="grid" action="/plans">
+          <h2>Gerar com IA</h2>
+          <form action={requestGeneratedContentPlan} className="grid">
             <label>
               Marca
-              <select name="brand_id" defaultValue={filters.brand_id ?? ''}>
-                <option value="">Todas</option>
+              <select name="brand_id" required defaultValue={brands[0]?.id ?? ''}>
                 {brands.map((brand) => (
                   <option value={brand.id} key={brand.id}>{brand.name}</option>
                 ))}
               </select>
             </label>
-            <label>
-              Status
-              <select name="status" defaultValue={filters.status ?? ''}>
-                <option value="">Todos</option>
-                <option value="draft">Rascunho</option>
-                <option value="generating">Gerando</option>
-                <option value="awaiting_approval">Em aprovacao</option>
-                <option value="approved">Aprovado</option>
-              </select>
-            </label>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <button type="submit">Filtrar</button>
-              <Link className="button secondary" href="/plans">Limpar</Link>
+            <div className="grid two">
+              <label>
+                Inicio
+                <input name="period_start" type="date" required />
+              </label>
+              <label>
+                Fim
+                <input name="period_end" type="date" required />
+              </label>
             </div>
+            <label>
+              Objetivo
+              <textarea name="objective" placeholder="Ex: gerar autoridade e leads qualificados no mes." />
+            </label>
+            <button type="submit">Gerar plano</button>
           </form>
         </div>
       </section>
 
+      <section className="panel" style={{ marginTop: 18 }}>
+        <h2>Filtros</h2>
+        <form className="grid two" action="/plans">
+          <label>
+            Marca
+            <select name="brand_id" defaultValue={filters.brand_id ?? ''}>
+              <option value="">Todas</option>
+              {brands.map((brand) => (
+                <option value={brand.id} key={brand.id}>{brand.name}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Status
+            <select name="status" defaultValue={filters.status ?? ''}>
+              <option value="">Todos</option>
+              <option value="draft">Rascunho</option>
+              <option value="generating">Gerando</option>
+              <option value="awaiting_approval">Em aprovacao</option>
+              <option value="approved">Aprovado</option>
+            </select>
+          </label>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'end' }}>
+            <button type="submit">Filtrar</button>
+            <Link className="button secondary" href="/plans">Limpar</Link>
+          </div>
+        </form>
+      </section>
+
       <section className="grid" style={{ marginTop: 18 }}>
-        {filteredPlans.map((plan) => (
-          <Link className="card" href={`/plans/${plan.id}`} key={plan.id}>
-            <div className="toolbar" style={{ marginBottom: 8 }}>
-              <div>
-                <small className="muted">{plan.brands?.name ?? 'Marca'} · {formatDate(plan.period_start)} a {formatDate(plan.period_end)}</small>
-                <h2 style={{ margin: '6px 0' }}>{plan.title}</h2>
-              </div>
-              <span style={{ color: statusColor(plan.status), fontWeight: 700 }}>{statusLabel(plan.status)}</span>
-            </div>
-            <p className="muted">{String(plan.plan_json?.objective ?? 'Sem objetivo registrado.')}</p>
-            <small>{isDemoMode() ? `${itemCounts[plan.id] ?? 0} itens planejados` : 'Abrir itens planejados'}</small>
-          </Link>
-        ))}
-        {filteredPlans.length === 0 ? <p className="muted">Nenhum plano encontrado para os filtros atuais.</p> : null}
+        <div className="panel grid">
+          <h2>Planos</h2>
+          <div className="grid">
+            {filteredPlans.map((plan) => (
+              <Link className="card" href={`/plans/${plan.id}`} key={plan.id}>
+                <div className="toolbar" style={{ marginBottom: 8 }}>
+                  <div>
+                    <small className="muted">{plan.brands?.name ?? 'Marca'} · {formatDate(plan.period_start)} a {formatDate(plan.period_end)}</small>
+                    <h2 style={{ margin: '6px 0' }}>{plan.title}</h2>
+                  </div>
+                  <span style={{ color: statusColor(plan.status), fontWeight: 700 }}>{statusLabel(plan.status)}</span>
+                </div>
+                <p className="muted">{String(plan.plan_json?.objective ?? 'Sem objetivo registrado.')}</p>
+                <small>{isDemoMode() ? `${itemCounts[plan.id] ?? 0} itens planejados` : 'Abrir itens planejados'}</small>
+              </Link>
+            ))}
+            {filteredPlans.length === 0 ? <p className="muted">Nenhum plano encontrado para os filtros atuais.</p> : null}
+          </div>
+        </div>
       </section>
     </AppShell>
   );

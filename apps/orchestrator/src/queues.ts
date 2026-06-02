@@ -2,6 +2,7 @@ import { Queue } from 'bullmq';
 import { getEnv } from './env.js';
 
 export const BRAND_MEMORY_QUEUE = 'brand-memory';
+export const CONTENT_PLAN_QUEUE = 'content-plan';
 export const RENDER_PREVIEW_QUEUE = 'render-preview';
 
 const env = getEnv();
@@ -17,6 +18,10 @@ export const redisConnection = {
 };
 
 export const brandMemoryQueue = new Queue(BRAND_MEMORY_QUEUE, {
+  connection: redisConnection,
+});
+
+export const contentPlanQueue = new Queue(CONTENT_PLAN_QUEUE, {
   connection: redisConnection,
 });
 
