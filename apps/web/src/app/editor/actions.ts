@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
-import { CreativeDocumentJsonSchema, type CreativeDocumentJson } from '@content-saas/contracts';
+import { CreativeDocumentJsonSchema, RenderOutputFormatSchema, type CreativeDocumentJson } from '@content-saas/contracts';
 import { getCurrentWorkspace } from '@/lib/auth';
 import { isDemoMode } from '@/lib/demo';
 
@@ -232,4 +232,54 @@ export async function submitCreativeDocumentApproval(documentId: string, formDat
   revalidatePath(`/editor/${documentId}`);
   revalidatePath('/approvals');
   redirect('/approvals?target_type=creative_document&status=pending');
+}
+
+export async function requestCreativeDocumentRender(documentId: string, formData: FormData) {
+  const outputFormat = RenderOutputFormatSchema.parse(formData.get('output_format') || 'png');
+
+  if (isDemoMode()) {
+    revalidatePath('/jobs');
+    redirect('/jobs?queue=creative-render');
+  }
+
+  const { supabase, user, membership } = await getCurrentWorkspace();
+  const workspaceId = requiredWorkspaceId(membership);
+
+  const { data: documentRow, error } = await supabase
+    .from('creative_documents')
+    .select('id, brand_id, metadata')
+    .eq('id', documentId)
+    .eq('workspace_id', workspaceId)
+    .single();
+
+  if (error || !documentRow) throw new Error(error?.message ?? 'Creative document not found');
+
+  const endpoint = process.env.ORCHESTRATOR_INTERNAL_URL ?? 'http://localhost:3002';
+  const secret = process.env.INTERNAL_SECRET;
+  if (!secret) throw new Error('INTERNAL_SECRET is required');
+
+  const res = await fetch(`${endpoint}/jobs/render-creative-document`, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-internal-secret': secret,
+    },
+    body: JSON.stringify({
+      workspace_id: workspaceId,
+      brand_id: documentRow.brand_id,
+      creative_document_id: documentRow.id,
+      requested_by: user.id,
+      output_format: outputFormat,
+    }),
+    cache: 'no-store',
+  });
+
+  if (!res.ok) {
+    throw new Error(`Could not enqueue creative render job: ${await res.text()}`);
+  }
+
+  revalidatePath('/jobs');
+  revalidatePath('/editor');
+  revalidatePath(`/editor/${documentId}`);
+  redirect('/jobs?queue=creative-render');
 }

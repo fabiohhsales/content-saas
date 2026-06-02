@@ -12,7 +12,7 @@ import {
   getDemoTemplatePlaceholders,
   isDemoMode,
 } from '@/lib/demo';
-import { submitCreativeDocumentApproval, updateCreativeElement } from '../actions';
+import { requestCreativeDocumentRender, submitCreativeDocumentApproval, updateCreativeElement } from '../actions';
 
 type CreativeDocumentRow = {
   id: string;
@@ -264,6 +264,16 @@ export default async function EditorDetailPage({
           {documentRow.content_item_id ? <Link className="button secondary" href={`/plans/demo-plan-aurora-2026-06#item-${documentRow.content_item_id}`}>Ver item</Link> : null}
           <form action={submitCreativeDocumentApproval.bind(null, documentRow.id)}>
             <button type="submit">Enviar para aprovacao</button>
+          </form>
+          <form action={requestCreativeDocumentRender.bind(null, documentRow.id)} style={{ display: 'flex', gap: 8, alignItems: 'end', flexWrap: 'wrap' }}>
+            <label style={{ minWidth: 110 }}>
+              Formato
+              <select name="output_format" defaultValue="png">
+                <option value="png">PNG</option>
+                <option value="jpg">JPG</option>
+              </select>
+            </label>
+            <button className="secondary" type="submit">Render final</button>
           </form>
         </div>
       </div>

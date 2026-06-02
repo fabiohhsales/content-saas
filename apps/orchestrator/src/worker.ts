@@ -4,10 +4,12 @@ import {
   GenerateBrandMemoryInputSchema,
   GenerateContentPlanInputSchema,
   GenerateRenderPreviewInputSchema,
+  RenderCreativeDocumentInputSchema,
 } from '@content-saas/contracts';
-import { BRAND_MEMORY_QUEUE, CONTENT_PLAN_QUEUE, RENDER_PREVIEW_QUEUE, redisConnection } from './queues.js';
+import { BRAND_MEMORY_QUEUE, CONTENT_PLAN_QUEUE, CREATIVE_RENDER_QUEUE, RENDER_PREVIEW_QUEUE, redisConnection } from './queues.js';
 import { generateBrandMemory } from './jobs/generate-brand-memory.js';
 import { generateContentPlan } from './jobs/generate-content-plan.js';
+import { renderCreativeDocument } from './jobs/render-creative-document.js';
 import { renderPreview } from './jobs/render-preview.js';
 import { supabase } from './supabase.js';
 
@@ -20,6 +22,10 @@ const RenderPreviewWorkerPayloadSchema = GenerateRenderPreviewInputSchema.extend
 });
 
 const ContentPlanWorkerPayloadSchema = GenerateContentPlanInputSchema.extend({
+  job_run_id: z.string().uuid(),
+});
+
+const CreativeRenderWorkerPayloadSchema = RenderCreativeDocumentInputSchema.extend({
   job_run_id: z.string().uuid(),
 });
 
@@ -97,11 +103,28 @@ renderPreviewWorker.on('failed', async (job, err) => {
   await markFailed('render_preview', job, err);
 });
 
+const creativeRenderWorker = new Worker(CREATIVE_RENDER_QUEUE, async (job) => {
+  const payload = CreativeRenderWorkerPayloadSchema.parse(job.data);
+  return renderCreativeDocument(payload, payload.job_run_id);
+}, {
+  connection: redisConnection,
+  concurrency: 2,
+});
+
+creativeRenderWorker.on('completed', (job) => {
+  console.log(`[creative-render] completed ${job.id}`);
+});
+
+creativeRenderWorker.on('failed', async (job, err) => {
+  await markFailed('render_creative_document', job, err);
+});
+
 process.on('SIGTERM', async () => {
   await brandMemoryWorker.close();
   await contentPlanWorker.close();
   await renderPreviewWorker.close();
+  await creativeRenderWorker.close();
   process.exit(0);
 });
 
-console.log('brand-memory, content-plan and render-preview workers started');
+console.log('brand-memory, content-plan, render-preview and creative-render workers started');

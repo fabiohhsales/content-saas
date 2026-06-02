@@ -317,6 +317,23 @@ export const demoJobRuns = [
     finished_at: new Date(Date.now() - 1000 * 60 * 43).toISOString(),
     created_at: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
   },
+  {
+    id: 'job-demo-creative-render-001',
+    workspace_id: DEMO_WORKSPACE_ID,
+    brand_id: DEMO_BRAND_ID,
+    job_name: 'render_creative_document',
+    queue_name: 'creative-render',
+    status: 'queued',
+    input_json: {
+      creative_document_id: '00000000-0000-4000-8000-000000000601',
+      output_format: 'png',
+    },
+    output_json: null,
+    error_json: null,
+    started_at: null,
+    finished_at: null,
+    created_at: new Date(Date.now() - 1000 * 45).toISOString(),
+  },
 ];
 
 export const demoAutomationLogs = [
@@ -353,6 +370,18 @@ export const demoAutomationLogs = [
       reason: 'briefing_insufficient',
     },
     created_at: new Date(Date.now() - 1000 * 60 * 43).toISOString(),
+  },
+  {
+    id: 'log-demo-004',
+    workspace_id: DEMO_WORKSPACE_ID,
+    job_run_id: 'job-demo-creative-render-001',
+    level: 'info',
+    message: 'render_creative_document queued',
+    context_json: {
+      queue_name: 'creative-render',
+      creative_document_id: '00000000-0000-4000-8000-000000000601',
+    },
+    created_at: new Date(Date.now() - 1000 * 45).toISOString(),
   },
 ];
 

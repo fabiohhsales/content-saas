@@ -149,6 +149,16 @@ Estado atual do job `render_preview`:
 - Cria `approvals` com `target_type = generated_asset` para cada preview gerado.
 - Registra `job_runs` e `automation_logs`.
 
+Estado atual do job `render_creative_document`:
+
+- Recebe `{ workspace_id, brand_id, creative_document_id, requested_by, output_format }`.
+- Carrega `creative_documents.document_json`.
+- Resolve URLs assinadas de `brand_assets` e `global_assets` referenciados no documento.
+- Chama `RENDER_INTERNAL_URL/render-document`.
+- Salva PNG/JPG final no bucket `brand-assets`.
+- Atualiza `creative_renders` para `ready`.
+- Registra `job_runs` e `automation_logs`.
+
 Estado atual do job `generate_content_plan`:
 
 - Recebe `{ workspace_id, brand_id, requested_by, period_start, period_end, objective }`.
@@ -597,7 +607,7 @@ Rotas demo verificadas com HTTP 200:
 - Upload real: implementado no web, mas depende de Supabase Storage configurado.
 - Jobs: contrato, worker, painel visual e retry inicial existem, mas falta integracao ponta a ponta real em ambiente com Redis/Supabase.
 - Render preview: posts unicos/carrosseis implementados no orchestrator/web, mas precisam ambiente real com Redis, Supabase Storage e render service rodando para teste ponta a ponta.
-- Editor assistido: contratos, tabelas, demo, UI inicial, persistencia de edicao, aprovacao e endpoint de render final existem, mas ainda falta job do orchestrator para persistir o render final de `creative_documents` no Storage.
+- Editor assistido: contratos, tabelas, demo, UI inicial, persistencia de edicao, aprovacao, endpoint de render final e job de persistencia em Storage existem, mas ainda falta validacao ponta a ponta real com Redis/Supabase/render.
 - Geracao de plano: job mockado implementado, mas precisa provider IA real para producao.
 - Gestao de membros: CRUD inicial por `user_id` e convite por link existem, mas falta envio de e-mail transacional.
 - Convites: implementados no schema e web, mas ainda sem envio de e-mail transacional.
@@ -606,7 +616,6 @@ Rotas demo verificadas com HTTP 200:
 
 - IA real para memoria de marca.
 - IA real para geracao de planos e itens.
-- Job de render final para `creative_documents`, com upload no Storage e vinculo a `creative_renders`.
 - Render preview avancado com escolha assistida de template e assets reais da marca.
 - Envio de e-mail transacional para convites.
 - Testes SQL/RLS automatizados.

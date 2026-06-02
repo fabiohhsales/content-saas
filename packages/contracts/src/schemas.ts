@@ -382,6 +382,23 @@ export const GenerateRenderPreviewOutputSchema = z.object({
   output_format: RenderOutputFormatSchema,
 });
 
+export const RenderCreativeDocumentInputSchema = z.object({
+  workspace_id: z.string().uuid(),
+  brand_id: z.string().uuid(),
+  creative_document_id: z.string().uuid(),
+  creative_version_id: z.string().uuid().optional(),
+  requested_by: z.string().uuid(),
+  output_format: RenderOutputFormatSchema.default('png'),
+});
+
+export const RenderCreativeDocumentOutputSchema = z.object({
+  creative_render_ids: z.array(z.string().uuid()),
+  storage_bucket: z.string().min(1),
+  storage_paths: z.array(z.string()),
+  mime_type: z.string().min(1),
+  output_format: RenderOutputFormatSchema,
+});
+
 export const JobRunSchema = z.object({
   id: z.string().uuid(),
   workspace_id: z.string().uuid(),
@@ -436,5 +453,7 @@ export type GenerateContentPlanInput = z.infer<typeof GenerateContentPlanInputSc
 export type GenerateContentPlanOutput = z.infer<typeof GenerateContentPlanOutputSchema>;
 export type GenerateRenderPreviewInput = z.infer<typeof GenerateRenderPreviewInputSchema>;
 export type GenerateRenderPreviewOutput = z.infer<typeof GenerateRenderPreviewOutputSchema>;
+export type RenderCreativeDocumentInput = z.infer<typeof RenderCreativeDocumentInputSchema>;
+export type RenderCreativeDocumentOutput = z.infer<typeof RenderCreativeDocumentOutputSchema>;
 export type JobRun = z.infer<typeof JobRunSchema>;
 export type Approval = z.infer<typeof ApprovalSchema>;

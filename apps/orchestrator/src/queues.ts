@@ -4,6 +4,7 @@ import { getEnv } from './env.js';
 export const BRAND_MEMORY_QUEUE = 'brand-memory';
 export const CONTENT_PLAN_QUEUE = 'content-plan';
 export const RENDER_PREVIEW_QUEUE = 'render-preview';
+export const CREATIVE_RENDER_QUEUE = 'creative-render';
 
 const env = getEnv();
 const redisUrl = new URL(env.REDIS_URL);
@@ -26,5 +27,9 @@ export const contentPlanQueue = new Queue(CONTENT_PLAN_QUEUE, {
 });
 
 export const renderPreviewQueue = new Queue(RENDER_PREVIEW_QUEUE, {
+  connection: redisConnection,
+});
+
+export const creativeRenderQueue = new Queue(CREATIVE_RENDER_QUEUE, {
   connection: redisConnection,
 });
