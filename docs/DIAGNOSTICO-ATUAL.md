@@ -11,6 +11,7 @@ Estado atual:
 - Monorepo criado e publicado em `fabiohhsales/content-saas`.
 - `apps/web` roda localmente em modo demo sem Supabase real.
 - `apps/orchestrator` possui API interna e worker BullMQ para `generate_brand_memory`.
+- `apps/orchestrator` tambem possui fila inicial `render-preview` para gerar previews e abrir aprovacoes.
 - `apps/render` foi importado do render-service oficial e manteve os endpoints de render.
 - Migrations Supabase foram criadas com tabelas, RLS multi-tenant e bucket privado `brand-assets`.
 - Contratos Zod compartilhados vivem em `packages/contracts`.
@@ -63,6 +64,7 @@ Responsavel pela experiencia do usuario:
 - Biblioteca de templates em `/templates` e detalhe em `/templates/[templateId]`.
 - Central de aprovacoes em `/approvals`.
 - Painel de jobs/logs em `/jobs`, com filtros e retry manual para jobs suportados.
+- Disparo de render preview a partir dos itens de `/plans/[planId]`.
 - Healthcheck em `/api/health`.
 
 Arquivos-chave:
@@ -98,12 +100,14 @@ Responsavel por API interna e jobs assincronos:
 - `GET /jobs/:id`: consulta status do job.
 - `POST /jobs/:id/retry`: cria nova execucao a partir de job falho suportado.
 - Worker `brand-memory` consome fila e executa `generate_brand_memory`.
+- Worker `render-preview` consome fila, chama o render service, salva preview no Storage e abre aprovacao.
 
 Arquivos-chave:
 
 - `apps/orchestrator/src/index.ts`: API Express.
 - `apps/orchestrator/src/worker.ts`: worker BullMQ.
 - `apps/orchestrator/src/jobs/generate-brand-memory.ts`: job mockado.
+- `apps/orchestrator/src/jobs/render-preview.ts`: job de preview PNG/JPG.
 - `apps/orchestrator/src/queues.ts`: conexao Redis e filas.
 - `apps/orchestrator/src/supabase.ts`: client Supabase service role.
 
@@ -115,6 +119,17 @@ Estado atual do job `generate_brand_memory`:
 - Salva nova versao em `brand_memories`.
 - Atualiza `job_runs` para `completed` ou `failed`.
 - Registra eventos em `automation_logs`.
+
+Estado atual do job `render_preview`:
+
+- Recebe `{ workspace_id, brand_id, content_item_id, requested_by, output_format }`.
+- Carrega `content_items.copy_json`.
+- Monta payload compatibilizado com `RenderRequestSchema`.
+- Chama `RENDER_INTERNAL_URL/render`.
+- Salva PNG/JPG no bucket `brand-assets`, path `workspace_id/brand_id/generated/file`.
+- Atualiza `generated_assets` para `ready`.
+- Cria `approvals` com `target_type = generated_asset`.
+- Registra `job_runs` e `automation_logs`.
 
 ### 3.3 Render (`apps/render`)
 
@@ -283,19 +298,35 @@ flowchart TD
   H --> I["Registra automation_logs"]
 ```
 
-### 6.4 Fluxo futuro de render
+### 6.4 Fluxo atual de render preview
 
 ```mermaid
 flowchart TD
-  A["Content item aprovado para preview"] --> B["Orchestrator monta render payload"]
-  B --> C["Render service /render ou /render-dynamic"]
+  A["Usuario clica Gerar preview no item"] --> B["Web chama orchestrator /jobs/render-preview"]
+  B --> C["Orchestrator cria job_runs queued"]
+  C --> D["BullMQ enfileira render_preview"]
+  D --> E["Worker carrega content_item.copy_json"]
+  E --> F["Monta RenderRequestSchema"]
+  F --> G["Render service /render"]
+  G --> H["Retorna base64 PNG/JPG + post_render_qa"]
+  H --> I["Worker salva arquivo no Storage brand-assets"]
+  I --> J["Atualiza generated_assets"]
+  J --> K["Abre aprovacao humana"]
+```
+
+### 6.5 Fluxo futuro de render avancado
+
+```mermaid
+flowchart TD
+  A["Content item aprovado para preview"] --> B["Orchestrator escolhe template e assets da marca"]
+  B --> C["Render service /render, /render-dynamic ou /render-carousel"]
   C --> D["Retorna base64 PNG/JPG + post_render_qa"]
   D --> E["Orchestrator salva arquivo no Storage"]
   E --> F["Cria generated_assets"]
   F --> G["Abre aprovacao humana"]
 ```
 
-### 6.5 Fluxo atual de planejamento de conteudo
+### 6.6 Fluxo atual de planejamento de conteudo
 
 ```mermaid
 flowchart TD
@@ -336,6 +367,7 @@ flowchart TD
 |---|---|---|
 | `GET /health` | funcional | healthcheck |
 | `POST /jobs/generate-brand-memory` | implementada | exige `x-internal-secret` |
+| `POST /jobs/render-preview` | implementada | enfileira preview PNG/JPG |
 | `GET /jobs/:id` | implementada | consulta `job_runs` |
 | `POST /jobs/:id/retry` | implementada | retry para `generate_brand_memory` falho |
 
@@ -410,6 +442,7 @@ Rotas demo verificadas com HTTP 200:
 - `/brands/demo-brand-health-grow/assets`
 - `/plans`
 - `/plans/demo-plan-aurora-2026-06`
+- `/jobs?queue=render-preview`
 - `/templates`
 - `/templates/photo-overlay-01`
 - `/approvals`
@@ -424,6 +457,7 @@ Rotas demo verificadas com HTTP 200:
 - Biblioteca inicial de templates.
 - Central inicial de aprovacoes humanas.
 - Planejamento manual de conteudo com planos e itens.
+- Fila inicial de render preview com persistencia em `generated_assets`.
 - Memoria de marca mockada.
 - Painel inicial de jobs/logs no web.
 - Arquitetura de monorepo.
@@ -435,11 +469,12 @@ Rotas demo verificadas com HTTP 200:
 - Orchestrator: implementado, mas precisa Redis + Supabase real para fluxo ponta a ponta.
 - Upload real: implementado no web, mas depende de Supabase Storage configurado.
 - Jobs: contrato, worker, painel visual e retry inicial existem, mas falta integracao ponta a ponta real em ambiente com Redis/Supabase.
+- Render preview: implementado no orchestrator/web, mas precisa ambiente real com Redis, Supabase Storage e render service rodando para teste ponta a ponta.
 
 ### Ainda nao implementado
 
 - IA real para memoria de marca.
-- Render preview integrado ao web/orchestrator.
+- Render preview avancado com carrossel, escolha assistida de template e assets reais da marca.
 - Gestao de membros do workspace.
 - CI GitHub Actions.
 - Testes SQL/RLS automatizados.
@@ -471,9 +506,9 @@ Ordem sugerida:
 1. Criar setup Supabase local com CLI e aplicar migration.
 2. Gerar tipos Supabase reais e substituir os tipos parciais.
 3. Criar seed real para workspace, marca, assets e memoria.
-4. Subir Supabase/Redis local e validar fluxo real de `generate_brand_memory`.
+4. Subir Supabase/Redis/render local e validar fluxos reais de `generate_brand_memory` e `render_preview`.
 5. Integrar `generate_brand_memory` real com provider IA.
-6. Criar fluxo de render preview e salvar em `generated_assets`.
+6. Evoluir render preview para selecionar templates/assets e suportar carrossel.
 7. Conectar aprovacoes aos detalhes reais de memoria, plano, item e asset gerado.
 8. Adicionar geracao automatica de content plans/content items via orchestrator.
 9. Adicionar CI no GitHub Actions.

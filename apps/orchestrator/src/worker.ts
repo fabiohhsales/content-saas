@@ -1,29 +1,23 @@
 import { Worker } from 'bullmq';
 import { z } from 'zod';
-import { GenerateBrandMemoryInputSchema } from '@content-saas/contracts';
-import { BRAND_MEMORY_QUEUE, redisConnection } from './queues.js';
+import { GenerateBrandMemoryInputSchema, GenerateRenderPreviewInputSchema } from '@content-saas/contracts';
+import { BRAND_MEMORY_QUEUE, RENDER_PREVIEW_QUEUE, redisConnection } from './queues.js';
 import { generateBrandMemory } from './jobs/generate-brand-memory.js';
+import { renderPreview } from './jobs/render-preview.js';
 import { supabase } from './supabase.js';
 
-const WorkerPayloadSchema = GenerateBrandMemoryInputSchema.extend({
+const BrandMemoryWorkerPayloadSchema = GenerateBrandMemoryInputSchema.extend({
   job_run_id: z.string().uuid(),
 });
 
-const worker = new Worker(BRAND_MEMORY_QUEUE, async (job) => {
-  const payload = WorkerPayloadSchema.parse(job.data);
-  return generateBrandMemory(payload, payload.job_run_id);
-}, {
-  connection: redisConnection,
-  concurrency: 3,
+const RenderPreviewWorkerPayloadSchema = GenerateRenderPreviewInputSchema.extend({
+  job_run_id: z.string().uuid(),
 });
 
-worker.on('completed', (job) => {
-  console.log(`[brand-memory] completed ${job.id}`);
-});
-
-worker.on('failed', async (job, err) => {
-  const jobRunId = typeof job?.data?.job_run_id === 'string' ? job.data.job_run_id : null;
-  const workspaceId = typeof job?.data?.workspace_id === 'string' ? job.data.workspace_id : null;
+async function markFailed(jobName: string, job: { data?: unknown; id?: string | number } | undefined, err: Error) {
+  const data = job?.data as Record<string, unknown> | undefined;
+  const jobRunId = typeof data?.job_run_id === 'string' ? data.job_run_id : null;
+  const workspaceId = typeof data?.workspace_id === 'string' ? data.workspace_id : null;
   if (jobRunId) {
     await supabase
       .from('job_runs')
@@ -39,16 +33,49 @@ worker.on('failed', async (job, err) => {
       workspace_id: workspaceId,
       job_run_id: jobRunId,
       level: 'error',
-      message: 'generate_brand_memory failed',
+      message: `${jobName} failed`,
       context_json: { message: err.message },
     });
   }
-  console.error(`[brand-memory] failed ${job?.id}:`, err);
+  console.error(`[${jobName}] failed ${job?.id}:`, err);
+}
+
+const brandMemoryWorker = new Worker(BRAND_MEMORY_QUEUE, async (job) => {
+  const payload = BrandMemoryWorkerPayloadSchema.parse(job.data);
+  return generateBrandMemory(payload, payload.job_run_id);
+}, {
+  connection: redisConnection,
+  concurrency: 3,
+});
+
+brandMemoryWorker.on('completed', (job) => {
+  console.log(`[brand-memory] completed ${job.id}`);
+});
+
+brandMemoryWorker.on('failed', async (job, err) => {
+  await markFailed('generate_brand_memory', job, err);
+});
+
+const renderPreviewWorker = new Worker(RENDER_PREVIEW_QUEUE, async (job) => {
+  const payload = RenderPreviewWorkerPayloadSchema.parse(job.data);
+  return renderPreview(payload, payload.job_run_id);
+}, {
+  connection: redisConnection,
+  concurrency: 2,
+});
+
+renderPreviewWorker.on('completed', (job) => {
+  console.log(`[render-preview] completed ${job.id}`);
+});
+
+renderPreviewWorker.on('failed', async (job, err) => {
+  await markFailed('render_preview', job, err);
 });
 
 process.on('SIGTERM', async () => {
-  await worker.close();
+  await brandMemoryWorker.close();
+  await renderPreviewWorker.close();
   process.exit(0);
 });
 
-console.log('brand-memory worker started');
+console.log('brand-memory and render-preview workers started');

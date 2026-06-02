@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
-import { ContentItemStatusSchema } from '@content-saas/contracts';
+import { ContentItemStatusSchema, RenderOutputFormatSchema } from '@content-saas/contracts';
 import { getCurrentWorkspace } from '@/lib/auth';
 import { isDemoMode } from '@/lib/demo';
 
@@ -210,4 +210,54 @@ export async function createPlanApproval(planId: string) {
   revalidatePath(`/plans/${planId}`);
   revalidatePath('/approvals');
   redirect('/approvals?target_type=content_plan&status=pending');
+}
+
+export async function requestRenderPreview(planId: string, contentItemId: string, formData: FormData) {
+  const outputFormat = RenderOutputFormatSchema.parse(formData.get('output_format') || 'png');
+
+  if (isDemoMode()) {
+    revalidatePath(`/plans/${planId}`);
+    redirect('/jobs?queue=render-preview');
+  }
+
+  const { supabase, user, membership } = await getCurrentWorkspace();
+  const workspaceId = requiredWorkspaceId(membership);
+
+  const { data: item, error: itemError } = await supabase
+    .from('content_items')
+    .select('id, brand_id')
+    .eq('id', contentItemId)
+    .eq('content_plan_id', planId)
+    .eq('workspace_id', workspaceId)
+    .single();
+
+  if (itemError || !item) throw new Error(itemError?.message ?? 'Content item not found');
+
+  const endpoint = process.env.ORCHESTRATOR_INTERNAL_URL ?? 'http://localhost:3002';
+  const secret = process.env.INTERNAL_SECRET;
+  if (!secret) throw new Error('INTERNAL_SECRET is required');
+
+  const res = await fetch(`${endpoint}/jobs/render-preview`, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-internal-secret': secret,
+    },
+    body: JSON.stringify({
+      workspace_id: workspaceId,
+      brand_id: item.brand_id,
+      content_item_id: item.id,
+      requested_by: user.id,
+      output_format: outputFormat,
+    }),
+    cache: 'no-store',
+  });
+
+  if (!res.ok) {
+    throw new Error(`Could not enqueue render preview job: ${await res.text()}`);
+  }
+
+  revalidatePath(`/plans/${planId}`);
+  revalidatePath('/jobs');
+  redirect('/jobs?queue=render-preview');
 }

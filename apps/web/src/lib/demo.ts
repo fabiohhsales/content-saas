@@ -466,6 +466,39 @@ export const demoContentItems = [
   },
 ];
 
+export const demoGeneratedAssets = [
+  {
+    id: 'demo-generated-asset-001',
+    workspace_id: DEMO_WORKSPACE_ID,
+    brand_id: DEMO_BRAND_ID,
+    content_item_id: 'demo-content-item-001',
+    status: 'ready',
+    storage_bucket: 'brand-assets',
+    storage_path: `${DEMO_WORKSPACE_ID}/${DEMO_BRAND_ID}/generated/demo-content-item-001.png`,
+    mime_type: 'image/png',
+    render_payload_json: {
+      schema_version: 1,
+      template_id: 'photo-overlay-01',
+      output_format: 'png',
+      fields: {
+        headline: 'Queda capilar persistente merece investigacao, nao improviso.',
+        body: 'Entenda sinais que indicam a hora de buscar avaliacao medica.',
+        cta: 'Agende uma avaliacao.',
+      },
+      assets: {},
+    },
+    metadata: {
+      schema_version: 1,
+      post_render_qa: {
+        text_overflow: false,
+        safe_area: true,
+      },
+    },
+    signedUrl: assetImage('Preview PNG', '#ecfdf3', '#0f766e'),
+    created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+  },
+];
+
 export function getDemoBrand(brandId: string) {
   return demoBrands.find((brand) => brand.id === brandId) ?? demoBrands[0]!;
 }
@@ -491,4 +524,8 @@ export function getDemoContentPlan(planId: string) {
 
 export function getDemoContentItems(planId: string) {
   return demoContentItems.filter((item) => item.content_plan_id === planId);
+}
+
+export function getDemoGeneratedAssets(contentItemIds: string[]) {
+  return demoGeneratedAssets.filter((asset) => asset.content_item_id && contentItemIds.includes(asset.content_item_id));
 }

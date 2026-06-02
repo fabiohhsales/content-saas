@@ -2,11 +2,12 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { AppShell } from '@/components/app-shell';
 import { getCurrentWorkspace } from '@/lib/auth';
-import { demoBrands, getDemoContentItems, getDemoContentPlan, isDemoMode } from '@/lib/demo';
+import { demoBrands, getDemoContentItems, getDemoContentPlan, getDemoGeneratedAssets, isDemoMode } from '@/lib/demo';
 import {
   archiveContentPlan,
   createContentItem,
   createPlanApproval,
+  requestRenderPreview,
   updateContentItemStatus,
 } from '../actions';
 
@@ -27,6 +28,19 @@ type ItemLike = {
   status: string;
   scheduled_for: string | null;
   copy_json?: Record<string, unknown>;
+  created_at?: string;
+};
+
+type GeneratedAssetLike = {
+  id: string;
+  content_item_id: string | null;
+  status: string;
+  storage_bucket: string;
+  storage_path: string | null;
+  mime_type: string | null;
+  render_payload_json?: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
+  signedUrl?: string | null;
   created_at?: string;
 };
 
@@ -73,6 +87,7 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ pla
 
   let plan: PlanDetail | null = null;
   let items: ItemLike[] = [];
+  let generatedAssets: GeneratedAssetLike[] = [];
 
   if (isDemoMode()) {
     const demoPlan = getDemoContentPlan(planId);
@@ -82,6 +97,7 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ pla
       brands: brand ? { id: brand.id, name: brand.name } : { name: 'Marca demo' },
     };
     items = getDemoContentItems(demoPlan.id);
+    generatedAssets = getDemoGeneratedAssets(items.map((item) => item.id));
   } else {
     const [{ data: planRow }, { data: itemRows }] = await Promise.all([
       supabase
@@ -100,9 +116,38 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ pla
 
     plan = planRow as PlanDetail | null;
     items = (itemRows ?? []) as ItemLike[];
+
+    if (plan) {
+      const itemIds = items.map((item) => item.id);
+      if (itemIds.length > 0) {
+        const { data: assetRows } = await supabase
+          .from('generated_assets')
+          .select('id, content_item_id, status, storage_bucket, storage_path, mime_type, render_payload_json, metadata, created_at')
+          .eq('workspace_id', membership.workspace_id)
+          .eq('brand_id', plan.brand_id)
+          .in('content_item_id', itemIds)
+          .neq('status', 'archived')
+          .order('created_at', { ascending: false });
+
+        generatedAssets = (assetRows ?? []) as GeneratedAssetLike[];
+      }
+    }
+
+    generatedAssets = await Promise.all(generatedAssets.map(async (asset) => {
+      if (!asset.storage_path || asset.status !== 'ready') return asset;
+      const { data: signed } = await supabase.storage
+        .from(asset.storage_bucket)
+        .createSignedUrl(asset.storage_path, 60 * 10);
+      return { ...asset, signedUrl: signed?.signedUrl ?? null };
+    }));
   }
 
   if (!plan) notFound();
+  const assetsByItem = generatedAssets.reduce<Record<string, GeneratedAssetLike[]>>((acc, asset) => {
+    if (!asset.content_item_id) return acc;
+    acc[asset.content_item_id] = [...(acc[asset.content_item_id] ?? []), asset];
+    return acc;
+  }, {});
 
   return (
     <AppShell>
@@ -206,6 +251,37 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ pla
                 </label>
                 <button className="secondary" type="submit">Salvar status</button>
               </form>
+            </div>
+            <div className="grid" style={{ marginTop: 16 }}>
+              <div className="toolbar" style={{ marginBottom: 0 }}>
+                <div>
+                  <small className="muted">Previews gerados</small>
+                  <p className="muted" style={{ margin: '4px 0 0' }}>Render PNG/JPG salvo em Storage e enviado para aprovacao humana.</p>
+                </div>
+                <form action={requestRenderPreview.bind(null, plan.id, item.id)} style={{ display: 'flex', gap: 8, alignItems: 'end', flexWrap: 'wrap' }}>
+                  <label style={{ minWidth: 120 }}>
+                    Formato
+                    <select name="output_format" defaultValue="png">
+                      <option value="png">PNG</option>
+                      <option value="jpg">JPG</option>
+                    </select>
+                  </label>
+                  <button type="submit">Gerar preview</button>
+                </form>
+              </div>
+              <div className="grid two">
+                {(assetsByItem[item.id] ?? []).map((asset) => (
+                  <article className="card" key={asset.id}>
+                    <div className="asset-preview">
+                      {asset.signedUrl ? <img alt="Preview gerado" src={asset.signedUrl} /> : <span className="muted">{statusLabel(asset.status)}</span>}
+                    </div>
+                    <strong>{asset.mime_type ?? 'Preview'}</strong>
+                    <p className="muted">Status: {statusLabel(asset.status)} · {asset.storage_path ?? 'sem arquivo ainda'}</p>
+                    <pre>{JSON.stringify(asset.render_payload_json ?? { schema_version: 1 }, null, 2)}</pre>
+                  </article>
+                ))}
+                {(assetsByItem[item.id] ?? []).length === 0 ? <p className="muted">Nenhum preview renderizado para este item.</p> : null}
+              </div>
             </div>
           </article>
         ))}

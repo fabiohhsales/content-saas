@@ -7,6 +7,7 @@ const EnvSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.string().url().optional(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
   REDIS_URL: z.string().min(1).default('redis://localhost:6379'),
+  RENDER_INTERNAL_URL: z.string().url().default('http://localhost:3001'),
   INTERNAL_SECRET: z.string().min(1),
   AI_PROVIDER: z.enum(['mock', 'openai', 'anthropic']).default('mock'),
 });

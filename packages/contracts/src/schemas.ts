@@ -153,6 +153,19 @@ export const RenderResponseSchema = z.object({
   post_render_qa: z.record(z.unknown()).optional(),
 });
 
+export const GeneratedAssetSchema = z.object({
+  id: z.string().uuid(),
+  workspace_id: z.string().uuid(),
+  brand_id: z.string().uuid(),
+  content_item_id: z.string().uuid().nullable().optional(),
+  status: z.enum(['draft', 'rendering', 'ready', 'failed', 'archived']),
+  storage_bucket: z.string().default('brand-assets'),
+  storage_path: z.string().nullable().optional(),
+  mime_type: z.string().nullable().optional(),
+  render_payload_json: z.record(z.unknown()).default({ schema_version: 1 }),
+  metadata: z.record(z.unknown()).default({}),
+});
+
 export const GenerateBrandMemoryInputSchema = z.object({
   workspace_id: z.string().uuid(),
   brand_id: z.string().uuid(),
@@ -164,6 +177,23 @@ export const GenerateBrandMemoryOutputSchema = z.object({
   version: z.number().int().positive(),
   summary: z.string().min(1),
   confidence: z.number().min(0).max(1),
+});
+
+export const GenerateRenderPreviewInputSchema = z.object({
+  workspace_id: z.string().uuid(),
+  brand_id: z.string().uuid(),
+  content_item_id: z.string().uuid(),
+  requested_by: z.string().uuid(),
+  output_format: RenderOutputFormatSchema.default('png'),
+});
+
+export const GenerateRenderPreviewOutputSchema = z.object({
+  generated_asset_id: z.string().uuid(),
+  approval_id: z.string().uuid().nullable(),
+  storage_bucket: z.string().min(1),
+  storage_path: z.string().min(1),
+  mime_type: z.string().min(1),
+  output_format: RenderOutputFormatSchema,
 });
 
 export const JobRunSchema = z.object({
@@ -200,7 +230,10 @@ export type ContentItem = z.infer<typeof ContentItemSchema>;
 export type RenderSlide = z.infer<typeof RenderSlideSchema>;
 export type RenderRequest = z.infer<typeof RenderRequestSchema>;
 export type RenderResponse = z.infer<typeof RenderResponseSchema>;
+export type GeneratedAsset = z.infer<typeof GeneratedAssetSchema>;
 export type GenerateBrandMemoryInput = z.infer<typeof GenerateBrandMemoryInputSchema>;
 export type GenerateBrandMemoryOutput = z.infer<typeof GenerateBrandMemoryOutputSchema>;
+export type GenerateRenderPreviewInput = z.infer<typeof GenerateRenderPreviewInputSchema>;
+export type GenerateRenderPreviewOutput = z.infer<typeof GenerateRenderPreviewOutputSchema>;
 export type JobRun = z.infer<typeof JobRunSchema>;
 export type Approval = z.infer<typeof ApprovalSchema>;
