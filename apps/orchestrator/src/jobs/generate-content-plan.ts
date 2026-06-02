@@ -212,6 +212,7 @@ export async function generateContentPlan(
   }
 
   const output = {
+    schema_version: 1,
     content_plan_id: insertedPlan.id,
     content_item_ids: insertedItems.map((item: { id: string }) => item.id),
     title,

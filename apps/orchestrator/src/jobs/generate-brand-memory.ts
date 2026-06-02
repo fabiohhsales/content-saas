@@ -121,6 +121,7 @@ export async function generateBrandMemory(input: GenerateBrandMemoryInput, jobRu
   }
 
   const output = {
+    schema_version: 1,
     brand_memory_id: inserted.id,
     version,
     summary: memory.summary,

@@ -36,6 +36,7 @@ content-saas/
     workflows/       CI do monorepo
   docs/
     DIAGNOSTICO-ATUAL.md
+    PLANO-MVP-EDITOR-VISUAL.md
 ```
 
 Scripts principais na raiz:
@@ -86,6 +87,7 @@ Arquivos-chave:
 - `apps/web/src/app/editor/page.tsx`: lista documentos criativos editaveis derivados de previews.
 - `apps/web/src/app/editor/[documentId]/page.tsx`: revisao assistida por placeholders, assets, biblioteca global e versoes.
 - `apps/web/src/app/editor/actions.ts`: salva edicoes de elementos, cria versoes e envia documentos criativos para aprovacao.
+- `docs/PLANO-MVP-EDITOR-VISUAL.md`: planejamento da evolucao do editor assistido para um MVP visual tipo Canva controlado.
 - `apps/web/src/app/templates/page.tsx`: biblioteca de templates.
 - `apps/web/src/app/templates/[templateId]/page.tsx`: detalhe de contrato/campos do template.
 - `apps/web/src/app/approvals/page.tsx`: central de aprovacao humana com links para alvos.
@@ -553,10 +555,21 @@ O workflow roda em push e pull request para `main`:
 Cobertura atual:
 
 - Typecheck nos pacotes e apps.
+- Teste estatico das migrations Supabase em `packages/supabase/test/migrations.test.mjs`.
+- Cobertura automatizada para tabelas do roadmap, RLS habilitado, helpers multi-tenant, policies de Storage e `schema_version` em contratos JSON persistidos.
 - Smoke tests do render com templates locais.
 - Teste de contrato do job `generate_brand_memory`.
 - Teste de contrato do job `generate_content_plan`.
+- Teste de contrato dos jobs `render_preview` e `render_creative_document`.
 - Build Next de producao.
+
+Validacoes incrementais mais recentes:
+
+```bash
+npm test -w @content-saas/supabase
+npm test -w @content-saas/contracts
+npm test -w @content-saas/orchestrator
+```
 
 Rotas demo verificadas com HTTP 200:
 
@@ -589,6 +602,7 @@ Rotas demo verificadas com HTTP 200:
 - Aprovacoes conectadas aos detalhes de memoria, plano, item e preview.
 - Planejamento manual de conteudo com planos e itens.
 - Editor assistido inicial para revisar criativos por placeholders, assets da marca e biblioteca global.
+- Planejamento do MVP de editor visual tipo Canva controlado, com fases, UX do designer, contratos e riscos.
 - Geracao mockada de planos e itens via orchestrator.
 - Fila inicial de render preview com persistencia em `generated_assets`.
 - Render preview inicial para posts unicos e carrosseis.
@@ -602,12 +616,13 @@ Rotas demo verificadas com HTTP 200:
 
 ### Pronto parcialmente
 
-- Supabase schema/RLS: criado, mas ainda precisa ser aplicado/testado contra um projeto Supabase real/local.
+- Supabase schema/RLS: criado e coberto por teste estatico de migrations, mas ainda precisa ser aplicado/testado contra um projeto Supabase real/local com usuarios e workspaces distintos.
 - Orchestrator: implementado, mas precisa Redis + Supabase real para fluxo ponta a ponta.
 - Upload real: implementado no web, mas depende de Supabase Storage configurado.
 - Jobs: contrato, worker, painel visual e retry inicial existem, mas falta integracao ponta a ponta real em ambiente com Redis/Supabase.
 - Render preview: posts unicos/carrosseis implementados no orchestrator/web, mas precisam ambiente real com Redis, Supabase Storage e render service rodando para teste ponta a ponta.
 - Editor assistido: contratos, tabelas, demo, UI inicial, persistencia de edicao, aprovacao, endpoint de render final e job de persistencia em Storage existem, mas ainda falta validacao ponta a ponta real com Redis/Supabase/render.
+- Biblioteca global de assets: schema, leitura autenticada e hardening para remover upload livre existem; falta fluxo administrativo/curadoria para inserir assets globais.
 - Geracao de plano: job mockado implementado, mas precisa provider IA real para producao.
 - Gestao de membros: CRUD inicial por `user_id` e convite por link existem, mas falta envio de e-mail transacional.
 - Convites: implementados no schema e web, mas ainda sem envio de e-mail transacional.
@@ -617,8 +632,9 @@ Rotas demo verificadas com HTTP 200:
 - IA real para memoria de marca.
 - IA real para geracao de planos e itens.
 - Render preview avancado com escolha assistida de template e assets reais da marca.
+- Editor visual com canvas real, selecao, drag/resize, painel de propriedades e asset picker integrado.
 - Envio de e-mail transacional para convites.
-- Testes SQL/RLS automatizados.
+- Testes SQL/RLS executados contra Supabase real/local com usuarios de workspaces diferentes.
 
 ## 11. Riscos e pontos de atencao
 
@@ -640,6 +656,9 @@ Rotas demo verificadas com HTTP 200:
 6. `.env.local` existe localmente e nao deve ser commitado.
    - `.gitignore` ja cobre `.env.local`.
 
+7. Biblioteca `global-assets` precisa fluxo de curadoria.
+   - Estado: upload livre autenticado foi removido por migration de hardening; falta implementar upload administrativo/service-role para popular a biblioteca global.
+
 ## 12. Proximos passos recomendados
 
 Ordem sugerida:
@@ -650,8 +669,10 @@ Ordem sugerida:
 4. Subir Supabase/Redis/render local e validar fluxos reais de `generate_brand_memory`, `generate_content_plan` e `render_preview`.
 5. Integrar `generate_brand_memory` e `generate_content_plan` com provider IA.
 6. Evoluir render preview para selecionar templates/assets reais da marca.
-7. Adicionar envio transacional de e-mail para convites.
-8. Adicionar testes SQL/RLS automatizados.
+7. Implementar Fase 1 do `docs/PLANO-MVP-EDITOR-VISUAL.md`: canvas real, selecao, edicao de texto/asset e persistencia validada.
+8. Criar fluxo admin/service-role para curadoria e upload em `global-assets`.
+9. Adicionar envio transacional de e-mail para convites.
+10. Adicionar testes SQL/RLS executados contra Supabase real/local com usuarios de workspaces diferentes.
 
 ## 13. Checklist de handoff
 

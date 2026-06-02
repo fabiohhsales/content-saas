@@ -38,7 +38,7 @@ async function markFailed(jobName: string, job: { data?: unknown; id?: string | 
       .from('job_runs')
       .update({
         status: 'failed',
-        error_json: { message: err.message, stack: err.stack },
+        error_json: { schema_version: 1, message: err.message, stack: err.stack },
         finished_at: new Date().toISOString(),
       })
       .eq('id', jobRunId);
@@ -49,7 +49,7 @@ async function markFailed(jobName: string, job: { data?: unknown; id?: string | 
       job_run_id: jobRunId,
       level: 'error',
       message: `${jobName} failed`,
-      context_json: { message: err.message },
+      context_json: { schema_version: 1, message: err.message },
     });
   }
   console.error(`[${jobName}] failed ${job?.id}:`, err);

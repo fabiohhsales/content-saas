@@ -246,6 +246,7 @@ app.post('/jobs/:id/retry', requireInternalSecret, async (req, res) => {
     level: 'info',
     message: 'job retry queued',
     context_json: {
+      schema_version: 1,
       retried_from_job_run_id: original.id,
       bullmq_job_id: job.id,
     },

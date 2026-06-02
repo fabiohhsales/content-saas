@@ -201,6 +201,7 @@ export async function renderCreativeDocument(
     }
 
     const output = {
+      schema_version: 1,
       creative_render_ids: creativeRenderIds,
       storage_bucket: 'brand-assets',
       storage_paths: storagePaths,

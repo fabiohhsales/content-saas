@@ -273,6 +273,7 @@ export async function renderPreview(
     }
 
     const output = {
+      schema_version: 1,
       generated_asset_id: generatedAssetIds[0]!,
       generated_asset_ids: generatedAssetIds,
       approval_id: approvals?.[0]?.id ?? null,

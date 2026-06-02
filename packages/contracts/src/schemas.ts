@@ -334,12 +334,14 @@ export const GeneratedAssetSchema = z.object({
 });
 
 export const GenerateBrandMemoryInputSchema = z.object({
+  schema_version: SchemaVersionSchema,
   workspace_id: z.string().uuid(),
   brand_id: z.string().uuid(),
   requested_by: z.string().uuid(),
 });
 
 export const GenerateBrandMemoryOutputSchema = z.object({
+  schema_version: SchemaVersionSchema,
   brand_memory_id: z.string().uuid(),
   version: z.number().int().positive(),
   summary: z.string().min(1),
@@ -347,6 +349,7 @@ export const GenerateBrandMemoryOutputSchema = z.object({
 });
 
 export const GenerateContentPlanInputSchema = z.object({
+  schema_version: SchemaVersionSchema,
   workspace_id: z.string().uuid(),
   brand_id: z.string().uuid(),
   requested_by: z.string().uuid(),
@@ -356,6 +359,7 @@ export const GenerateContentPlanInputSchema = z.object({
 });
 
 export const GenerateContentPlanOutputSchema = z.object({
+  schema_version: SchemaVersionSchema,
   content_plan_id: z.string().uuid(),
   content_item_ids: z.array(z.string().uuid()),
   title: z.string().min(1),
@@ -363,6 +367,7 @@ export const GenerateContentPlanOutputSchema = z.object({
 });
 
 export const GenerateRenderPreviewInputSchema = z.object({
+  schema_version: SchemaVersionSchema,
   workspace_id: z.string().uuid(),
   brand_id: z.string().uuid(),
   content_item_id: z.string().uuid(),
@@ -371,6 +376,7 @@ export const GenerateRenderPreviewInputSchema = z.object({
 });
 
 export const GenerateRenderPreviewOutputSchema = z.object({
+  schema_version: SchemaVersionSchema,
   generated_asset_id: z.string().uuid(),
   generated_asset_ids: z.array(z.string().uuid()).default([]),
   approval_id: z.string().uuid().nullable(),
@@ -383,6 +389,7 @@ export const GenerateRenderPreviewOutputSchema = z.object({
 });
 
 export const RenderCreativeDocumentInputSchema = z.object({
+  schema_version: SchemaVersionSchema,
   workspace_id: z.string().uuid(),
   brand_id: z.string().uuid(),
   creative_document_id: z.string().uuid(),
@@ -392,6 +399,7 @@ export const RenderCreativeDocumentInputSchema = z.object({
 });
 
 export const RenderCreativeDocumentOutputSchema = z.object({
+  schema_version: SchemaVersionSchema,
   creative_render_ids: z.array(z.string().uuid()),
   storage_bucket: z.string().min(1),
   storage_paths: z.array(z.string()),
@@ -405,7 +413,7 @@ export const JobRunSchema = z.object({
   brand_id: z.string().uuid().nullable().optional(),
   job_name: z.string().min(1),
   status: JobRunStatusSchema,
-  input_json: z.record(z.unknown()).default({}),
+  input_json: z.record(z.unknown()).default({ schema_version: 1 }),
   output_json: z.record(z.unknown()).nullable().optional(),
   error_json: z.record(z.unknown()).nullable().optional(),
 });
