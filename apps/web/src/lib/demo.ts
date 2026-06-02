@@ -109,6 +109,105 @@ export const demoMemories = [
   },
 ];
 
+export const demoJobRuns = [
+  {
+    id: 'job-demo-memory-001',
+    workspace_id: DEMO_WORKSPACE_ID,
+    brand_id: DEMO_BRAND_ID,
+    job_name: 'generate_brand_memory',
+    queue_name: 'brand-memory',
+    status: 'completed',
+    input_json: {
+      workspace_id: DEMO_WORKSPACE_ID,
+      brand_id: DEMO_BRAND_ID,
+      requested_by: DEMO_USER_ID,
+    },
+    output_json: {
+      brand_memory_id: 'memory-aurora-v1',
+      version: 1,
+      summary: demoMemories[0]!.memory_json.summary,
+      confidence: 0.72,
+    },
+    error_json: null,
+    started_at: new Date(Date.now() - 1000 * 60 * 7).toISOString(),
+    finished_at: new Date(Date.now() - 1000 * 60 * 6).toISOString(),
+    created_at: new Date(Date.now() - 1000 * 60 * 8).toISOString(),
+  },
+  {
+    id: 'job-demo-render-001',
+    workspace_id: DEMO_WORKSPACE_ID,
+    brand_id: DEMO_BRAND_ID,
+    job_name: 'render_preview',
+    queue_name: 'render-preview',
+    status: 'queued',
+    input_json: {
+      content_item_id: 'demo-content-item-001',
+      output_format: 'png',
+    },
+    output_json: null,
+    error_json: null,
+    started_at: null,
+    finished_at: null,
+    created_at: new Date(Date.now() - 1000 * 90).toISOString(),
+  },
+  {
+    id: 'job-demo-plan-001',
+    workspace_id: DEMO_WORKSPACE_ID,
+    brand_id: 'demo-brand-renovo',
+    job_name: 'generate_content_plan',
+    queue_name: 'content-plan',
+    status: 'failed',
+    input_json: {
+      brand_id: 'demo-brand-renovo',
+      month: '2026-06',
+    },
+    output_json: null,
+    error_json: {
+      message: 'Demo de falha controlada: briefing insuficiente para gerar plano.',
+    },
+    started_at: new Date(Date.now() - 1000 * 60 * 44).toISOString(),
+    finished_at: new Date(Date.now() - 1000 * 60 * 43).toISOString(),
+    created_at: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
+  },
+];
+
+export const demoAutomationLogs = [
+  {
+    id: 'log-demo-001',
+    workspace_id: DEMO_WORKSPACE_ID,
+    job_run_id: 'job-demo-memory-001',
+    level: 'info',
+    message: 'generate_brand_memory completed',
+    context_json: {
+      confidence: 0.72,
+      version: 1,
+    },
+    created_at: new Date(Date.now() - 1000 * 60 * 6).toISOString(),
+  },
+  {
+    id: 'log-demo-002',
+    workspace_id: DEMO_WORKSPACE_ID,
+    job_run_id: 'job-demo-render-001',
+    level: 'info',
+    message: 'render_preview queued',
+    context_json: {
+      queue_name: 'render-preview',
+    },
+    created_at: new Date(Date.now() - 1000 * 90).toISOString(),
+  },
+  {
+    id: 'log-demo-003',
+    workspace_id: DEMO_WORKSPACE_ID,
+    job_run_id: 'job-demo-plan-001',
+    level: 'error',
+    message: 'generate_content_plan failed',
+    context_json: {
+      reason: 'briefing_insufficient',
+    },
+    created_at: new Date(Date.now() - 1000 * 60 * 43).toISOString(),
+  },
+];
+
 export function getDemoBrand(brandId: string) {
   return demoBrands.find((brand) => brand.id === brandId) ?? demoBrands[0]!;
 }

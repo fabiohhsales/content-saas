@@ -128,6 +128,21 @@ textarea {
   min-height: 96px;
 }
 
+pre {
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: #344054;
+  font-size: 12px;
+  line-height: 1.45;
+  margin: 8px 0 0;
+  max-height: 180px;
+  overflow: auto;
+  padding: 10px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .card {
   background: #ffffff;
   border: 1px solid var(--line);

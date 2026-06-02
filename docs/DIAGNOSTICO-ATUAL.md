@@ -59,6 +59,7 @@ Responsavel pela experiencia do usuario:
 - Detalhe/edicao de marca em `/brands/[brandId]`.
 - Wizard de onboarding da marca em `/brands/[brandId]/onboarding`.
 - Biblioteca de assets em `/brands/[brandId]/assets`.
+- Painel de jobs/logs em `/jobs`.
 - Healthcheck em `/api/health`.
 
 Arquivos-chave:
@@ -67,6 +68,7 @@ Arquivos-chave:
 - `apps/web/src/lib/demo.ts`: dados ficticios para navegacao local.
 - `apps/web/src/lib/supabase.ts`: client Supabase SSR.
 - `apps/web/src/app/brands/actions.ts`: server actions de marcas, assets e memoria.
+- `apps/web/src/app/jobs/page.tsx`: painel operacional de jobs e logs.
 - `apps/web/src/components/app-shell.tsx`: shell de navegacao.
 
 Modo demo:
@@ -223,6 +225,7 @@ flowchart TD
   E --> F["Wizard de onboarding"]
   E --> G["Biblioteca de assets"]
   E --> H["Memoria de marca mockada"]
+  E --> I["Painel /jobs com execucoes e logs demo"]
 ```
 
 Objetivo:
@@ -291,6 +294,7 @@ flowchart TD
 | `/brands/[brandId]` | funcional | edita marca e mostra memorias |
 | `/brands/[brandId]/onboarding` | funcional | wizard inicial |
 | `/brands/[brandId]/assets` | funcional | biblioteca e upload |
+| `/jobs` | funcional | painel de job_runs e automation_logs; demo ativo |
 | `/api/health` | funcional | healthcheck web |
 
 ### Orchestrator
@@ -370,6 +374,7 @@ Rotas demo verificadas com HTTP 200:
 - `/brands/demo-brand-health-grow`
 - `/brands/demo-brand-health-grow/onboarding`
 - `/brands/demo-brand-health-grow/assets`
+- `/jobs`
 
 ## 10. Diagnostico de maturidade
 
@@ -378,6 +383,7 @@ Rotas demo verificadas com HTTP 200:
 - Navegacao demo local.
 - Estrutura de marca e assets.
 - Memoria de marca mockada.
+- Painel inicial de jobs/logs no web.
 - Arquitetura de monorepo.
 - Render service importado e testado.
 
@@ -386,7 +392,7 @@ Rotas demo verificadas com HTTP 200:
 - Supabase schema/RLS: criado, mas ainda precisa ser aplicado/testado contra um projeto Supabase real/local.
 - Orchestrator: implementado, mas precisa Redis + Supabase real para fluxo ponta a ponta.
 - Upload real: implementado no web, mas depende de Supabase Storage configurado.
-- Jobs: contrato e worker existem, mas falta painel visual de jobs/logs.
+- Jobs: contrato, worker e painel visual existem, mas falta retry manual e integracao ponta a ponta real em ambiente com Redis/Supabase.
 
 ### Ainda nao implementado
 
@@ -426,7 +432,7 @@ Ordem sugerida:
 1. Criar setup Supabase local com CLI e aplicar migration.
 2. Gerar tipos Supabase reais e substituir os tipos parciais.
 3. Criar seed real para workspace, marca, assets e memoria.
-4. Criar painel de jobs/logs no web.
+4. Adicionar retry manual e filtros avancados no painel de jobs/logs.
 5. Integrar `generate_brand_memory` real com provider IA.
 6. Criar biblioteca de templates no web.
 7. Criar fluxo de render preview e salvar em `generated_assets`.
@@ -442,4 +448,3 @@ Ordem sugerida:
 - Demo mode: ativo localmente
 - Commit base: `b33d53e initial content saas foundation`
 - Commit demo: `2352a0c add local demo mode`
-
