@@ -167,6 +167,13 @@ export const RenderResponseSchema = z.object({
   post_render_qa: z.record(z.unknown()).optional(),
 });
 
+export const RenderCarouselResponseSchema = z.object({
+  slides: z.array(z.string()),
+  output_format: RenderOutputFormatSchema,
+  post_render_qa: z.array(z.record(z.unknown())).optional(),
+  count: z.number().int().nonnegative(),
+});
+
 export const GeneratedAssetSchema = z.object({
   id: z.string().uuid(),
   workspace_id: z.string().uuid(),
@@ -219,9 +226,12 @@ export const GenerateRenderPreviewInputSchema = z.object({
 
 export const GenerateRenderPreviewOutputSchema = z.object({
   generated_asset_id: z.string().uuid(),
+  generated_asset_ids: z.array(z.string().uuid()).default([]),
   approval_id: z.string().uuid().nullable(),
+  approval_ids: z.array(z.string().uuid()).default([]),
   storage_bucket: z.string().min(1),
   storage_path: z.string().min(1),
+  storage_paths: z.array(z.string()).default([]),
   mime_type: z.string().min(1),
   output_format: RenderOutputFormatSchema,
 });
@@ -261,6 +271,7 @@ export type ContentItem = z.infer<typeof ContentItemSchema>;
 export type RenderSlide = z.infer<typeof RenderSlideSchema>;
 export type RenderRequest = z.infer<typeof RenderRequestSchema>;
 export type RenderResponse = z.infer<typeof RenderResponseSchema>;
+export type RenderCarouselResponse = z.infer<typeof RenderCarouselResponseSchema>;
 export type GeneratedAsset = z.infer<typeof GeneratedAssetSchema>;
 export type GenerateBrandMemoryInput = z.infer<typeof GenerateBrandMemoryInputSchema>;
 export type GenerateBrandMemoryOutput = z.infer<typeof GenerateBrandMemoryOutputSchema>;

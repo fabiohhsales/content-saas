@@ -138,10 +138,10 @@ Estado atual do job `render_preview`:
 - Recebe `{ workspace_id, brand_id, content_item_id, requested_by, output_format }`.
 - Carrega `content_items.copy_json`.
 - Monta payload compatibilizado com `RenderRequestSchema`.
-- Chama `RENDER_INTERNAL_URL/render`.
-- Salva PNG/JPG no bucket `brand-assets`, path `workspace_id/brand_id/generated/file`.
-- Atualiza `generated_assets` para `ready`.
-- Cria `approvals` com `target_type = generated_asset`.
+- Quando `copy_json.slides` possui multiplos slides, chama `RENDER_INTERNAL_URL/render-carousel`.
+- Salva um ou mais PNG/JPG no bucket `brand-assets`, path `workspace_id/brand_id/generated/file`.
+- Atualiza um ou mais `generated_assets` para `ready`.
+- Cria `approvals` com `target_type = generated_asset` para cada preview gerado.
 - Registra `job_runs` e `automation_logs`.
 
 Estado atual do job `generate_content_plan`:
@@ -337,11 +337,14 @@ flowchart TD
   C --> D["BullMQ enfileira render_preview"]
   D --> E["Worker carrega content_item.copy_json"]
   E --> F["Monta RenderRequestSchema"]
-  F --> G["Render service /render"]
-  G --> H["Retorna base64 PNG/JPG + post_render_qa"]
-  H --> I["Worker salva arquivo no Storage brand-assets"]
-  I --> J["Atualiza generated_assets"]
-  J --> K["Abre aprovacao humana"]
+  F --> G{"Item tem slides?"}
+  G -- "nao" --> H["Render service /render"]
+  G -- "sim" --> I["Render service /render-carousel"]
+  H --> J["Retorna base64 PNG/JPG + post_render_qa"]
+  I --> J
+  J --> K["Worker salva arquivo(s) no Storage brand-assets"]
+  K --> L["Atualiza generated_assets"]
+  L --> M["Abre aprovacao humana por preview"]
 ```
 
 ### 6.5 Fluxo atual de geracao de plano
@@ -568,6 +571,7 @@ Rotas demo verificadas com HTTP 200:
 - Planejamento manual de conteudo com planos e itens.
 - Geracao mockada de planos e itens via orchestrator.
 - Fila inicial de render preview com persistencia em `generated_assets`.
+- Render preview inicial para posts unicos e carrosseis.
 - Gestao inicial de membros e roles do workspace.
 - Convites por e-mail com aceite autenticado.
 - CI do monorepo com typecheck, testes e build.
@@ -582,7 +586,7 @@ Rotas demo verificadas com HTTP 200:
 - Orchestrator: implementado, mas precisa Redis + Supabase real para fluxo ponta a ponta.
 - Upload real: implementado no web, mas depende de Supabase Storage configurado.
 - Jobs: contrato, worker, painel visual e retry inicial existem, mas falta integracao ponta a ponta real em ambiente com Redis/Supabase.
-- Render preview: implementado no orchestrator/web, mas precisa ambiente real com Redis, Supabase Storage e render service rodando para teste ponta a ponta.
+- Render preview: posts unicos/carrosseis implementados no orchestrator/web, mas precisam ambiente real com Redis, Supabase Storage e render service rodando para teste ponta a ponta.
 - Geracao de plano: job mockado implementado, mas precisa provider IA real para producao.
 - Gestao de membros: CRUD inicial por `user_id` e convite por link existem, mas falta envio de e-mail transacional.
 - Convites: implementados no schema e web, mas ainda sem envio de e-mail transacional.
@@ -591,7 +595,7 @@ Rotas demo verificadas com HTTP 200:
 
 - IA real para memoria de marca.
 - IA real para geracao de planos e itens.
-- Render preview avancado com carrossel, escolha assistida de template e assets reais da marca.
+- Render preview avancado com escolha assistida de template e assets reais da marca.
 - Envio de e-mail transacional para convites.
 - Testes SQL/RLS automatizados.
 
@@ -624,7 +628,7 @@ Ordem sugerida:
 3. Criar seed real para workspace, marca, assets e memoria.
 4. Subir Supabase/Redis/render local e validar fluxos reais de `generate_brand_memory`, `generate_content_plan` e `render_preview`.
 5. Integrar `generate_brand_memory` e `generate_content_plan` com provider IA.
-6. Evoluir render preview para selecionar templates/assets e suportar carrossel.
+6. Evoluir render preview para selecionar templates/assets reais da marca.
 7. Adicionar envio transacional de e-mail para convites.
 8. Adicionar testes SQL/RLS automatizados.
 
