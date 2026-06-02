@@ -12,6 +12,7 @@ import {
   getDemoTemplatePlaceholders,
   isDemoMode,
 } from '@/lib/demo';
+import { submitCreativeDocumentApproval, updateCreativeElement } from '../actions';
 
 type CreativeDocumentRow = {
   id: string;
@@ -83,7 +84,11 @@ function formatDate(value?: string) {
 
 function assetLabel(asset?: AssetRow) {
   if (!asset) return 'Sem asset aplicado';
-  return `${asset.file_name} · ${asset.category}`;
+  return `${asset.file_name} - ${asset.category}`;
+}
+
+function assetRef(assetSource?: string, assetId?: string) {
+  return assetSource && assetId ? `${assetSource}:${assetId}` : '';
 }
 
 function styleNumber(value: unknown, fallback: number) {
@@ -250,14 +255,16 @@ export default async function EditorDetailPage({
     <AppShell>
       <div className="toolbar">
         <div>
-          <small className="muted">{documentRow.brands?.name ?? 'Marca'} · {documentRow.template_ref} · {statusLabel(documentRow.status)}</small>
+          <small className="muted">{documentRow.brands?.name ?? 'Marca'} - {documentRow.template_ref} - {statusLabel(documentRow.status)}</small>
           <h1>{documentRow.title}</h1>
           <p className="muted">Editor assistido para revisar texto, placeholders, logos, imagens e versoes antes da aprovacao.</p>
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <Link className="button secondary" href="/editor">Voltar</Link>
           {documentRow.content_item_id ? <Link className="button secondary" href={`/plans/demo-plan-aurora-2026-06#item-${documentRow.content_item_id}`}>Ver item</Link> : null}
-          <Link className="button" href="/approvals?target_type=creative_document">Enviar para aprovacao</Link>
+          <form action={submitCreativeDocumentApproval.bind(null, documentRow.id)}>
+            <button type="submit">Enviar para aprovacao</button>
+          </form>
         </div>
       </div>
 
@@ -274,7 +281,7 @@ export default async function EditorDetailPage({
               {placeholders.map((placeholder) => (
                 <article className="mini-card" key={placeholder.placeholder_key}>
                   <strong>{placeholder.placeholder_key}</strong>
-                  <p className="muted">{placeholder.kind} · {placeholder.role} · {placeholder.required ? 'obrigatorio' : 'opcional'}</p>
+                  <p className="muted">{placeholder.kind} - {placeholder.role} - {placeholder.required ? 'obrigatorio' : 'opcional'}</p>
                 </article>
               ))}
               {placeholders.length === 0 ? <p className="muted">Sem placeholders cadastrados para este template.</p> : null}
@@ -285,7 +292,7 @@ export default async function EditorDetailPage({
             <div className="grid" style={{ marginTop: 8 }}>
               {versions.map((version) => (
                 <article className="mini-card" key={version.id}>
-                  <strong>v{version.version} · {statusLabel(version.status)}</strong>
+                  <strong>v{version.version} - {statusLabel(version.status)}</strong>
                   <p className="muted">{version.change_summary ?? 'Sem resumo.'}</p>
                   <small className="muted">{formatDate(version.created_at)}</small>
                 </article>
@@ -304,32 +311,43 @@ export default async function EditorDetailPage({
             <div className="toolbar" style={{ marginBottom: 10 }}>
               <div>
                 <h2>Elementos editaveis</h2>
-                <p className="muted">Campos que o designer deve revisar antes de renderizar a versao final.</p>
+                <p className="muted">Campos que o designer revisa antes de renderizar a versao final.</p>
               </div>
               <span className="muted">{creativeDocument.slides.length} slide(s)</span>
             </div>
             <div className="grid two">
               {editableElements.map((element) => (
-                <article className="card" key={`${element.slide_id}-${element.id}`}>
-                  <small className="muted">{element.slide_id} · {element.placeholder ?? element.role}</small>
+                <form action={updateCreativeElement.bind(null, documentRow.id)} className="card grid" key={`${element.slide_id}-${element.id}`}>
+                  <input type="hidden" name="slide_id" value={element.slide_id} />
+                  <input type="hidden" name="element_id" value={element.id} />
+                  <input type="hidden" name="element_type" value={element.type} />
+                  <small className="muted">{element.slide_id} - {element.placeholder ?? element.role}</small>
                   <h3>{element.role}</h3>
                   {element.type === 'text' ? (
                     <label>
                       Texto
-                      <textarea defaultValue={element.text ?? ''} />
+                      <textarea name="text" defaultValue={element.text ?? ''} />
                     </label>
                   ) : (
                     <div>
                       <p className="muted">Asset aplicado: {assetLabel(element.asset_id ? assetsById[element.asset_id] : undefined)}</p>
-                      <select defaultValue={element.asset_id ?? ''}>
+                      <select name="asset_ref" defaultValue={assetRef(element.asset_source, element.asset_id)}>
                         <option value="">Sem asset</option>
-                        {allAssets.map((asset) => (
-                          <option value={asset.id} key={asset.id}>{asset.file_name} · {asset.category}</option>
+                        {brandAssets.map((asset) => (
+                          <option value={`brand_asset:${asset.id}`} key={asset.id}>{asset.file_name} - marca - {asset.category}</option>
+                        ))}
+                        {globalAssets.map((asset) => (
+                          <option value={`global_asset:${asset.id}`} key={asset.id}>{asset.file_name} - global - {asset.category}</option>
                         ))}
                       </select>
                     </div>
                   )}
-                </article>
+                  <label>
+                    Resumo da mudanca
+                    <input name="change_summary" placeholder="Ex.: revisei headline, troquei logo, ajustei CTA" />
+                  </label>
+                  <button className="secondary" type="submit">Salvar versao</button>
+                </form>
               ))}
             </div>
           </section>
@@ -346,7 +364,7 @@ export default async function EditorDetailPage({
                 {asset.signedUrl ? <img alt={asset.file_name} src={asset.signedUrl} /> : null}
                 <div>
                   <strong>{asset.file_name}</strong>
-                  <p className="muted">{asset.category} · {asset.mime_type}</p>
+                  <p className="muted">{asset.category} - {asset.mime_type}</p>
                 </div>
               </article>
             ))}
@@ -361,7 +379,7 @@ export default async function EditorDetailPage({
                 {asset.signedUrl ? <img alt={asset.file_name} src={asset.signedUrl} /> : null}
                 <div>
                   <strong>{asset.file_name}</strong>
-                  <p className="muted">{asset.category} · {(asset.metadata?.tags ?? []).join(', ')}</p>
+                  <p className="muted">{asset.category} - {(asset.metadata?.tags ?? []).join(', ')}</p>
                 </div>
               </article>
             ))}

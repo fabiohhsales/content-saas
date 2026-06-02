@@ -85,6 +85,7 @@ Arquivos-chave:
 - `apps/web/src/app/plans/actions.ts`: server actions de planos, itens e aprovacao.
 - `apps/web/src/app/editor/page.tsx`: lista documentos criativos editaveis derivados de previews.
 - `apps/web/src/app/editor/[documentId]/page.tsx`: revisao assistida por placeholders, assets, biblioteca global e versoes.
+- `apps/web/src/app/editor/actions.ts`: salva edicoes de elementos, cria versoes e envia documentos criativos para aprovacao.
 - `apps/web/src/app/templates/page.tsx`: biblioteca de templates.
 - `apps/web/src/app/templates/[templateId]/page.tsx`: detalhe de contrato/campos do template.
 - `apps/web/src/app/approvals/page.tsx`: central de aprovacao humana com links para alvos.
@@ -594,7 +595,7 @@ Rotas demo verificadas com HTTP 200:
 - Upload real: implementado no web, mas depende de Supabase Storage configurado.
 - Jobs: contrato, worker, painel visual e retry inicial existem, mas falta integracao ponta a ponta real em ambiente com Redis/Supabase.
 - Render preview: posts unicos/carrosseis implementados no orchestrator/web, mas precisam ambiente real com Redis, Supabase Storage e render service rodando para teste ponta a ponta.
-- Editor assistido: contratos, tabelas, demo e UI inicial existem, mas ainda falta persistencia de edicao via server action e render final de `creative_documents`.
+- Editor assistido: contratos, tabelas, demo, UI inicial, persistencia de edicao e aprovacao existem, mas ainda falta render final de `creative_documents`.
 - Geracao de plano: job mockado implementado, mas precisa provider IA real para producao.
 - Gestao de membros: CRUD inicial por `user_id` e convite por link existem, mas falta envio de e-mail transacional.
 - Convites: implementados no schema e web, mas ainda sem envio de e-mail transacional.
