@@ -208,6 +208,118 @@ export const demoAutomationLogs = [
   },
 ];
 
+export const demoTemplates = [
+  {
+    id: 'template-demo-photo-overlay',
+    workspace_id: null,
+    template_id: 'photo-overlay-01',
+    name: 'Photo overlay',
+    type: 'post_unico',
+    recommended_use: 'Post de impacto com foto principal, headline curta e CTA.',
+    status: 'available',
+    schema_json: {
+      schema_version: 1,
+      fields: [
+        { key: 'eyebrow', label: 'Eyebrow', max_chars: 32, required: false },
+        { key: 'headline', label: 'Headline', max_chars: 72, required: true },
+        { key: 'body', label: 'Texto de apoio', max_chars: 160, required: false },
+        { key: 'cta', label: 'CTA', max_chars: 42, required: false },
+      ],
+      asset_slots: {
+        photo: { required: true, accepted_types: ['image/jpeg', 'image/png'] },
+        logo: { required: false, accepted_types: ['image/png'] },
+      },
+    },
+    render_contract_json: {
+      schema_version: 1,
+      endpoint: '/render',
+      output_formats: ['png', 'jpg'],
+      supports_design_tokens: true,
+      supports_decorators: true,
+    },
+  },
+  {
+    id: 'template-demo-triptych',
+    workspace_id: null,
+    template_id: 'triptych-grid-01',
+    name: 'Triptych grid',
+    type: 'carrossel',
+    recommended_use: 'Sequencia educativa com tres blocos visuais e ritmo de leitura claro.',
+    status: 'available',
+    schema_json: {
+      schema_version: 1,
+      fields: [
+        { key: 'headline', label: 'Headline', max_chars: 64, required: true },
+        { key: 'card_1', label: 'Card 1', max_chars: 90, required: true },
+        { key: 'card_2', label: 'Card 2', max_chars: 90, required: true },
+        { key: 'card_3', label: 'Card 3', max_chars: 90, required: true },
+      ],
+      asset_slots: {
+        logo: { required: false, accepted_types: ['image/png'] },
+      },
+    },
+    render_contract_json: {
+      schema_version: 1,
+      endpoint: '/render',
+      output_formats: ['png', 'jpg'],
+      supports_design_tokens: true,
+      supports_decorators: false,
+    },
+  },
+  {
+    id: 'template-demo-statement',
+    workspace_id: null,
+    template_id: 'statement-dark-01',
+    name: 'Statement dark',
+    type: 'post_unico',
+    recommended_use: 'Frase forte, tese editorial ou posicionamento de marca.',
+    status: 'available',
+    schema_json: {
+      schema_version: 1,
+      fields: [
+        { key: 'headline', label: 'Statement', max_chars: 110, required: true },
+        { key: 'highlight_box', label: 'Destaque', max_chars: 70, required: false },
+        { key: 'brand_name', label: 'Marca', max_chars: 40, required: false },
+      ],
+      asset_slots: {
+        logo: { required: false, accepted_types: ['image/png'] },
+      },
+    },
+    render_contract_json: {
+      schema_version: 1,
+      endpoint: '/render',
+      output_formats: ['png', 'jpg'],
+      supports_design_tokens: true,
+      supports_decorators: true,
+    },
+  },
+  {
+    id: 'template-demo-paper-editorial',
+    workspace_id: null,
+    template_id: 'paper-editorial-01',
+    name: 'Paper editorial',
+    type: 'post_unico',
+    recommended_use: 'Conteudo editorial premium, explicativo e com pouca dependencia de foto.',
+    status: 'available',
+    schema_json: {
+      schema_version: 1,
+      fields: [
+        { key: 'eyebrow', label: 'Eyebrow', max_chars: 28, required: false },
+        { key: 'headline', label: 'Headline', max_chars: 84, required: true },
+        { key: 'body', label: 'Corpo', max_chars: 220, required: true },
+      ],
+      asset_slots: {},
+    },
+    render_contract_json: {
+      schema_version: 1,
+      endpoint: '/render',
+      output_formats: ['png', 'jpg'],
+      supports_design_tokens: true,
+      supports_decorators: false,
+    },
+  },
+];
+
 export function getDemoBrand(brandId: string) {
   return demoBrands.find((brand) => brand.id === brandId) ?? demoBrands[0]!;
 }
@@ -221,4 +333,8 @@ export function getDemoAssets(brandId: string, category?: string) {
 
 export function getDemoMemories(brandId: string) {
   return demoMemories.filter((memory) => memory.brand_id === brandId || brandId !== DEMO_BRAND_ID);
+}
+
+export function getDemoTemplate(templateId: string) {
+  return demoTemplates.find((template) => template.template_id === templateId || template.id === templateId) ?? demoTemplates[0]!;
 }

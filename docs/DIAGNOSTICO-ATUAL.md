@@ -59,6 +59,7 @@ Responsavel pela experiencia do usuario:
 - Detalhe/edicao de marca em `/brands/[brandId]`.
 - Wizard de onboarding da marca em `/brands/[brandId]/onboarding`.
 - Biblioteca de assets em `/brands/[brandId]/assets`.
+- Biblioteca de templates em `/templates` e detalhe em `/templates/[templateId]`.
 - Painel de jobs/logs em `/jobs`, com filtros e retry manual para jobs suportados.
 - Healthcheck em `/api/health`.
 
@@ -68,6 +69,8 @@ Arquivos-chave:
 - `apps/web/src/lib/demo.ts`: dados ficticios para navegacao local.
 - `apps/web/src/lib/supabase.ts`: client Supabase SSR.
 - `apps/web/src/app/brands/actions.ts`: server actions de marcas, assets e memoria.
+- `apps/web/src/app/templates/page.tsx`: biblioteca de templates.
+- `apps/web/src/app/templates/[templateId]/page.tsx`: detalhe de contrato/campos do template.
 - `apps/web/src/app/jobs/page.tsx`: painel operacional de jobs e logs.
 - `apps/web/src/components/app-shell.tsx`: shell de navegacao.
 
@@ -227,6 +230,7 @@ flowchart TD
   E --> G["Biblioteca de assets"]
   E --> H["Memoria de marca mockada"]
   E --> I["Painel /jobs com execucoes e logs demo"]
+  E --> J["Biblioteca /templates com contratos demo"]
 ```
 
 Objetivo:
@@ -295,6 +299,8 @@ flowchart TD
 | `/brands/[brandId]` | funcional | edita marca e mostra memorias |
 | `/brands/[brandId]/onboarding` | funcional | wizard inicial |
 | `/brands/[brandId]/assets` | funcional | biblioteca e upload |
+| `/templates` | funcional | biblioteca de templates; demo ativo |
+| `/templates/[templateId]` | funcional | detalhe de campos, slots e contrato |
 | `/jobs` | funcional | painel de job_runs e automation_logs, filtros e retry; demo ativo |
 | `/api/health` | funcional | healthcheck web |
 
@@ -376,6 +382,8 @@ Rotas demo verificadas com HTTP 200:
 - `/brands/demo-brand-health-grow`
 - `/brands/demo-brand-health-grow/onboarding`
 - `/brands/demo-brand-health-grow/assets`
+- `/templates`
+- `/templates/photo-overlay-01`
 - `/jobs`
 
 ## 10. Diagnostico de maturidade
@@ -384,6 +392,7 @@ Rotas demo verificadas com HTTP 200:
 
 - Navegacao demo local.
 - Estrutura de marca e assets.
+- Biblioteca inicial de templates.
 - Memoria de marca mockada.
 - Painel inicial de jobs/logs no web.
 - Arquitetura de monorepo.
@@ -402,7 +411,6 @@ Rotas demo verificadas com HTTP 200:
 - CRUD de content plans e content items.
 - Tela de approvals.
 - Render preview integrado ao web/orchestrator.
-- Biblioteca visual de templates.
 - Gestao de membros do workspace.
 - CI GitHub Actions.
 - Testes SQL/RLS automatizados.
@@ -436,11 +444,10 @@ Ordem sugerida:
 3. Criar seed real para workspace, marca, assets e memoria.
 4. Subir Supabase/Redis local e validar fluxo real de `generate_brand_memory`.
 5. Integrar `generate_brand_memory` real com provider IA.
-6. Criar biblioteca de templates no web.
-7. Criar fluxo de render preview e salvar em `generated_assets`.
-8. Implementar approvals para memoria, plano e asset gerado.
-9. Criar CRUD de content plans e content items.
-10. Adicionar CI no GitHub Actions.
+6. Criar fluxo de render preview e salvar em `generated_assets`.
+7. Implementar approvals para memoria, plano e asset gerado.
+8. Criar CRUD de content plans e content items.
+9. Adicionar CI no GitHub Actions.
 
 ## 13. Checklist de handoff
 
