@@ -169,6 +169,7 @@ Responsavel por transformar templates HTML/CSS em imagens:
 - `POST /render`
 - `POST /render-dynamic`
 - `POST /render-carousel`
+- `POST /render-document`
 
 Estado atual:
 
@@ -176,6 +177,7 @@ Estado atual:
 - Templates HTML foram copiados para `apps/render/templates-html`.
 - Render usa Playwright/Chromium.
 - Suporta `output_format: "png" | "jpg"`, mantendo `png` como default.
+- Renderiza `creative_documents.document_json` em PNG/JPG por slide via `/render-document`.
 - Smoke tests renderizam todos os templates locais.
 
 Arquivos-chave:
@@ -595,7 +597,7 @@ Rotas demo verificadas com HTTP 200:
 - Upload real: implementado no web, mas depende de Supabase Storage configurado.
 - Jobs: contrato, worker, painel visual e retry inicial existem, mas falta integracao ponta a ponta real em ambiente com Redis/Supabase.
 - Render preview: posts unicos/carrosseis implementados no orchestrator/web, mas precisam ambiente real com Redis, Supabase Storage e render service rodando para teste ponta a ponta.
-- Editor assistido: contratos, tabelas, demo, UI inicial, persistencia de edicao e aprovacao existem, mas ainda falta render final de `creative_documents`.
+- Editor assistido: contratos, tabelas, demo, UI inicial, persistencia de edicao, aprovacao e endpoint de render final existem, mas ainda falta job do orchestrator para persistir o render final de `creative_documents` no Storage.
 - Geracao de plano: job mockado implementado, mas precisa provider IA real para producao.
 - Gestao de membros: CRUD inicial por `user_id` e convite por link existem, mas falta envio de e-mail transacional.
 - Convites: implementados no schema e web, mas ainda sem envio de e-mail transacional.
@@ -604,6 +606,7 @@ Rotas demo verificadas com HTTP 200:
 
 - IA real para memoria de marca.
 - IA real para geracao de planos e itens.
+- Job de render final para `creative_documents`, com upload no Storage e vinculo a `creative_renders`.
 - Render preview avancado com escolha assistida de template e assets reais da marca.
 - Envio de e-mail transacional para convites.
 - Testes SQL/RLS automatizados.

@@ -76,6 +76,54 @@ export interface RenderDynamicRequest extends RenderSlide {
   template_source: DynamicTemplateSource;
 }
 
+export interface CreativeRenderElement {
+  id: string;
+  type: 'text' | 'image' | 'shape';
+  role: string;
+  placeholder?: string;
+  locked?: boolean;
+  visible?: boolean;
+  text?: string;
+  asset_id?: string;
+  asset_source?: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation?: number;
+  style?: Record<string, string | number | boolean | null>;
+}
+
+export interface CreativeRenderSlide {
+  id: string;
+  name?: string;
+  elements: CreativeRenderElement[];
+  background?: {
+    color?: string;
+    asset_id?: string;
+    asset_source?: string;
+  };
+}
+
+export interface CreativeRenderDocument {
+  schema_version: number;
+  canvas: {
+    width: number;
+    height: number;
+    format: string;
+  };
+  template_id: string;
+  brand_id: string;
+  slides: CreativeRenderSlide[];
+  tokens?: Record<string, string>;
+}
+
+export interface CreativeRenderRequest {
+  document: CreativeRenderDocument;
+  asset_urls?: Record<string, string>;
+  output_format?: 'png' | 'jpg';
+}
+
 export interface RenderCarouselResponse {
   slides: string[]; // base64 PNG array
   count: number;

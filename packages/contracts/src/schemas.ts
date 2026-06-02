@@ -307,6 +307,19 @@ export const CreativeRenderSchema = z.object({
   metadata: z.record(z.unknown()).default({ schema_version: 1 }),
 });
 
+export const CreativeRenderRequestSchema = z.object({
+  document: CreativeDocumentJsonSchema,
+  asset_urls: z.record(z.string()).default({}),
+  output_format: RenderOutputFormatSchema.default('png'),
+});
+
+export const CreativeRenderResponseSchema = z.object({
+  slides: z.array(z.string()),
+  output_format: RenderOutputFormatSchema,
+  post_render_qa: z.array(z.record(z.unknown())).optional(),
+  count: z.number().int().nonnegative(),
+});
+
 export const GeneratedAssetSchema = z.object({
   id: z.string().uuid(),
   workspace_id: z.string().uuid(),
@@ -414,6 +427,8 @@ export type TemplatePlaceholder = z.infer<typeof TemplatePlaceholderSchema>;
 export type CreativeDocument = z.infer<typeof CreativeDocumentSchema>;
 export type CreativeVersion = z.infer<typeof CreativeVersionSchema>;
 export type CreativeRender = z.infer<typeof CreativeRenderSchema>;
+export type CreativeRenderRequest = z.infer<typeof CreativeRenderRequestSchema>;
+export type CreativeRenderResponse = z.infer<typeof CreativeRenderResponseSchema>;
 export type GeneratedAsset = z.infer<typeof GeneratedAssetSchema>;
 export type GenerateBrandMemoryInput = z.infer<typeof GenerateBrandMemoryInputSchema>;
 export type GenerateBrandMemoryOutput = z.infer<typeof GenerateBrandMemoryOutputSchema>;

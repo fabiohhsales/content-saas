@@ -1,6 +1,6 @@
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { renderDynamicSlide, renderSlide, closeBrowser, injectDesignTokens } from '../src/renderer.js';
+import { renderCreativeDocument, renderDynamicSlide, renderSlide, closeBrowser, injectDesignTokens } from '../src/renderer.js';
 import { listTemplates, loadSchema } from '../src/template-loader.js';
 import { RenderFields, RenderSlide } from '../src/types.js';
 
@@ -342,4 +342,60 @@ test('visual_diagnostics marca clipped e frase incompleta no campo cortado', asy
   assert.ok(field, 'expected headline field diagnostic');
   assert.equal(field!.clipped, true, 'headline deveria estar clipado');
   assert.ok(field!.box.width > 0, 'expected field box measured');
+});
+
+test('renderCreativeDocument renders editable document slides', async () => {
+  const outcomes = await renderCreativeDocument(
+    {
+      schema_version: 1,
+      canvas: { width: 1080, height: 1350, format: 'instagram_post' },
+      template_id: 'assisted-editor-smoke',
+      brand_id: 'brand-smoke',
+      tokens: {
+        background_color: '#f7f7f4',
+        text_color: '#1f2933',
+        font_family: 'Arial',
+      },
+      slides: [
+        {
+          id: 'slide-1',
+          name: 'Smoke',
+          background: { color: '#f7f7f4' },
+          elements: [
+            {
+              id: 'headline',
+              type: 'text',
+              role: 'headline',
+              visible: true,
+              text: 'Editor assistido renderiza versao final',
+              x: 80,
+              y: 260,
+              width: 760,
+              height: 220,
+              rotation: 0,
+              style: { font_size: 64, font_weight: 700, color: '#1f2933' },
+            },
+            {
+              id: 'cta',
+              type: 'shape',
+              role: 'shape',
+              visible: true,
+              x: 80,
+              y: 1030,
+              width: 420,
+              height: 86,
+              rotation: 0,
+              style: { color: '#0f766e', radius: 8 },
+            },
+          ],
+        },
+      ],
+    },
+    {},
+    'png',
+  );
+
+  assert.equal(outcomes.length, 1);
+  assert.ok(outcomes[0]!.buffer.length > 50000, `expected creative PNG > 50KB, got ${outcomes[0]!.buffer.length} bytes`);
+  assert.equal(outcomes[0]!.post_render_qa.density_status, 'ok');
 });

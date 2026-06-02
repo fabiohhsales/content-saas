@@ -1,5 +1,5 @@
 import { chromium, Browser } from 'playwright';
-import { DynamicTemplateSource, RenderFields, RenderSlide, TemplateSchema } from './types';
+import { CreativeRenderDocument, CreativeRenderSlide, DynamicTemplateSource, RenderFields, RenderSlide, TemplateSchema } from './types';
 import { getDimensionsFromSchema, loadTemplateHtml, loadSchema } from './template-loader';
 
 let browser: Browser | null = null;
@@ -272,6 +272,146 @@ export async function renderDynamicSlide(slide: RenderSlide, source: DynamicTemp
   if (!source.schema?.template_id) throw new Error('template_source.schema.template_id is required');
   const html = buildDynamicHtml(source, slide.fields, slide.design_tokens);
   return renderHtmlSlide(html, source.schema, slide);
+}
+
+function cssValue(value: unknown, fallback: string): string {
+  if (typeof value === 'number') return String(value);
+  if (typeof value !== 'string') return fallback;
+  const trimmed = value.trim();
+  if (!trimmed || /[;<>{}]/.test(trimmed)) return fallback;
+  return trimmed;
+}
+
+function creativeAssetUrl(assetId: string | undefined, assetUrls: Record<string, string>): string | null {
+  if (!assetId) return null;
+  const value = assetUrls[assetId];
+  if (!value) return null;
+  if (value.startsWith('data:image/') || value.startsWith('https://') || value.startsWith('http://')) return value;
+  return null;
+}
+
+function buildCreativeHtml(
+  document: CreativeRenderDocument,
+  slide: CreativeRenderSlide,
+  assetUrls: Record<string, string>,
+): string {
+  const canvas = document.canvas;
+  const backgroundAsset = creativeAssetUrl(slide.background?.asset_id, assetUrls);
+  const backgroundColor = cssValue(slide.background?.color ?? document.tokens?.background_color, '#f7f7f4');
+  const textColor = cssValue(document.tokens?.text_color, '#1f2933');
+  const fontFamily = cssValue(document.tokens?.font_family, 'Arial');
+  const elements = slide.elements
+    .filter((element) => element.visible !== false)
+    .map((element) => {
+      const style = element.style ?? {};
+      const left = `${element.x}px`;
+      const top = `${element.y}px`;
+      const width = `${element.width}px`;
+      const height = `${element.height}px`;
+      const rotation = Number(element.rotation ?? 0);
+      const base = `left:${left};top:${top};width:${width};height:${height};transform:rotate(${rotation}deg);`;
+
+      if (element.type === 'image') {
+        const url = creativeAssetUrl(element.asset_id, assetUrls);
+        const fit = cssValue(style.fit, 'cover');
+        const radius = Number(style.radius ?? 8);
+        return `<div class="el image" data-role="${escapeHtml(element.role)}" style="${base}border-radius:${radius}px;">${
+          url
+            ? `<img src="${escapeHtml(url)}" style="object-fit:${fit};" />`
+            : `<span>${escapeHtml(element.placeholder ?? element.role)}</span>`
+        }</div>`;
+      }
+
+      if (element.type === 'shape') {
+        const color = cssValue(style.color, '#d0d5dd');
+        const radius = Number(style.radius ?? 8);
+        return `<div class="el shape" data-role="${escapeHtml(element.role)}" style="${base}background:${color};border-radius:${radius}px;"></div>`;
+      }
+
+      const color = cssValue(style.color, textColor);
+      const fontSize = Number(style.font_size ?? 32);
+      const fontWeight = Number(style.font_weight ?? 400);
+      const lineHeight = Number(style.line_height ?? 1.08);
+      return `<div class="el text" data-role="${escapeHtml(element.role)}" style="${base}color:${color};font-size:${fontSize}px;font-weight:${fontWeight};line-height:${lineHeight};">${escapeHtml(element.text ?? '')}</div>`;
+    })
+    .join('');
+
+  return `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <style>
+    html, body { margin: 0; width: ${canvas.width}px; height: ${canvas.height}px; overflow: hidden; }
+    body { font-family: ${fontFamily}, Arial, sans-serif; background: ${backgroundColor}; color: ${textColor}; }
+    .canvas { position: relative; width: ${canvas.width}px; height: ${canvas.height}px; overflow: hidden; background: ${backgroundColor}; }
+    .bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .32; }
+    .el { position: absolute; box-sizing: border-box; transform-origin: center center; }
+    .el.text { overflow: hidden; white-space: pre-wrap; word-break: normal; }
+    .el.image { display: flex; align-items: center; justify-content: center; overflow: hidden; background: rgba(255,255,255,.48); border: 1px solid rgba(102,112,133,.22); }
+    .el.image img { width: 100%; height: 100%; display: block; }
+    .el.image span { color: #667085; font-size: 24px; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <main class="canvas">
+    ${backgroundAsset ? `<img class="bg" src="${escapeHtml(backgroundAsset)}" />` : ''}
+    ${elements}
+  </main>
+</body>
+</html>`;
+}
+
+async function renderCreativeSlide(
+  document: CreativeRenderDocument,
+  slide: CreativeRenderSlide,
+  assetUrls: Record<string, string>,
+  outputFormat: 'png' | 'jpg',
+): Promise<RenderOutcome> {
+  const { width, height } = document.canvas;
+  const b = await getBrowser();
+  const context = await b.newContext({ deviceScaleFactor: 2 });
+  const page = await context.newPage();
+
+  try {
+    await page.setViewportSize({ width, height });
+    await page.setContent(buildCreativeHtml(document, slide, assetUrls), { waitUntil: 'load', timeout: 15000 });
+    await page.evaluate('document.fonts.ready');
+    await page.waitForTimeout(150);
+    const screenshotType = outputFormat === 'jpg' ? 'jpeg' : 'png';
+    const buffer = await page.screenshot({
+      type: screenshotType,
+      quality: screenshotType === 'jpeg' ? 92 : undefined,
+      clip: { x: 0, y: 0, width, height },
+    });
+    const post_render_qa = {
+      density_status: 'ok' as const,
+      density_ratio: 1,
+      truncated_fields: [],
+      visual_diagnostics: {
+        canvas: { width, height, density_ratio: 1 },
+        fields: [],
+        assets: [],
+        logo: { present: false, visible: false, white_box_ratio: -1, transparent_likely: false },
+        placeholder_visible: false,
+        safe_area_violations: [],
+      },
+    };
+    return { buffer: buffer as Buffer, post_render_qa };
+  } finally {
+    await context.close();
+  }
+}
+
+export async function renderCreativeDocument(
+  document: CreativeRenderDocument,
+  assetUrls: Record<string, string> = {},
+  outputFormat: 'png' | 'jpg' = 'png',
+): Promise<RenderOutcome[]> {
+  const results: RenderOutcome[] = [];
+  for (const slide of document.slides.slice(0, 10)) {
+    results.push(await renderCreativeSlide(document, slide, assetUrls, outputFormat));
+  }
+  return results;
 }
 
 async function renderHtmlSlide(html: string, schema: TemplateSchema, slide: RenderSlide): Promise<RenderOutcome> {

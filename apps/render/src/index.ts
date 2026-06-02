@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
-import { RenderRequestSchema } from '@content-saas/contracts';
-import { renderCarousel, renderDynamicSlide, renderSlide, closeBrowser } from './renderer';
+import { CreativeRenderRequestSchema, RenderRequestSchema } from '@content-saas/contracts';
+import { renderCarousel, renderCreativeDocument, renderDynamicSlide, renderSlide, closeBrowser } from './renderer';
 import { listTemplates, loadSchema } from './template-loader';
 import { RenderCarouselRequest, RenderDynamicRequest, RenderSlide } from './types';
 
@@ -105,6 +105,26 @@ app.post('/render-carousel', async (req: Request, res: Response) => {
 });
 
 // ─── Graceful shutdown ────────────────────────────────────────────────────────
+
+app.post('/render-document', async (req: Request, res: Response) => {
+  const parsed = CreativeRenderRequestSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: 'invalid creative render payload', issues: parsed.error.issues });
+  }
+
+  try {
+    const outcomes = await renderCreativeDocument(parsed.data.document, parsed.data.asset_urls, parsed.data.output_format);
+    return res.json({
+      slides: outcomes.map((outcome) => outcome.buffer.toString('base64')),
+      output_format: parsed.data.output_format,
+      post_render_qa: outcomes.map((outcome) => outcome.post_render_qa),
+      count: outcomes.length,
+    });
+  } catch (err: any) {
+    console.error('[/render-document] error:', err.message);
+    return res.status(500).json({ error: err.message });
+  }
+});
 
 process.on('SIGTERM', async () => {
   await closeBrowser();
