@@ -132,6 +132,107 @@ export const demoAssets = [
   },
 ];
 
+export const demoAssetCollections = [
+  {
+    id: '00000000-0000-4000-8000-000000000301',
+    workspace_id: null,
+    brand_id: null,
+    scope: 'global',
+    name: 'Elementos editoriais globais',
+    slug: 'elementos-editoriais-globais',
+    status: 'active',
+    metadata: { schema_version: 1, description: 'Fundos, formas e icones reutilizaveis por qualquer workspace.' },
+  },
+  {
+    id: '00000000-0000-4000-8000-000000000302',
+    workspace_id: DEMO_WORKSPACE_ID,
+    brand_id: DEMO_BRAND_ID,
+    scope: 'brand',
+    name: 'Assets aprovados Clinica Aurora',
+    slug: 'assets-aprovados-clinica-aurora',
+    status: 'active',
+    metadata: { schema_version: 1, description: 'Logos, fotos e referencias que preservam a memoria de marca.' },
+  },
+];
+
+export const demoGlobalAssets = [
+  {
+    id: '00000000-0000-4000-8000-000000000401',
+    workspace_id: null,
+    collection_id: '00000000-0000-4000-8000-000000000301',
+    category: 'background',
+    status: 'ready',
+    storage_bucket: 'global-assets',
+    storage_path: 'global/backgrounds/paper-soft.png',
+    file_name: 'paper-soft.png',
+    mime_type: 'image/png',
+    size_bytes: 184200,
+    metadata: { schema_version: 1, tags: ['editorial', 'clean', 'premium'], dominant_color: '#f7f7f4' },
+    signedUrl: assetImage('Fundo editorial', '#f7f7f4', '#98a2b3'),
+  },
+  {
+    id: '00000000-0000-4000-8000-000000000402',
+    workspace_id: null,
+    collection_id: '00000000-0000-4000-8000-000000000301',
+    category: 'icon',
+    status: 'ready',
+    storage_bucket: 'global-assets',
+    storage_path: 'global/icons/check-clinical.png',
+    file_name: 'check-clinical.png',
+    mime_type: 'image/png',
+    size_bytes: 44320,
+    metadata: { schema_version: 1, tags: ['saude', 'validacao', 'selo'], dominant_color: '#0f766e' },
+    signedUrl: assetImage('Icone saude', '#ecfdf3', '#0f766e'),
+  },
+  {
+    id: '00000000-0000-4000-8000-000000000403',
+    workspace_id: null,
+    collection_id: '00000000-0000-4000-8000-000000000301',
+    category: 'shape',
+    status: 'ready',
+    storage_bucket: 'global-assets',
+    storage_path: 'global/shapes/soft-frame.png',
+    file_name: 'soft-frame.png',
+    mime_type: 'image/png',
+    size_bytes: 92500,
+    metadata: { schema_version: 1, tags: ['moldura', 'minimal'], dominant_color: '#d0d5dd' },
+    signedUrl: assetImage('Moldura soft', '#f8fafc', '#344054'),
+  },
+];
+
+export const demoTemplatePlaceholders = [
+  {
+    id: '00000000-0000-4000-8000-000000000501',
+    workspace_id: null,
+    template_ref: 'photo-overlay-01',
+    placeholder_key: 'logo_primary',
+    kind: 'logo',
+    role: 'brand_logo',
+    required: false,
+    constraints_json: { schema_version: 1, accepted_sources: ['brand_asset'], accepted_categories: ['logo'] },
+  },
+  {
+    id: '00000000-0000-4000-8000-000000000502',
+    workspace_id: null,
+    template_ref: 'photo-overlay-01',
+    placeholder_key: 'hero_image',
+    kind: 'image',
+    role: 'hero_image',
+    required: true,
+    constraints_json: { schema_version: 1, accepted_sources: ['brand_asset', 'global_asset'], accepted_categories: ['photo', 'background'] },
+  },
+  {
+    id: '00000000-0000-4000-8000-000000000503',
+    workspace_id: null,
+    template_ref: 'paper-editorial-01',
+    placeholder_key: 'headline',
+    kind: 'text',
+    role: 'headline',
+    required: true,
+    constraints_json: { schema_version: 1, max_chars: 84 },
+  },
+];
+
 export const demoMemories = [
   {
     id: 'memory-aurora-v1',
@@ -417,6 +518,24 @@ export const demoApprovals = [
       template_id: 'photo-overlay-01',
     },
   },
+  {
+    id: 'approval-demo-creative-001',
+    workspace_id: DEMO_WORKSPACE_ID,
+    target_type: 'creative_document',
+    target_id: '00000000-0000-4000-8000-000000000602',
+    target_label: 'Carrossel editavel - 3 mitos sobre tratamento capilar',
+    status: 'pending',
+    decided_by: null,
+    decided_at: null,
+    notes: null,
+    created_at: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
+    metadata: {
+      schema_version: 1,
+      brand_id: DEMO_BRAND_ID,
+      template_ref: 'paper-editorial-01',
+      slides_count: 2,
+    },
+  },
 ];
 
 export const demoContentPlans = [
@@ -604,6 +723,175 @@ export const demoGeneratedAssets = [
   },
 ];
 
+export const demoCreativeDocuments = [
+  {
+    id: '00000000-0000-4000-8000-000000000601',
+    workspace_id: DEMO_WORKSPACE_ID,
+    brand_id: DEMO_BRAND_ID,
+    content_item_id: 'demo-content-item-001',
+    generated_asset_id: 'demo-generated-asset-001',
+    template_ref: 'photo-overlay-01',
+    title: 'Queda capilar persistente - versao editavel',
+    status: 'editing',
+    updated_at: new Date(Date.now() - 1000 * 60 * 11).toISOString(),
+    brands: { name: 'Clinica Aurora' },
+    document_json: {
+      schema_version: 1,
+      canvas: { width: 1080, height: 1350, format: 'instagram_post' },
+      template_id: 'photo-overlay-01',
+      brand_id: DEMO_BRAND_ID,
+      content_item_id: 'demo-content-item-001',
+      generated_asset_id: 'demo-generated-asset-001',
+      tokens: {
+        primary_color: '#0f766e',
+        background_color: '#f7f7f4',
+        text_color: '#1f2933',
+        font_family: 'Arial',
+      },
+      slides: [
+        {
+          id: 'slide-1',
+          name: 'Feed principal',
+          background: { color: '#f7f7f4', asset_id: '00000000-0000-4000-8000-000000000401', asset_source: 'global_asset' },
+          elements: [
+            {
+              id: 'logo',
+              type: 'image',
+              role: 'brand_logo',
+              placeholder: 'logo_primary',
+              locked: false,
+              visible: true,
+              asset_id: 'asset-logo-aurora',
+              asset_source: 'brand_asset',
+              x: 72,
+              y: 68,
+              width: 180,
+              height: 72,
+              rotation: 0,
+              style: { fit: 'contain' },
+            },
+            {
+              id: 'headline',
+              type: 'text',
+              role: 'headline',
+              placeholder: 'headline',
+              locked: false,
+              visible: true,
+              text: 'Queda capilar persistente merece investigacao, nao improviso.',
+              x: 72,
+              y: 350,
+              width: 760,
+              height: 220,
+              rotation: 0,
+              style: { font_size: 58, font_weight: 700, color: '#1f2933' },
+            },
+            {
+              id: 'hero',
+              type: 'image',
+              role: 'hero_image',
+              placeholder: 'hero_image',
+              locked: false,
+              visible: true,
+              asset_id: 'asset-photo-consultorio',
+              asset_source: 'brand_asset',
+              x: 612,
+              y: 760,
+              width: 360,
+              height: 360,
+              rotation: 0,
+              style: { fit: 'cover', radius: 8 },
+            },
+            {
+              id: 'cta',
+              type: 'text',
+              role: 'cta',
+              placeholder: 'cta',
+              locked: false,
+              visible: true,
+              text: 'Agende uma avaliacao individualizada.',
+              x: 72,
+              y: 1110,
+              width: 520,
+              height: 80,
+              rotation: 0,
+              style: { font_size: 30, color: '#0f766e' },
+            },
+          ],
+        },
+      ],
+    },
+    metadata: { schema_version: 1, source: 'generated_asset', current_version: 2 },
+  },
+  {
+    id: '00000000-0000-4000-8000-000000000602',
+    workspace_id: DEMO_WORKSPACE_ID,
+    brand_id: DEMO_BRAND_ID,
+    content_item_id: 'demo-content-item-002',
+    generated_asset_id: 'demo-generated-asset-carousel-001',
+    template_ref: 'paper-editorial-01',
+    title: '3 mitos sobre tratamento capilar - carrossel editavel',
+    status: 'ready_for_approval',
+    updated_at: new Date(Date.now() - 1000 * 60 * 9).toISOString(),
+    brands: { name: 'Clinica Aurora' },
+    document_json: {
+      schema_version: 1,
+      canvas: { width: 1080, height: 1350, format: 'instagram_post' },
+      template_id: 'paper-editorial-01',
+      brand_id: DEMO_BRAND_ID,
+      content_item_id: 'demo-content-item-002',
+      generated_asset_id: 'demo-generated-asset-carousel-001',
+      tokens: {
+        primary_color: '#115e59',
+        background_color: '#eef4f3',
+        text_color: '#1f2933',
+        font_family: 'Arial',
+      },
+      slides: [
+        {
+          id: 'slide-1',
+          name: 'Mito 1',
+          background: { color: '#f8fafc' },
+          elements: [
+            { id: 'headline-1', type: 'text', role: 'headline', placeholder: 'headline', locked: false, visible: true, text: 'Shampoo nao resolve tudo', x: 84, y: 260, width: 760, height: 180, rotation: 0, style: { font_size: 64, font_weight: 700, color: '#1f2933' } },
+            { id: 'body-1', type: 'text', role: 'body', placeholder: 'body', locked: false, visible: true, text: 'Nem todo conselho popular ajuda seu cabelo.', x: 84, y: 520, width: 720, height: 120, rotation: 0, style: { font_size: 32, color: '#344054' } },
+          ],
+        },
+        {
+          id: 'slide-2',
+          name: 'Mito 2',
+          background: { color: '#eef4f3' },
+          elements: [
+            { id: 'headline-2', type: 'text', role: 'headline', placeholder: 'headline', locked: false, visible: true, text: 'Suplemento sem diagnostico pode frustrar', x: 84, y: 260, width: 820, height: 220, rotation: 0, style: { font_size: 56, font_weight: 700, color: '#1f2933' } },
+            { id: 'body-2', type: 'text', role: 'body', placeholder: 'body', locked: false, visible: true, text: 'Resultado exige contexto, criterio e acompanhamento.', x: 84, y: 560, width: 720, height: 120, rotation: 0, style: { font_size: 32, color: '#344054' } },
+          ],
+        },
+      ],
+    },
+    metadata: { schema_version: 1, source: 'carousel_preview', current_version: 1 },
+  },
+];
+
+export const demoCreativeVersions = [
+  {
+    id: '00000000-0000-4000-8000-000000000701',
+    workspace_id: DEMO_WORKSPACE_ID,
+    creative_document_id: '00000000-0000-4000-8000-000000000601',
+    version: 1,
+    status: 'draft',
+    change_summary: 'Documento criado a partir do primeiro preview renderizado.',
+    created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+  },
+  {
+    id: '00000000-0000-4000-8000-000000000702',
+    workspace_id: DEMO_WORKSPACE_ID,
+    creative_document_id: '00000000-0000-4000-8000-000000000601',
+    version: 2,
+    status: 'draft',
+    change_summary: 'Logo aplicado no placeholder e CTA revisado.',
+    created_at: new Date(Date.now() - 1000 * 60 * 11).toISOString(),
+  },
+];
+
 export function getDemoBrand(brandId: string) {
   return demoBrands.find((brand) => brand.id === brandId) ?? demoBrands[0]!;
 }
@@ -633,4 +921,16 @@ export function getDemoContentItems(planId: string) {
 
 export function getDemoGeneratedAssets(contentItemIds: string[]) {
   return demoGeneratedAssets.filter((asset) => asset.content_item_id && contentItemIds.includes(asset.content_item_id));
+}
+
+export function getDemoCreativeDocument(documentId: string) {
+  return demoCreativeDocuments.find((document) => document.id === documentId) ?? demoCreativeDocuments[0]!;
+}
+
+export function getDemoCreativeVersions(documentId: string) {
+  return demoCreativeVersions.filter((version) => version.creative_document_id === documentId);
+}
+
+export function getDemoTemplatePlaceholders(templateRef: string) {
+  return demoTemplatePlaceholders.filter((placeholder) => placeholder.template_ref === templateRef);
 }

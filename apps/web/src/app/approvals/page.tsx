@@ -35,6 +35,8 @@ function targetTypeLabel(targetType: string) {
     content_plan: 'Plano de conteudo',
     content_item: 'Item de conteudo',
     generated_asset: 'Asset gerado',
+    creative_document: 'Documento criativo',
+    creative_version: 'Versao criativa',
   };
   return labels[targetType] ?? targetType;
 }
@@ -93,6 +95,13 @@ function buildTargetHref(
     return planId && contentItemId ? `/plans/${planId}#item-${contentItemId}` : null;
   }
 
+  if (approval.target_type === 'creative_document') return `/editor/${approval.target_id}`;
+
+  if (approval.target_type === 'creative_version') {
+    const creativeDocumentId = metadataString(approval.metadata, 'creative_document_id');
+    return creativeDocumentId ? `/editor/${creativeDocumentId}` : null;
+  }
+
   return null;
 }
 
@@ -117,6 +126,9 @@ export default async function ApprovalsPage({
       }
       if (approval.target_type === 'generated_asset') {
         return { ...approval, target_href: '/plans/demo-plan-aurora-2026-06#item-demo-content-item-001' };
+      }
+      if (approval.target_type === 'creative_document') {
+        return { ...approval, target_href: `/editor/${approval.target_id}` };
       }
       return approval;
     });

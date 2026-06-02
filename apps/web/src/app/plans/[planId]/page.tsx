@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { AppShell } from '@/components/app-shell';
 import { getCurrentWorkspace } from '@/lib/auth';
-import { demoBrands, getDemoContentItems, getDemoContentPlan, getDemoGeneratedAssets, isDemoMode } from '@/lib/demo';
+import { demoBrands, demoCreativeDocuments, getDemoContentItems, getDemoContentPlan, getDemoGeneratedAssets, isDemoMode } from '@/lib/demo';
 import {
   archiveContentPlan,
   createContentItem,
@@ -276,6 +276,11 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ pla
                       {asset.signedUrl ? <img alt="Preview gerado" src={asset.signedUrl} /> : <span className="muted">{statusLabel(asset.status)}</span>}
                     </div>
                     <strong>{asset.mime_type ?? 'Preview'}</strong>
+                    {isDemoMode() && demoCreativeDocuments.find((document) => document.generated_asset_id === asset.id) ? (
+                      <Link className="button secondary" href={`/editor/${demoCreativeDocuments.find((document) => document.generated_asset_id === asset.id)!.id}`} style={{ margin: '10px 0' }}>
+                        Abrir no editor
+                      </Link>
+                    ) : null}
                     <p className="muted">Status: {statusLabel(asset.status)} · {asset.storage_path ?? 'sem arquivo ainda'}</p>
                     <pre>{JSON.stringify(asset.render_payload_json ?? { schema_version: 1 }, null, 2)}</pre>
                   </article>

@@ -9,6 +9,9 @@ export const BrandAssetCategorySchema = z.enum(['logo', 'photo', 'font', 'refere
 export const BrandAssetStatusSchema = z.enum(['uploaded', 'processing', 'ready', 'failed', 'archived']);
 export const ApprovalStatusSchema = z.enum(['pending', 'approved', 'changes_requested', 'rejected']);
 export const JobRunStatusSchema = z.enum(['queued', 'running', 'completed', 'failed']);
+export const CreativeDocumentStatusSchema = z.enum(['draft', 'editing', 'ready_for_approval', 'approved', 'archived']);
+export const CreativeRenderStatusSchema = z.enum(['queued', 'rendering', 'ready', 'failed', 'archived']);
+export const AssetCollectionScopeSchema = z.enum(['global', 'workspace', 'brand']);
 export const ContentItemStatusSchema = z.enum([
   'draft',
   'generating',
@@ -174,6 +177,136 @@ export const RenderCarouselResponseSchema = z.object({
   count: z.number().int().nonnegative(),
 });
 
+export const CreativeElementRoleSchema = z.enum([
+  'brand_logo',
+  'hero_image',
+  'background_image',
+  'supporting_image',
+  'headline',
+  'subtitle',
+  'body',
+  'cta',
+  'badge',
+  'disclaimer',
+  'icon',
+  'shape',
+]);
+
+export const CreativeElementSchema = z.object({
+  id: z.string().min(1),
+  type: z.enum(['text', 'image', 'shape']),
+  role: CreativeElementRoleSchema,
+  placeholder: z.string().optional(),
+  locked: z.boolean().default(false),
+  visible: z.boolean().default(true),
+  text: z.string().optional(),
+  asset_id: z.string().optional(),
+  asset_source: z.enum(['brand_asset', 'global_asset', 'workspace_asset', 'external']).optional(),
+  x: z.number(),
+  y: z.number(),
+  width: z.number().positive(),
+  height: z.number().positive(),
+  rotation: z.number().default(0),
+  style: z.record(z.union([z.string(), z.number(), z.boolean(), z.null()])).default({}),
+});
+
+export const CreativeSlideSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().optional(),
+  elements: z.array(CreativeElementSchema),
+  background: z.object({
+    color: z.string().optional(),
+    asset_id: z.string().optional(),
+    asset_source: z.enum(['brand_asset', 'global_asset', 'workspace_asset', 'external']).optional(),
+  }).default({}),
+});
+
+export const CreativeDocumentJsonSchema = z.object({
+  schema_version: SchemaVersionSchema,
+  canvas: z.object({
+    width: z.number().int().positive(),
+    height: z.number().int().positive(),
+    format: z.enum(['instagram_post', 'instagram_story', 'linkedin_post', 'custom']).default('instagram_post'),
+  }),
+  template_id: z.string().min(1),
+  brand_id: z.string().min(1),
+  content_item_id: z.string().optional(),
+  generated_asset_id: z.string().optional(),
+  slides: z.array(CreativeSlideSchema).min(1),
+  tokens: z.record(z.string()).default({}),
+});
+
+export const AssetCollectionSchema = z.object({
+  id: z.string().uuid(),
+  workspace_id: z.string().uuid().nullable().optional(),
+  brand_id: z.string().uuid().nullable().optional(),
+  scope: AssetCollectionScopeSchema,
+  name: z.string().min(1),
+  slug: z.string().min(1),
+  status: z.enum(['active', 'archived']).default('active'),
+  metadata: z.record(z.unknown()).default({ schema_version: 1 }),
+});
+
+export const GlobalAssetSchema = z.object({
+  id: z.string().uuid(),
+  workspace_id: z.string().uuid().nullable().optional(),
+  collection_id: z.string().uuid().nullable().optional(),
+  category: z.enum(['logo', 'photo', 'background', 'icon', 'shape', 'texture', 'mockup', 'other']),
+  status: BrandAssetStatusSchema,
+  storage_bucket: z.string().default('global-assets'),
+  storage_path: z.string().min(1),
+  file_name: z.string().min(1),
+  mime_type: z.string().min(1),
+  metadata: z.record(z.unknown()).default({ schema_version: 1 }),
+});
+
+export const TemplatePlaceholderSchema = z.object({
+  id: z.string().uuid().optional(),
+  workspace_id: z.string().uuid().nullable().optional(),
+  template_ref: z.string().min(1),
+  placeholder_key: z.string().min(1),
+  kind: z.enum(['text', 'image', 'logo', 'color', 'asset']),
+  role: CreativeElementRoleSchema,
+  required: z.boolean().default(false),
+  constraints_json: z.record(z.unknown()).default({ schema_version: 1 }),
+});
+
+export const CreativeDocumentSchema = z.object({
+  id: z.string().uuid(),
+  workspace_id: z.string().uuid(),
+  brand_id: z.string().uuid(),
+  content_item_id: z.string().uuid().nullable().optional(),
+  generated_asset_id: z.string().uuid().nullable().optional(),
+  template_ref: z.string().min(1),
+  title: z.string().min(1),
+  status: CreativeDocumentStatusSchema,
+  document_json: CreativeDocumentJsonSchema,
+  metadata: z.record(z.unknown()).default({ schema_version: 1 }),
+});
+
+export const CreativeVersionSchema = z.object({
+  id: z.string().uuid(),
+  workspace_id: z.string().uuid(),
+  creative_document_id: z.string().uuid(),
+  version: z.number().int().positive(),
+  status: z.enum(['draft', 'submitted', 'approved', 'archived']).default('draft'),
+  document_json: CreativeDocumentJsonSchema,
+  change_summary: z.string().nullable().optional(),
+});
+
+export const CreativeRenderSchema = z.object({
+  id: z.string().uuid(),
+  workspace_id: z.string().uuid(),
+  creative_document_id: z.string().uuid(),
+  creative_version_id: z.string().uuid().nullable().optional(),
+  generated_asset_id: z.string().uuid().nullable().optional(),
+  status: CreativeRenderStatusSchema,
+  output_format: RenderOutputFormatSchema,
+  storage_bucket: z.string().default('brand-assets'),
+  storage_path: z.string().nullable().optional(),
+  metadata: z.record(z.unknown()).default({ schema_version: 1 }),
+});
+
 export const GeneratedAssetSchema = z.object({
   id: z.string().uuid(),
   workspace_id: z.string().uuid(),
@@ -250,7 +383,7 @@ export const JobRunSchema = z.object({
 export const ApprovalSchema = z.object({
   id: z.string().uuid(),
   workspace_id: z.string().uuid(),
-  target_type: z.enum(['brand_memory', 'content_plan', 'content_item', 'generated_asset']),
+  target_type: z.enum(['brand_memory', 'content_plan', 'content_item', 'generated_asset', 'creative_document', 'creative_version']),
   target_id: z.string().uuid(),
   status: ApprovalStatusSchema,
   decided_by: z.string().uuid().nullable().optional(),
@@ -272,6 +405,15 @@ export type RenderSlide = z.infer<typeof RenderSlideSchema>;
 export type RenderRequest = z.infer<typeof RenderRequestSchema>;
 export type RenderResponse = z.infer<typeof RenderResponseSchema>;
 export type RenderCarouselResponse = z.infer<typeof RenderCarouselResponseSchema>;
+export type CreativeElement = z.infer<typeof CreativeElementSchema>;
+export type CreativeSlide = z.infer<typeof CreativeSlideSchema>;
+export type CreativeDocumentJson = z.infer<typeof CreativeDocumentJsonSchema>;
+export type AssetCollection = z.infer<typeof AssetCollectionSchema>;
+export type GlobalAsset = z.infer<typeof GlobalAssetSchema>;
+export type TemplatePlaceholder = z.infer<typeof TemplatePlaceholderSchema>;
+export type CreativeDocument = z.infer<typeof CreativeDocumentSchema>;
+export type CreativeVersion = z.infer<typeof CreativeVersionSchema>;
+export type CreativeRender = z.infer<typeof CreativeRenderSchema>;
 export type GeneratedAsset = z.infer<typeof GeneratedAssetSchema>;
 export type GenerateBrandMemoryInput = z.infer<typeof GenerateBrandMemoryInputSchema>;
 export type GenerateBrandMemoryOutput = z.infer<typeof GenerateBrandMemoryOutputSchema>;

@@ -50,6 +50,36 @@ export type Database = {
         Insert: { id?: string; workspace_id: string; brand_id: string; content_item_id?: string | null; status?: string; storage_bucket?: string; storage_path?: string | null; mime_type?: string | null; render_payload_json?: Json; metadata?: Json; created_by?: string | null };
         Update: Partial<Database['public']['Tables']['generated_assets']['Insert']>;
       };
+      asset_collections: {
+        Row: { id: string; workspace_id: string | null; brand_id: string | null; scope: 'global' | 'workspace' | 'brand'; name: string; slug: string; status: string; metadata: Json; created_by: string | null; created_at: string; updated_at: string };
+        Insert: { id?: string; workspace_id?: string | null; brand_id?: string | null; scope: 'global' | 'workspace' | 'brand'; name: string; slug: string; status?: string; metadata?: Json; created_by?: string | null };
+        Update: Partial<Database['public']['Tables']['asset_collections']['Insert']>;
+      };
+      global_assets: {
+        Row: { id: string; workspace_id: string | null; collection_id: string | null; category: string; status: string; storage_bucket: string; storage_path: string; file_name: string; mime_type: string; size_bytes: number; metadata: Json; created_by: string | null; created_at: string; updated_at: string };
+        Insert: { id?: string; workspace_id?: string | null; collection_id?: string | null; category: string; status?: string; storage_bucket?: string; storage_path: string; file_name: string; mime_type: string; size_bytes?: number; metadata?: Json; created_by?: string | null };
+        Update: Partial<Database['public']['Tables']['global_assets']['Insert']>;
+      };
+      template_placeholders: {
+        Row: { id: string; workspace_id: string | null; template_ref: string; placeholder_key: string; kind: string; role: string; required: boolean; constraints_json: Json; created_by: string | null; created_at: string; updated_at: string };
+        Insert: { id?: string; workspace_id?: string | null; template_ref: string; placeholder_key: string; kind: string; role: string; required?: boolean; constraints_json?: Json; created_by?: string | null };
+        Update: Partial<Database['public']['Tables']['template_placeholders']['Insert']>;
+      };
+      creative_documents: {
+        Row: { id: string; workspace_id: string; brand_id: string; content_item_id: string | null; generated_asset_id: string | null; template_ref: string; title: string; status: string; document_json: Json; metadata: Json; created_by: string | null; created_at: string; updated_at: string };
+        Insert: { id?: string; workspace_id: string; brand_id: string; content_item_id?: string | null; generated_asset_id?: string | null; template_ref: string; title: string; status?: string; document_json?: Json; metadata?: Json; created_by?: string | null };
+        Update: Partial<Database['public']['Tables']['creative_documents']['Insert']>;
+      };
+      creative_versions: {
+        Row: { id: string; workspace_id: string; creative_document_id: string; version: number; status: string; document_json: Json; change_summary: string | null; created_by: string | null; created_at: string };
+        Insert: { id?: string; workspace_id: string; creative_document_id: string; version: number; status?: string; document_json: Json; change_summary?: string | null; created_by?: string | null };
+        Update: Partial<Database['public']['Tables']['creative_versions']['Insert']>;
+      };
+      creative_renders: {
+        Row: { id: string; workspace_id: string; creative_document_id: string; creative_version_id: string | null; generated_asset_id: string | null; status: string; output_format: 'png' | 'jpg'; storage_bucket: string; storage_path: string | null; mime_type: string | null; metadata: Json; created_by: string | null; created_at: string; updated_at: string };
+        Insert: { id?: string; workspace_id: string; creative_document_id: string; creative_version_id?: string | null; generated_asset_id?: string | null; status?: string; output_format?: 'png' | 'jpg'; storage_bucket?: string; storage_path?: string | null; mime_type?: string | null; metadata?: Json; created_by?: string | null };
+        Update: Partial<Database['public']['Tables']['creative_renders']['Insert']>;
+      };
       approvals: {
         Row: { id: string; workspace_id: string; target_type: string; target_id: string; status: string; decided_by: string | null; decided_at: string | null; notes: string | null; metadata: Json; created_by: string | null; created_at: string; updated_at: string };
         Insert: { id?: string; workspace_id: string; target_type: string; target_id: string; status?: string; decided_by?: string | null; decided_at?: string | null; notes?: string | null; metadata?: Json; created_by?: string | null };

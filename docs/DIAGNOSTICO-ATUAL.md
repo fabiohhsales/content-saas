@@ -64,6 +64,7 @@ Responsavel pela experiencia do usuario:
 - Wizard de onboarding da marca em `/brands/[brandId]/onboarding`.
 - Biblioteca de assets em `/brands/[brandId]/assets`.
 - Planejamento de conteudo em `/plans` e `/plans/[planId]`.
+- Editor assistido em `/editor` e `/editor/[documentId]`.
 - Biblioteca de templates em `/templates` e detalhe em `/templates/[templateId]`.
 - Central de aprovacoes em `/approvals`.
 - Links de aprovacao para memoria, plano, item e asset gerado.
@@ -82,6 +83,8 @@ Arquivos-chave:
 - `apps/web/src/app/plans/page.tsx`: lista, filtros e criacao de planos de conteudo.
 - `apps/web/src/app/plans/[planId]/page.tsx`: detalhe do plano, itens planejados e status.
 - `apps/web/src/app/plans/actions.ts`: server actions de planos, itens e aprovacao.
+- `apps/web/src/app/editor/page.tsx`: lista documentos criativos editaveis derivados de previews.
+- `apps/web/src/app/editor/[documentId]/page.tsx`: revisao assistida por placeholders, assets, biblioteca global e versoes.
 - `apps/web/src/app/templates/page.tsx`: biblioteca de templates.
 - `apps/web/src/app/templates/[templateId]/page.tsx`: detalhe de contrato/campos do template.
 - `apps/web/src/app/approvals/page.tsx`: central de aprovacao humana com links para alvos.
@@ -99,6 +102,7 @@ Modo demo:
 - Cria workspace, marcas, assets e memoria mockados em memoria estatica.
 - Inclui planos editoriais e itens de conteudo mockados para avaliacao de fluxo.
 - Inclui membros ficticios com roles owner, editor e viewer.
+- Inclui documentos criativos editaveis, versoes, placeholders e biblioteca global de assets para avaliar o MVP do editor assistido.
 - Atualmente serve para avaliacao de fluxo/UX, nao para persistencia real.
 
 ### 3.2 Orchestrator (`apps/orchestrator`)
@@ -550,6 +554,8 @@ Rotas demo verificadas com HTTP 200:
 - `/brands/demo-brand-health-grow/assets`
 - `/plans`
 - `/plans/demo-plan-aurora-2026-06`
+- `/editor`
+- `/editor/00000000-0000-4000-8000-000000000601`
 - `/jobs?queue=render-preview`
 - `/settings/members`
 - `/invite/demo-invite-token`
@@ -569,6 +575,7 @@ Rotas demo verificadas com HTTP 200:
 - Central inicial de aprovacoes humanas.
 - Aprovacoes conectadas aos detalhes de memoria, plano, item e preview.
 - Planejamento manual de conteudo com planos e itens.
+- Editor assistido inicial para revisar criativos por placeholders, assets da marca e biblioteca global.
 - Geracao mockada de planos e itens via orchestrator.
 - Fila inicial de render preview com persistencia em `generated_assets`.
 - Render preview inicial para posts unicos e carrosseis.
@@ -587,6 +594,7 @@ Rotas demo verificadas com HTTP 200:
 - Upload real: implementado no web, mas depende de Supabase Storage configurado.
 - Jobs: contrato, worker, painel visual e retry inicial existem, mas falta integracao ponta a ponta real em ambiente com Redis/Supabase.
 - Render preview: posts unicos/carrosseis implementados no orchestrator/web, mas precisam ambiente real com Redis, Supabase Storage e render service rodando para teste ponta a ponta.
+- Editor assistido: contratos, tabelas, demo e UI inicial existem, mas ainda falta persistencia de edicao via server action e render final de `creative_documents`.
 - Geracao de plano: job mockado implementado, mas precisa provider IA real para producao.
 - Gestao de membros: CRUD inicial por `user_id` e convite por link existem, mas falta envio de e-mail transacional.
 - Convites: implementados no schema e web, mas ainda sem envio de e-mail transacional.
