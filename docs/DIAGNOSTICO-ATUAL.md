@@ -65,6 +65,7 @@ Responsavel pela experiencia do usuario:
 - Central de aprovacoes em `/approvals`.
 - Painel de jobs/logs em `/jobs`, com filtros e retry manual para jobs suportados.
 - Disparo de render preview a partir dos itens de `/plans/[planId]`.
+- Gestao inicial de membros em `/settings/members`.
 - Healthcheck em `/api/health`.
 
 Arquivos-chave:
@@ -81,6 +82,8 @@ Arquivos-chave:
 - `apps/web/src/app/approvals/page.tsx`: central de aprovacao humana.
 - `apps/web/src/app/approvals/actions.ts`: acoes de aprovar ou pedir ajustes.
 - `apps/web/src/app/jobs/page.tsx`: painel operacional de jobs e logs.
+- `apps/web/src/app/settings/members/page.tsx`: membros, papeis e permissao do workspace.
+- `apps/web/src/app/settings/members/actions.ts`: adicionar, alterar papel e remover membros.
 - `apps/web/src/components/app-shell.tsx`: shell de navegacao.
 
 Modo demo:
@@ -89,6 +92,7 @@ Modo demo:
 - Permite navegar sem Supabase configurado.
 - Cria workspace, marcas, assets e memoria mockados em memoria estatica.
 - Inclui planos editoriais e itens de conteudo mockados para avaliacao de fluxo.
+- Inclui membros ficticios com roles owner, editor e viewer.
 - Atualmente serve para avaliacao de fluxo/UX, nao para persistencia real.
 
 ### 3.2 Orchestrator (`apps/orchestrator`)
@@ -256,6 +260,7 @@ flowchart TD
   E --> J["Biblioteca /templates com contratos demo"]
   E --> K["Central /approvals com decisoes demo"]
   E --> L["Planos /plans com itens editoriais demo"]
+  E --> M["Membros /settings/members com roles demo"]
 ```
 
 Objetivo:
@@ -339,6 +344,19 @@ flowchart TD
   G --> H["Cria approvals target_type=content_plan"]
 ```
 
+### 6.7 Fluxo atual de gestao de membros
+
+```mermaid
+flowchart TD
+  A["Owner/admin abre /settings/members"] --> B["Lista membros do workspace"]
+  B --> C["Adiciona membro por user_id Supabase"]
+  B --> D["Altera role owner/admin/editor/viewer"]
+  B --> E["Remove membro nao-owner"]
+  C --> F["RLS de members valida owner/admin"]
+  D --> F
+  E --> F
+```
+
 ## 7. Rotas atuais
 
 ### Web
@@ -359,6 +377,7 @@ flowchart TD
 | `/templates/[templateId]` | funcional | detalhe de campos, slots e contrato |
 | `/approvals` | funcional | central de aprovacoes, filtros e decisoes |
 | `/jobs` | funcional | painel de job_runs e automation_logs, filtros e retry; demo ativo |
+| `/settings/members` | funcional | lista/adiciona/altera/remove membros por user_id; demo ativo |
 | `/api/health` | funcional | healthcheck web |
 
 ### Orchestrator
@@ -443,6 +462,7 @@ Rotas demo verificadas com HTTP 200:
 - `/plans`
 - `/plans/demo-plan-aurora-2026-06`
 - `/jobs?queue=render-preview`
+- `/settings/members`
 - `/templates`
 - `/templates/photo-overlay-01`
 - `/approvals`
@@ -458,6 +478,7 @@ Rotas demo verificadas com HTTP 200:
 - Central inicial de aprovacoes humanas.
 - Planejamento manual de conteudo com planos e itens.
 - Fila inicial de render preview com persistencia em `generated_assets`.
+- Gestao inicial de membros e roles do workspace.
 - Memoria de marca mockada.
 - Painel inicial de jobs/logs no web.
 - Arquitetura de monorepo.
@@ -470,12 +491,13 @@ Rotas demo verificadas com HTTP 200:
 - Upload real: implementado no web, mas depende de Supabase Storage configurado.
 - Jobs: contrato, worker, painel visual e retry inicial existem, mas falta integracao ponta a ponta real em ambiente com Redis/Supabase.
 - Render preview: implementado no orchestrator/web, mas precisa ambiente real com Redis, Supabase Storage e render service rodando para teste ponta a ponta.
+- Gestao de membros: CRUD inicial por `user_id`; ainda nao ha convite por e-mail nem fluxo de aceite.
 
 ### Ainda nao implementado
 
 - IA real para memoria de marca.
 - Render preview avancado com carrossel, escolha assistida de template e assets reais da marca.
-- Gestao de membros do workspace.
+- Convites de membros por e-mail com aceite.
 - CI GitHub Actions.
 - Testes SQL/RLS automatizados.
 
@@ -510,8 +532,9 @@ Ordem sugerida:
 5. Integrar `generate_brand_memory` real com provider IA.
 6. Evoluir render preview para selecionar templates/assets e suportar carrossel.
 7. Conectar aprovacoes aos detalhes reais de memoria, plano, item e asset gerado.
-8. Adicionar geracao automatica de content plans/content items via orchestrator.
-9. Adicionar CI no GitHub Actions.
+8. Adicionar convites por e-mail e fluxo de aceite para membros.
+9. Adicionar geracao automatica de content plans/content items via orchestrator.
+10. Adicionar CI no GitHub Actions.
 
 ## 13. Checklist de handoff
 

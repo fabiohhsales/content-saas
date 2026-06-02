@@ -16,6 +16,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Link href="/templates">Templates</Link>
           <Link href="/approvals">Aprovacoes</Link>
           <Link href="/jobs">Jobs</Link>
+          <Link href="/settings/members">Membros</Link>
           <form action={signOutFromApp}>
             <button className="secondary" type="submit">Sair</button>
           </form>

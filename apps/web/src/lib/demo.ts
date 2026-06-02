@@ -17,6 +17,36 @@ export const demoWorkspace = {
   slug: 'health-grow-studio',
 };
 
+export const demoMembers = [
+  {
+    id: 'demo-member-owner',
+    workspace_id: DEMO_WORKSPACE_ID,
+    user_id: DEMO_USER_ID,
+    role: 'owner',
+    email: 'demo@content-saas.local',
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 12).toISOString(),
+    updated_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 12).toISOString(),
+  },
+  {
+    id: 'demo-member-editor',
+    workspace_id: DEMO_WORKSPACE_ID,
+    user_id: '00000000-0000-4000-8000-000000000202',
+    role: 'editor',
+    email: 'editor@content-saas.local',
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 4).toISOString(),
+    updated_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
+  },
+  {
+    id: 'demo-member-viewer',
+    workspace_id: DEMO_WORKSPACE_ID,
+    user_id: '00000000-0000-4000-8000-000000000203',
+    role: 'viewer',
+    email: 'viewer@content-saas.local',
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 18).toISOString(),
+    updated_at: new Date(Date.now() - 1000 * 60 * 60 * 18).toISOString(),
+  },
+];
+
 export const demoBrands = [
   {
     id: DEMO_BRAND_ID,

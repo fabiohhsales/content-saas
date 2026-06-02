@@ -12,7 +12,7 @@ export type Database = {
       };
       members: {
         Row: { id: string; workspace_id: string; user_id: string; role: 'owner' | 'admin' | 'editor' | 'viewer'; created_at: string; updated_at: string };
-        Insert: { id?: string; workspace_id: string; user_id: string; role: 'owner' | 'admin' | 'editor' | 'viewer' };
+        Insert: { id?: string; workspace_id: string; user_id: string; role: 'owner' | 'admin' | 'editor' | 'viewer'; created_at?: string; updated_at?: string };
         Update: Partial<Database['public']['Tables']['members']['Insert']>;
       };
       brands: {
