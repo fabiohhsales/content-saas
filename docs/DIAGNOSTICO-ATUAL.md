@@ -15,6 +15,7 @@ Estado atual:
 - `apps/render` foi importado do render-service oficial e manteve os endpoints de render.
 - Migrations Supabase foram criadas com tabelas, RLS multi-tenant e bucket privado `brand-assets`.
 - Contratos Zod compartilhados vivem em `packages/contracts`.
+- CI GitHub Actions roda typecheck, testes e build no monorepo.
 
 O produto novo foi desenhado para usar Supabase como fonte de verdade e Redis/BullMQ para jobs. n8n, ClickUp e Google Drive ficaram fora do caminho central.
 
@@ -31,6 +32,8 @@ content-saas/
     supabase/        Helpers e client Supabase
   supabase/
     migrations/      Schema Postgres, RLS e Storage policies
+  .github/
+    workflows/       CI do monorepo
   docs/
     DIAGNOSTICO-ATUAL.md
 ```
@@ -445,6 +448,20 @@ npm test
 npm run build
 ```
 
+CI configurado:
+
+```text
+.github/workflows/ci.yml
+```
+
+O workflow roda em push e pull request para `main`:
+
+- `npm ci`
+- `npx playwright install --with-deps chromium`
+- `npm run typecheck`
+- `npm test`
+- `npm run build`
+
 Cobertura atual:
 
 - Typecheck nos pacotes e apps.
@@ -479,6 +496,7 @@ Rotas demo verificadas com HTTP 200:
 - Planejamento manual de conteudo com planos e itens.
 - Fila inicial de render preview com persistencia em `generated_assets`.
 - Gestao inicial de membros e roles do workspace.
+- CI do monorepo com typecheck, testes e build.
 - Memoria de marca mockada.
 - Painel inicial de jobs/logs no web.
 - Arquitetura de monorepo.
@@ -498,7 +516,6 @@ Rotas demo verificadas com HTTP 200:
 - IA real para memoria de marca.
 - Render preview avancado com carrossel, escolha assistida de template e assets reais da marca.
 - Convites de membros por e-mail com aceite.
-- CI GitHub Actions.
 - Testes SQL/RLS automatizados.
 
 ## 11. Riscos e pontos de atencao
@@ -534,7 +551,7 @@ Ordem sugerida:
 7. Conectar aprovacoes aos detalhes reais de memoria, plano, item e asset gerado.
 8. Adicionar convites por e-mail e fluxo de aceite para membros.
 9. Adicionar geracao automatica de content plans/content items via orchestrator.
-10. Adicionar CI no GitHub Actions.
+10. Adicionar testes SQL/RLS automatizados.
 
 ## 13. Checklist de handoff
 
