@@ -320,6 +320,58 @@ export const demoTemplates = [
   },
 ];
 
+export const demoApprovals = [
+  {
+    id: 'approval-demo-memory-001',
+    workspace_id: DEMO_WORKSPACE_ID,
+    target_type: 'brand_memory',
+    target_id: 'memory-aurora-v1',
+    target_label: 'Memoria de marca v1 - Clinica Aurora',
+    status: 'pending',
+    decided_by: null,
+    decided_at: null,
+    notes: null,
+    created_at: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
+    metadata: {
+      schema_version: 1,
+      brand_id: DEMO_BRAND_ID,
+      summary: demoMemories[0]!.memory_json.summary,
+    },
+  },
+  {
+    id: 'approval-demo-plan-001',
+    workspace_id: DEMO_WORKSPACE_ID,
+    target_type: 'content_plan',
+    target_id: 'demo-plan-2026-06',
+    target_label: 'Plano editorial Junho/2026 - Renovo Hair',
+    status: 'changes_requested',
+    decided_by: DEMO_USER_ID,
+    decided_at: new Date(Date.now() - 1000 * 60 * 28).toISOString(),
+    notes: 'Adicionar mais conteudos de fundo de funil e reduzir repeticao de temas.',
+    created_at: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
+    metadata: {
+      schema_version: 1,
+      brand_id: 'demo-brand-renovo',
+    },
+  },
+  {
+    id: 'approval-demo-asset-001',
+    workspace_id: DEMO_WORKSPACE_ID,
+    target_type: 'generated_asset',
+    target_id: 'demo-generated-asset-001',
+    target_label: 'Preview PNG - photo-overlay-01',
+    status: 'approved',
+    decided_by: DEMO_USER_ID,
+    decided_at: new Date(Date.now() - 1000 * 60 * 90).toISOString(),
+    notes: 'Aprovado para seguir para agendamento.',
+    created_at: new Date(Date.now() - 1000 * 60 * 120).toISOString(),
+    metadata: {
+      schema_version: 1,
+      template_id: 'photo-overlay-01',
+    },
+  },
+];
+
 export function getDemoBrand(brandId: string) {
   return demoBrands.find((brand) => brand.id === brandId) ?? demoBrands[0]!;
 }

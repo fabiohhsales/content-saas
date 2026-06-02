@@ -60,6 +60,7 @@ Responsavel pela experiencia do usuario:
 - Wizard de onboarding da marca em `/brands/[brandId]/onboarding`.
 - Biblioteca de assets em `/brands/[brandId]/assets`.
 - Biblioteca de templates em `/templates` e detalhe em `/templates/[templateId]`.
+- Central de aprovacoes em `/approvals`.
 - Painel de jobs/logs em `/jobs`, com filtros e retry manual para jobs suportados.
 - Healthcheck em `/api/health`.
 
@@ -71,6 +72,8 @@ Arquivos-chave:
 - `apps/web/src/app/brands/actions.ts`: server actions de marcas, assets e memoria.
 - `apps/web/src/app/templates/page.tsx`: biblioteca de templates.
 - `apps/web/src/app/templates/[templateId]/page.tsx`: detalhe de contrato/campos do template.
+- `apps/web/src/app/approvals/page.tsx`: central de aprovacao humana.
+- `apps/web/src/app/approvals/actions.ts`: acoes de aprovar ou pedir ajustes.
 - `apps/web/src/app/jobs/page.tsx`: painel operacional de jobs e logs.
 - `apps/web/src/components/app-shell.tsx`: shell de navegacao.
 
@@ -231,6 +234,7 @@ flowchart TD
   E --> H["Memoria de marca mockada"]
   E --> I["Painel /jobs com execucoes e logs demo"]
   E --> J["Biblioteca /templates com contratos demo"]
+  E --> K["Central /approvals com decisoes demo"]
 ```
 
 Objetivo:
@@ -301,6 +305,7 @@ flowchart TD
 | `/brands/[brandId]/assets` | funcional | biblioteca e upload |
 | `/templates` | funcional | biblioteca de templates; demo ativo |
 | `/templates/[templateId]` | funcional | detalhe de campos, slots e contrato |
+| `/approvals` | funcional | central de aprovacoes, filtros e decisoes |
 | `/jobs` | funcional | painel de job_runs e automation_logs, filtros e retry; demo ativo |
 | `/api/health` | funcional | healthcheck web |
 
@@ -384,6 +389,7 @@ Rotas demo verificadas com HTTP 200:
 - `/brands/demo-brand-health-grow/assets`
 - `/templates`
 - `/templates/photo-overlay-01`
+- `/approvals`
 - `/jobs`
 
 ## 10. Diagnostico de maturidade
@@ -393,6 +399,7 @@ Rotas demo verificadas com HTTP 200:
 - Navegacao demo local.
 - Estrutura de marca e assets.
 - Biblioteca inicial de templates.
+- Central inicial de aprovacoes humanas.
 - Memoria de marca mockada.
 - Painel inicial de jobs/logs no web.
 - Arquitetura de monorepo.
@@ -409,7 +416,6 @@ Rotas demo verificadas com HTTP 200:
 
 - IA real para memoria de marca.
 - CRUD de content plans e content items.
-- Tela de approvals.
 - Render preview integrado ao web/orchestrator.
 - Gestao de membros do workspace.
 - CI GitHub Actions.
@@ -445,8 +451,8 @@ Ordem sugerida:
 4. Subir Supabase/Redis local e validar fluxo real de `generate_brand_memory`.
 5. Integrar `generate_brand_memory` real com provider IA.
 6. Criar fluxo de render preview e salvar em `generated_assets`.
-7. Implementar approvals para memoria, plano e asset gerado.
-8. Criar CRUD de content plans e content items.
+7. Criar CRUD de content plans e content items.
+8. Conectar aprovacoes aos detalhes reais de memoria, plano, item e asset gerado.
 9. Adicionar CI no GitHub Actions.
 
 ## 13. Checklist de handoff

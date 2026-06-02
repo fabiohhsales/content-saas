@@ -13,6 +13,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           {demo ? <span>Demo mode</span> : null}
           <Link href="/brands">Marcas</Link>
           <Link href="/templates">Templates</Link>
+          <Link href="/approvals">Aprovacoes</Link>
           <Link href="/jobs">Jobs</Link>
           <form action={signOutFromApp}>
             <button className="secondary" type="submit">Sair</button>
