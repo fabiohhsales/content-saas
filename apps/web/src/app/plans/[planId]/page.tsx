@@ -223,7 +223,7 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ pla
 
       <section className="grid" style={{ marginTop: 18 }}>
         {items.map((item) => (
-          <article className="card" key={item.id}>
+          <article className="card" id={`item-${item.id}`} key={item.id}>
             <div className="toolbar" style={{ marginBottom: 8 }}>
               <div>
                 <small className="muted">{formatDate(item.scheduled_for)} · {jsonValue(item.copy_json?.channel)} · {jsonValue(item.copy_json?.format)}</small>
@@ -271,7 +271,7 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ pla
               </div>
               <div className="grid two">
                 {(assetsByItem[item.id] ?? []).map((asset) => (
-                  <article className="card" key={asset.id}>
+                  <article className="card" id={`asset-${asset.id}`} key={asset.id}>
                     <div className="asset-preview">
                       {asset.signedUrl ? <img alt="Preview gerado" src={asset.signedUrl} /> : <span className="muted">{statusLabel(asset.status)}</span>}
                     </div>

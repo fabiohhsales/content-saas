@@ -66,6 +66,7 @@ Responsavel pela experiencia do usuario:
 - Planejamento de conteudo em `/plans` e `/plans/[planId]`.
 - Biblioteca de templates em `/templates` e detalhe em `/templates/[templateId]`.
 - Central de aprovacoes em `/approvals`.
+- Links de aprovacao para memoria, plano, item e asset gerado.
 - Painel de jobs/logs em `/jobs`, com filtros e retry manual para jobs suportados.
 - Disparo de render preview a partir dos itens de `/plans/[planId]`.
 - Gestao de membros e convites em `/settings/members`.
@@ -83,7 +84,7 @@ Arquivos-chave:
 - `apps/web/src/app/plans/actions.ts`: server actions de planos, itens e aprovacao.
 - `apps/web/src/app/templates/page.tsx`: biblioteca de templates.
 - `apps/web/src/app/templates/[templateId]/page.tsx`: detalhe de contrato/campos do template.
-- `apps/web/src/app/approvals/page.tsx`: central de aprovacao humana.
+- `apps/web/src/app/approvals/page.tsx`: central de aprovacao humana com links para alvos.
 - `apps/web/src/app/approvals/actions.ts`: acoes de aprovar ou pedir ajustes.
 - `apps/web/src/app/jobs/page.tsx`: painel operacional de jobs e logs.
 - `apps/web/src/app/settings/members/page.tsx`: membros, convites, papeis e permissao do workspace.
@@ -408,6 +409,23 @@ flowchart TD
   F --> G["Marca convite como accepted"]
 ```
 
+### 6.10 Fluxo atual de aprovacao com alvo
+
+```mermaid
+flowchart TD
+  A["Usuario abre /approvals"] --> B["Filtra por status/tipo"]
+  B --> C["Aprovacao resolve target_type + target_id"]
+  C --> D{"Tipo do alvo"}
+  D -- "brand_memory" --> E["/brands/[brandId]#brand-memories"]
+  D -- "content_plan" --> F["/plans/[planId]"]
+  D -- "content_item" --> G["/plans/[planId]#item-[itemId]"]
+  D -- "generated_asset" --> H["/plans/[planId]#item-[itemId]"]
+  E --> I["Aprovar ou pedir ajustes"]
+  F --> I
+  G --> I
+  H --> I
+```
+
 ## 7. Rotas atuais
 
 ### Web
@@ -426,7 +444,7 @@ flowchart TD
 | `/plans/[planId]` | funcional | gerencia itens, status e envio para aprovacao |
 | `/templates` | funcional | biblioteca de templates; demo ativo |
 | `/templates/[templateId]` | funcional | detalhe de campos, slots e contrato |
-| `/approvals` | funcional | central de aprovacoes, filtros e decisoes |
+| `/approvals` | funcional | central de aprovacoes, filtros, decisoes e links para alvos |
 | `/jobs` | funcional | painel de job_runs e automation_logs, filtros e retry; demo ativo |
 | `/settings/members` | funcional | lista/adiciona/altera/remove membros por user_id; demo ativo |
 | `/invite/[token]` | funcional | aceite autenticado de convite |
@@ -535,6 +553,7 @@ Rotas demo verificadas com HTTP 200:
 - `/templates`
 - `/templates/photo-overlay-01`
 - `/approvals`
+- `/approvals?target_type=generated_asset`
 - `/jobs`
 
 ## 10. Diagnostico de maturidade
@@ -545,6 +564,7 @@ Rotas demo verificadas com HTTP 200:
 - Estrutura de marca e assets.
 - Biblioteca inicial de templates.
 - Central inicial de aprovacoes humanas.
+- Aprovacoes conectadas aos detalhes de memoria, plano, item e preview.
 - Planejamento manual de conteudo com planos e itens.
 - Geracao mockada de planos e itens via orchestrator.
 - Fila inicial de render preview com persistencia em `generated_assets`.
@@ -605,9 +625,8 @@ Ordem sugerida:
 4. Subir Supabase/Redis/render local e validar fluxos reais de `generate_brand_memory`, `generate_content_plan` e `render_preview`.
 5. Integrar `generate_brand_memory` e `generate_content_plan` com provider IA.
 6. Evoluir render preview para selecionar templates/assets e suportar carrossel.
-7. Conectar aprovacoes aos detalhes reais de memoria, plano, item e asset gerado.
-8. Adicionar envio transacional de e-mail para convites.
-9. Adicionar testes SQL/RLS automatizados.
+7. Adicionar envio transacional de e-mail para convites.
+8. Adicionar testes SQL/RLS automatizados.
 
 ## 13. Checklist de handoff
 

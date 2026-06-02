@@ -51,11 +51,11 @@ export default async function BrandDetailPage({ params }: { params: Promise<{ br
             <button type="submit">Salvar demo</button>
           </form>
 
-          <div className="panel">
+          <div className="panel" id="brand-memories">
             <h2>Memorias geradas</h2>
             <div className="grid">
               {memories.map((memory: any) => (
-                <article className="card" key={memory.id}>
+                <article className="card" id={`memory-${memory.id}`} key={memory.id}>
                   <strong>Versao {memory.version}</strong>
                   <p>{memory.memory_json.summary}</p>
                   <small>Status: {memory.status} · confiança {Math.round(memory.memory_json.confidence * 100)}%</small>
@@ -130,11 +130,11 @@ export default async function BrandDetailPage({ params }: { params: Promise<{ br
           <button type="submit">Salvar</button>
         </form>
 
-        <div className="panel">
+        <div className="panel" id="brand-memories">
           <h2>Memorias geradas</h2>
           <div className="grid">
             {(memories ?? []).map((memory: any) => (
-              <article className="card" key={memory.id}>
+              <article className="card" id={`memory-${memory.id}`} key={memory.id}>
                 <strong>Versao {memory.version}</strong>
                 <p>{(memory.memory_json as { summary?: string }).summary}</p>
                 <small>Status: {memory.status}</small>

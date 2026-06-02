@@ -389,7 +389,7 @@ export const demoApprovals = [
     id: 'approval-demo-plan-001',
     workspace_id: DEMO_WORKSPACE_ID,
     target_type: 'content_plan',
-    target_id: 'demo-plan-2026-06',
+    target_id: 'demo-plan-renovo-2026-06',
     target_label: 'Plano editorial Junho/2026 - Renovo Hair',
     status: 'changes_requested',
     decided_by: DEMO_USER_ID,

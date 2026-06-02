@@ -9,6 +9,7 @@ type ApprovalLike = {
   id: string;
   target_type: string;
   target_id: string;
+  target_href?: string | null;
   target_label?: string | null;
   status: string;
   decided_by: string | null;
@@ -64,6 +65,37 @@ function targetLabel(approval: ApprovalLike) {
   return approval.target_label ?? String(approval.metadata?.title ?? approval.metadata?.summary ?? approval.target_id);
 }
 
+function metadataString(metadata: Record<string, unknown> | undefined, key: string) {
+  const value = metadata?.[key];
+  return typeof value === 'string' && value.length > 0 ? value : null;
+}
+
+function buildTargetHref(
+  approval: ApprovalLike,
+  planByContentItemId: Map<string, string>,
+  contentItemByGeneratedAssetId: Map<string, string>,
+) {
+  if (approval.target_type === 'content_plan') return `/plans/${approval.target_id}`;
+
+  if (approval.target_type === 'brand_memory') {
+    const brandId = metadataString(approval.metadata, 'brand_id');
+    return brandId ? `/brands/${brandId}#brand-memories` : null;
+  }
+
+  if (approval.target_type === 'content_item') {
+    const planId = metadataString(approval.metadata, 'content_plan_id') ?? planByContentItemId.get(approval.target_id);
+    return planId ? `/plans/${planId}#item-${approval.target_id}` : null;
+  }
+
+  if (approval.target_type === 'generated_asset') {
+    const contentItemId = metadataString(approval.metadata, 'content_item_id') ?? contentItemByGeneratedAssetId.get(approval.target_id);
+    const planId = contentItemId ? planByContentItemId.get(contentItemId) : null;
+    return planId && contentItemId ? `/plans/${planId}#item-${contentItemId}` : null;
+  }
+
+  return null;
+}
+
 export default async function ApprovalsPage({
   searchParams,
 }: {
@@ -76,7 +108,18 @@ export default async function ApprovalsPage({
   let approvals: ApprovalLike[] = [];
 
   if (isDemoMode()) {
-    approvals = demoApprovals;
+    approvals = demoApprovals.map((approval) => {
+      if (approval.target_type === 'content_plan') {
+        return { ...approval, target_href: `/plans/${approval.target_id}` };
+      }
+      if (approval.target_type === 'brand_memory') {
+        return { ...approval, target_href: `/brands/${approval.metadata.brand_id}#brand-memories` };
+      }
+      if (approval.target_type === 'generated_asset') {
+        return { ...approval, target_href: '/plans/demo-plan-aurora-2026-06#item-demo-content-item-001' };
+      }
+      return approval;
+    });
   } else {
     const { data } = await supabase
       .from('approvals')
@@ -86,6 +129,74 @@ export default async function ApprovalsPage({
       .limit(100);
 
     approvals = (data ?? []) as ApprovalLike[];
+
+    const contentItemIds = approvals
+      .filter((approval) => approval.target_type === 'content_item')
+      .map((approval) => approval.target_id);
+    const generatedAssetIds = approvals
+      .filter((approval) => approval.target_type === 'generated_asset')
+      .map((approval) => approval.target_id);
+    const brandMemoryIds = approvals
+      .filter((approval) => approval.target_type === 'brand_memory' && !metadataString(approval.metadata, 'brand_id'))
+      .map((approval) => approval.target_id);
+
+    const contentItemByGeneratedAssetId = new Map<string, string>();
+    if (generatedAssetIds.length > 0) {
+      const { data: assets } = await supabase
+        .from('generated_assets')
+        .select('id, content_item_id')
+        .eq('workspace_id', membership.workspace_id)
+        .in('id', generatedAssetIds);
+
+      (assets ?? []).forEach((asset: any) => {
+        if (asset.content_item_id) contentItemByGeneratedAssetId.set(asset.id, asset.content_item_id);
+      });
+    }
+
+    const allContentItemIds = Array.from(new Set([
+      ...contentItemIds,
+      ...Array.from(contentItemByGeneratedAssetId.values()),
+      ...approvals.map((approval) => metadataString(approval.metadata, 'content_item_id')).filter((value): value is string => Boolean(value)),
+    ]));
+
+    const planByContentItemId = new Map<string, string>();
+    if (allContentItemIds.length > 0) {
+      const { data: items } = await supabase
+        .from('content_items')
+        .select('id, content_plan_id')
+        .eq('workspace_id', membership.workspace_id)
+        .in('id', allContentItemIds);
+
+      (items ?? []).forEach((item: any) => {
+        if (item.content_plan_id) planByContentItemId.set(item.id, item.content_plan_id);
+      });
+    }
+
+    const brandByMemoryId = new Map<string, string>();
+    if (brandMemoryIds.length > 0) {
+      const { data: memories } = await supabase
+        .from('brand_memories')
+        .select('id, brand_id')
+        .eq('workspace_id', membership.workspace_id)
+        .in('id', brandMemoryIds);
+
+      (memories ?? []).forEach((memory: any) => {
+        if (memory.brand_id) brandByMemoryId.set(memory.id, memory.brand_id);
+      });
+    }
+
+    approvals = approvals.map((approval) => {
+      const enrichedMetadata = approval.target_type === 'brand_memory' && !metadataString(approval.metadata, 'brand_id')
+        ? { ...(approval.metadata ?? {}), brand_id: brandByMemoryId.get(approval.target_id) }
+        : approval.metadata;
+      const enrichedApproval: ApprovalLike = enrichedMetadata
+        ? { ...approval, metadata: enrichedMetadata }
+        : { ...approval };
+      return {
+        ...enrichedApproval,
+        target_href: buildTargetHref(enrichedApproval, planByContentItemId, contentItemByGeneratedAssetId),
+      };
+    });
   }
 
   const filteredApprovals = approvals.filter((approval) => {
@@ -163,6 +274,13 @@ export default async function ApprovalsPage({
               <div>
                 <small className="muted">Contexto</small>
                 <pre>{jsonPreview(approval.metadata ?? { target_id: approval.target_id })}</pre>
+                {approval.target_href ? (
+                  <Link className="button secondary" href={approval.target_href} style={{ marginTop: 12 }}>
+                    Abrir alvo
+                  </Link>
+                ) : (
+                  <p className="muted">Destino direto indisponivel para este alvo.</p>
+                )}
               </div>
               <div>
                 <small className="muted">Decisao</small>
