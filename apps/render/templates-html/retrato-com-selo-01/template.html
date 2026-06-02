@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <style>
+    * { box-sizing: border-box; }
+    body { width: 1080px; height: 1350px; margin: 0; overflow: hidden; background: var(--bg-dark, #121b29); color: var(--text-on-dark, #fffaf2); font-family: var(--font-body, Arial), Helvetica, sans-serif; }
+    .post { position: relative; width: 1080px; height: 1350px; padding: 82px 76px 92px; }
+    .photo-wrap { position: absolute; inset: 178px 130px 318px; border: 2px solid rgba(203,177,132,.42); background: linear-gradient(145deg, var(--bg-dark, #25344a), var(--bg-dark, #111925)); overflow: hidden; }
+    .photo { width: 100%; height: 100%; object-fit: cover; display: none; }
+    .monogram { height: 100%; display: flex; align-items: center; justify-content: center; color: rgba(203,177,132,.28); font-family: Georgia, serif; font-size: 270px; }
+    .seal { position: absolute; right: 120px; top: 700px; width: 150px; height: 150px; border-radius: 50%; border: 4px solid var(--accent, #cbb184); background: var(--bg-dark, #121b29); color: var(--accent, #cbb184); display: flex; align-items: center; justify-content: center; text-align: center; font-size: 21px; font-weight: 800; line-height: 1.1; }
+    .seal img { width: 100%; height: 100%; object-fit: contain; display: none; }
+    .top { display: flex; justify-content: space-between; align-items: flex-start; }
+    .brand { color: var(--accent, #cbb184); font-size: 22px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; }
+    .logo { max-width: 170px; max-height: 64px; object-fit: contain; display: none; filter: brightness(0) invert(1); }
+    .copy { position: absolute; left: 76px; right: 76px; bottom: 92px; text-align: center; }
+    h1 { margin: 0 0 18px; font-family: var(--font-heading, Georgia), 'Times New Roman', serif; font-size: 76px; line-height: 1; color: var(--text-on-dark, #fffaf2); letter-spacing: 0; }
+    .cred { color: var(--accent, #cbb184); font-size: 27px; line-height: 1.25; text-transform: uppercase; letter-spacing: 2px; font-weight: 700; }
+    .headline { margin: 38px auto 0; max-width: 760px; font-size: 33px; line-height: 1.32; color: rgba(255,250,242,.86); }
+    .cta { margin-top: 34px; font-size: 26px; font-weight: 800; color: var(--accent, #cbb184); }
+  </style>
+</head>
+<body>
+  <main class="post">
+    <div class="top"><div id="brand_name" class="brand"></div><img id="logo" class="logo" /></div>
+    <div class="photo-wrap"><img id="photo" class="photo" /><div id="monogram" class="monogram"></div></div>
+    <div id="seal" class="seal" style="display:none"><span id="seal-text"></span><img id="seal-img" /></div>
+    <section class="copy">
+      <h1 id="nome"></h1>
+      <div id="credencial" class="cred"></div>
+      <p id="headline" class="headline"></p>
+      <div id="cta" class="cta"></div>
+    </section>
+  </main>
+  <script>
+    document.addEventListener('renderdata', function () {
+      var d = window.__DATA__ || {};
+      var f = d.fields || {};
+      var a = d.assets || {};
+      document.getElementById('brand_name').textContent = f.brand_name || '';
+      document.getElementById('monogram').textContent = f.brand_letter || (f.brand_name ? f.brand_name.charAt(0).toUpperCase() : '');
+      document.getElementById('nome').textContent = f.nome || '';
+      document.getElementById('credencial').textContent = f.credencial || '';
+      document.getElementById('headline').textContent = f.headline || '';
+      document.getElementById('cta').textContent = f.cta || '';
+      if (a.logo) { var logo = document.getElementById('logo'); logo.src = 'data:image/png;base64,' + a.logo; logo.style.display = 'block'; }
+      if (a.photo) { var photo = document.getElementById('photo'); photo.src = 'data:image/jpeg;base64,' + a.photo; photo.style.display = 'block'; document.getElementById('monogram').style.display = 'none'; }
+      // Selo: só renderiza quando explicitamente solicitado.
+      // Prioridade: imagem (a.seal) > texto (f.seal_text). Sem nada → permanece hidden.
+      if (a.seal) {
+        var sealImg = document.getElementById('seal-img');
+        sealImg.src = 'data:image/png;base64,' + a.seal;
+        sealImg.style.display = 'block';
+        document.getElementById('seal').style.display = 'flex';
+      } else if (f.seal_text) {
+        document.getElementById('seal-text').innerHTML = (f.seal_text || '').replace(/\n/g, '<br />');
+        document.getElementById('seal').style.display = 'flex';
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "template_id": "statement-dark-01",
+  "format": "1080x1350",
+  "fields": {
+    "brand_name": { "max_chars": 30, "required": false },
+    "kicker": { "max_chars": 30, "required": false },
+    "headline": { "max_chars": 100, "required": true },
+    "highlight": { "max_chars": 60, "required": false },
+    "supporting": { "max_chars": 120, "required": true },
+    "cta": { "max_chars": 50, "required": true }
+  },
+  "asset_slots": {
+    "logo": { "required": false, "accepted_types": ["logo"] }
+  }
+}

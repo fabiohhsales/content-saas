@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Montserrat:ital,wght@0,400;0,500;1,700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink: var(--text-on-light, #172b42);
+      --paper: var(--bg-light, #f7f0e6);
+      --watermark: rgba(23, 43, 66, 0.07);
+    }
+
+    body {
+      width: 1080px;
+      height: 1350px;
+      overflow: hidden;
+      position: relative;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--font-body, Montserrat), Arial, sans-serif;
+    }
+
+    /* ── Watermark letter ── */
+    .watermark {
+      position: absolute;
+      right: -175px;
+      top: 300px;
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 780px;
+      line-height: 0.8;
+      font-weight: 700;
+      color: transparent;
+      -webkit-text-stroke: 34px var(--watermark);
+      transform: scaleX(0.86);
+      user-select: none;
+      pointer-events: none;
+    }
+
+    /* ── Copy block ── */
+    .copy {
+      position: relative;
+      z-index: 2;
+      width: 820px;
+      margin: 0 auto;
+      padding-top: 180px;
+      text-align: center;
+    }
+
+    .eyebrow {
+      font-size: 28px;
+      font-weight: 700;
+      font-style: italic;
+      line-height: 1.3;
+      color: var(--ink);
+      margin-bottom: 60px;
+    }
+    .eyebrow[data-empty="true"] { display: none; }
+
+    .headline {
+      font-family: var(--font-heading, 'Cormorant Garamond'), Georgia, serif;
+      font-size: 64px;
+      font-weight: 700;
+      line-height: 1.05;
+      color: var(--ink);
+      margin-bottom: 60px;
+    }
+
+    .body-copy {
+      font-size: 34px;
+      font-weight: 400;
+      line-height: 1.55;
+      color: var(--ink);
+      width: 780px;
+      margin: 0 auto;
+    }
+    .body-copy[data-empty="true"] { display: none; }
+
+    /* ── Logo bottom center ── */
+    .logo-wrap {
+      position: absolute;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 20;
+      text-align: center;
+    }
+    .logo-wrap img {
+      max-width: 180px;
+      max-height: 64px;
+      object-fit: contain;
+    }
+    .logo-placeholder {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      color: rgba(23, 43, 66, 0.45);
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="watermark" id="watermark">H</div>
+
+  <section class="copy">
+    <p class="eyebrow" id="eyebrow"></p>
+    <h1 class="headline" id="headline">Headline aqui</h1>
+    <p class="body-copy" id="body"></p>
+  </section>
+
+  <div class="logo-wrap" id="logo-wrap">
+    <span class="logo-placeholder" id="logo-placeholder"></span>
+    <img id="logo-img" src="" alt="" style="display:none" />
+  </div>
+
+  <script>
+    document.addEventListener('renderdata', function () {
+      var d = (window.__DATA__ || {});
+      var f = d.fields || {};
+      var a = d.assets || {};
+
+      // Watermark
+      if (f.brand_letter) document.getElementById('watermark').textContent = f.brand_letter;
+
+      // Eyebrow
+      if (f.eyebrow) {
+        document.getElementById('eyebrow').textContent = f.eyebrow;
+      } else {
+        document.getElementById('eyebrow').setAttribute('data-empty', 'true');
+      }
+
+      // Headline
+      if (f.headline) document.getElementById('headline').textContent = f.headline;
+
+      // Body
+      if (f.body) {
+        document.getElementById('body').textContent = f.body;
+      } else {
+        document.getElementById('body').setAttribute('data-empty', 'true');
+      }
+
+      // Logo
+      if (a.logo) {
+        document.getElementById('logo-img').src = 'data:image/png;base64,' + a.logo;
+        document.getElementById('logo-img').style.display = 'block';
+        document.getElementById('logo-placeholder').style.display = 'none';
+      } else if (f.brand_name) {
+        document.getElementById('logo-placeholder').textContent = f.brand_name;
+      } else {
+        document.getElementById('logo-wrap').style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>

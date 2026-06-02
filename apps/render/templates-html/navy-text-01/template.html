@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Montserrat:ital,wght@0,400;0,500;1,700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink: var(--text-on-light, #172b42);
+      --paper: var(--bg-dark, #172b42);
+      --bar: var(--text-on-light, #3a5a7a);
+      --watermark: rgba(255, 255, 255, 0.05);
+    }
+
+    body {
+      width: 1080px;
+      height: 1350px;
+      overflow: hidden;
+      position: relative;
+      background: var(--paper);
+      color: var(--text-on-dark, #fff);
+      font-family: var(--font-body, Montserrat), Arial, sans-serif;
+    }
+
+    /* ── Watermark letter ── */
+    .watermark {
+      position: absolute;
+      right: -140px;
+      top: 50%;
+      transform: translateY(-50%) scaleX(0.86);
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 780px;
+      line-height: 1;
+      font-weight: 700;
+      color: transparent;
+      -webkit-text-stroke: 30px var(--watermark);
+      user-select: none;
+      pointer-events: none;
+    }
+
+    /* ── Vertical bar ── */
+    .bar {
+      position: absolute;
+      left: 100px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 4px;
+      height: 420px;
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    /* ── Content ── */
+    .content {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      left: 136px;
+      right: 80px;
+      z-index: 10;
+    }
+
+    .label {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.5);
+      margin-bottom: 36px;
+    }
+    .label[data-empty="true"] { display: none; }
+
+    .headline {
+      font-size: 52px;
+      font-weight: 700;
+      font-style: italic;
+      line-height: 1.18;
+      color: var(--text-on-dark, #fff);
+      margin-bottom: 40px;
+    }
+
+    /* ── List items ── */
+    .list { list-style: none; }
+    .list li {
+      font-size: 36px;
+      font-weight: 400;
+      line-height: 1.5;
+      color: rgba(255, 255, 255, 0.88);
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    .list li:last-child { border-bottom: none; }
+    .list[data-empty="true"] { display: none; }
+
+    /* ── Body (alternative to list) ── */
+    .body {
+      font-size: 34px;
+      font-weight: 400;
+      line-height: 1.55;
+      color: rgba(255, 255, 255, 0.88);
+    }
+    .body[data-empty="true"] { display: none; }
+
+    /* ── Logo top-right ── */
+    .logo-wrap {
+      position: absolute;
+      top: 52px;
+      right: 60px;
+      z-index: 20;
+      text-align: right;
+    }
+    .logo-wrap img {
+      max-width: 180px;
+      max-height: 64px;
+      object-fit: contain;
+      filter: brightness(0) invert(1);
+    }
+    .logo-placeholder {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      color: rgba(255, 255, 255, 0.6);
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+  <div class="watermark" id="watermark"></div>
+  <div class="bar"></div>
+
+  <div class="logo-wrap" id="logo-wrap">
+    <span class="logo-placeholder" id="logo-placeholder"></span>
+    <img id="logo-img" src="" alt="" style="display:none" />
+  </div>
+
+  <div class="content">
+    <p class="label" id="label"></p>
+    <h1 class="headline" id="headline"></h1>
+    <ul class="list" id="list"></ul>
+    <p class="body" id="body"></p>
+  </div>
+
+  <script>
+    document.addEventListener('renderdata', function () {
+      var d = (window.__DATA__ || {});
+      var f = d.fields || {};
+      var a = d.assets || {};
+
+      // Watermark letter
+      var wm = document.getElementById('watermark');
+      wm.textContent = f.brand_letter || (f.brand_name ? f.brand_name.charAt(0).toUpperCase() : '');
+
+      // Logo
+      if (a.logo) {
+        document.getElementById('logo-img').src = 'data:image/png;base64,' + a.logo;
+        document.getElementById('logo-img').style.display = 'block';
+        document.getElementById('logo-placeholder').style.display = 'none';
+      } else if (f.brand_name) {
+        document.getElementById('logo-placeholder').textContent = f.brand_name;
+      }
+
+      // Label
+      if (f.label) {
+        document.getElementById('label').textContent = f.label;
+      } else {
+        document.getElementById('label').setAttribute('data-empty', 'true');
+      }
+
+      // Headline
+      if (f.headline) document.getElementById('headline').textContent = f.headline;
+
+      // List items (pipe-separated) vs body text
+      if (f.list_items) {
+        var items = f.list_items.split('|').map(function(s) { return s.trim(); }).filter(Boolean);
+        var ul = document.getElementById('list');
+        items.forEach(function(item) {
+          var li = document.createElement('li');
+          li.textContent = item;
+          ul.appendChild(li);
+        });
+        document.getElementById('body').setAttribute('data-empty', 'true');
+      } else if (f.body) {
+        document.getElementById('body').textContent = f.body;
+        document.getElementById('list').setAttribute('data-empty', 'true');
+      } else {
+        document.getElementById('list').setAttribute('data-empty', 'true');
+        document.getElementById('body').setAttribute('data-empty', 'true');
+      }
+    });
+  </script>
+</body>
+</html>

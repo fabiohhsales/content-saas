@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      width: 1080px;
+      height: 1350px;
+      margin: 0;
+      overflow: hidden;
+      background: var(--bg-light, #f5efe6);
+      color: var(--text-on-light, #17212b);
+      font-family: var(--font-heading, Georgia), 'Times New Roman', serif;
+    }
+    .wrap { height: 100%; padding: var(--space-xxl, 104px) var(--space-xxl, 96px) var(--space-xl, 88px); display: flex; flex-direction: column; }
+    .top { display: flex; justify-content: space-between; align-items: center; min-height: 72px; }
+    .kicker { font: 700 24px Arial, sans-serif; color: var(--accent, #9b8052); text-transform: uppercase; letter-spacing: 3px; }
+    .logo { max-width: 170px; max-height: 62px; object-fit: contain; display: none; }
+    .headline { margin: 148px 0 var(--space-lg, 36px); font-size: 78px; line-height: 1.02; max-width: 820px; letter-spacing: 0; }
+    .headline span { color: var(--accent, #9b8052); font-style: italic; }
+    .body { font: 400 34px/1.45 Arial, sans-serif; max-width: 780px; }
+    .cta { margin-top: auto; font: 800 30px Arial, sans-serif; color: var(--accent, #9b8052); border-top: 4px solid var(--accent, #9b8052); padding-top: var(--space-lg, 30px); max-width: 620px; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="top"><div id="kicker" class="kicker"></div><img id="logo" class="logo" /></div>
+    <h1 id="headline" class="headline"></h1>
+    <p id="body" class="body"></p>
+    <div id="cta" class="cta"></div>
+  </main>
+  <script>
+    document.addEventListener('renderdata', function () {
+      var d = window.__DATA__ || {};
+      var f = d.fields || {};
+      var a = d.assets || {};
+      var kickerEl = document.getElementById('kicker');
+      if (f.kicker) { kickerEl.textContent = f.kicker; } else { kickerEl.style.display = 'none'; }
+      var headline = f.headline || '';
+      if (f.destaque && headline.indexOf(f.destaque) >= 0) {
+        headline = headline.replace(f.destaque, '<span>' + f.destaque + '</span>');
+        document.getElementById('headline').innerHTML = headline;
+      } else {
+        document.getElementById('headline').textContent = headline;
+      }
+      document.getElementById('body').textContent = f.body || '';
+      document.getElementById('cta').textContent = f.cta || '';
+      if (a.logo) {
+        var logo = document.getElementById('logo');
+        logo.src = 'data:image/png;base64,' + a.logo;
+        logo.style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html>

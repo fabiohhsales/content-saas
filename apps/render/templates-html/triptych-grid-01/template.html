@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      width: 1080px;
+      height: 1350px;
+      margin: 0;
+      overflow: hidden;
+      background: var(--bg-dark, #111820);
+      color: var(--text-on-dark, #f7f1e8);
+      font-family: var(--font-body, Arial), Helvetica, sans-serif;
+    }
+    .wrap { height: 100%; padding: var(--space-xxl, 98px) var(--space-xl, 84px) var(--space-xl, 80px); display: flex; flex-direction: column; gap: var(--space-xxl, 68px); }
+    header { display: flex; justify-content: space-between; align-items: flex-start; min-height: 86px; }
+    .brand { max-width: 180px; max-height: 72px; object-fit: contain; }
+    .kicker { color: var(--accent, #c9aa72); font-size: 22px; text-transform: uppercase; letter-spacing: 3px; font-weight: 700; }
+    h1 { font-size: 74px; line-height: 0.98; margin: 0; max-width: 880px; letter-spacing: 0; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; align-items: stretch; min-height: 0; flex: 1; }
+    /* justify-content:center centraliza o conteúdo verticalmente — elimina o
+       espaço vazio quando o texto do card é curto (§17.1 / bug Marco 0). */
+    .card { border: 1px solid rgba(247,241,232,.25); padding: var(--space-lg, 34px) var(--space-md, 26px); display: flex; flex-direction: column; justify-content: center; gap: var(--space-lg, 24px); background: rgba(255,255,255,.035); overflow: hidden; min-height: 260px; word-break: normal; overflow-wrap: anywhere; }
+    .label { color: var(--accent, #c9aa72); font-size: 36px; font-weight: 800; line-height: 1; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: clip; }
+    .text { font-size: 26px; line-height: 1.2; font-weight: 700; overflow: hidden; max-height: 238px; }
+    .label-divider { width: 48px; height: 3px; background: rgba(201,170,114,.55); margin-top: -10px; }
+    .label-divider[data-empty="true"] { display: none; }
+    footer { height: 5px; background: var(--accent, #c9aa72); width: 220px; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <div id="brand_name" class="kicker"></div>
+      <img id="logo" class="brand" style="display:none" />
+    </header>
+    <h1 id="titulo"></h1>
+    <section class="grid">
+      <article class="card"><div class="label" id="l1"></div><div class="label-divider"></div><div class="text" id="t1"></div></article>
+      <article class="card"><div class="label" id="l2"></div><div class="label-divider"></div><div class="text" id="t2"></div></article>
+      <article class="card"><div class="label" id="l3"></div><div class="label-divider"></div><div class="text" id="t3"></div></article>
+    </section>
+    <footer></footer>
+  </main>
+  <script>
+    document.addEventListener('renderdata', function () {
+      var d = window.__DATA__ || {};
+      var f = d.fields || {};
+      var a = d.assets || {};
+      var deco = d.decorators || {};
+      document.getElementById('brand_name').textContent = f.brand_name || '';
+      document.getElementById('titulo').textContent = f.titulo || f.headline || '';
+      document.getElementById('l1').textContent = f.item_1_label || '1';
+      document.getElementById('t1').textContent = f.item_1_texto || '';
+      document.getElementById('l2').textContent = f.item_2_label || '2';
+      document.getElementById('t2').textContent = f.item_2_texto || '';
+      document.getElementById('l3').textContent = f.item_3_label || '3';
+      document.getElementById('t3').textContent = f.item_3_texto || '';
+      if (deco.divider_type === 'none') {
+        var dividers = document.querySelectorAll('.label-divider');
+        Array.prototype.forEach.call(dividers, function (divider) {
+          divider.setAttribute('data-empty', 'true');
+        });
+      }
+      if (a.logo) {
+        var logo = document.getElementById('logo');
+        logo.src = 'data:image/png;base64,' + a.logo;
+        logo.style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html>

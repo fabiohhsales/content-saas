@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { width: 1080px; height: 1350px; overflow: hidden; font-family: var(--font-body, 'Lato', Arial, sans-serif); position: relative; }
+    .bg-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; z-index: 0; }
+    .bg-fallback { position: absolute; inset: 0; background: var(--bg-dark, #1B2A4A); z-index: 0; }
+    .overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.42) 0%, rgba(0,0,0,0.60) 45%, rgba(0,0,0,0.76) 100%); z-index: 1; }
+    .content { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; padding: 72px 80px 60px; }
+    .header { display: flex; justify-content: space-between; align-items: flex-start; min-height: 60px; margin-bottom: 44px; }
+    .brand-name { color: var(--text-on-dark, #FFF); font-size: 22px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; opacity: 0.85; }
+    .logo-img { max-width: 160px; max-height: 56px; object-fit: contain; display: none; }
+    .headlines { flex: 1; display: flex; flex-direction: column; justify-content: center; margin-bottom: 32px; }
+    .headline-small { color: var(--accent, #C9A96E); font-size: 28px; font-weight: 400; letter-spacing: 1px; margin-bottom: 10px; }
+    .headline-big { color: var(--text-on-dark, #FFF); font-size: 84px; font-weight: 800; line-height: 0.95; font-family: var(--font-heading, 'Josefin Slab', Georgia, serif); letter-spacing: -1px; }
+    .pills-list { display: flex; flex-direction: column; gap: 16px; margin-bottom: 36px; }
+    .pill { display: flex; align-items: center; gap: 18px; background: rgba(255,255,255,0.11); border: 1px solid rgba(255,255,255,0.18); border-radius: 60px; padding: 12px 26px 12px 12px; }
+    .pill[data-empty="true"] { display: none; }
+    .pill-number { width: 46px; height: 46px; min-width: 46px; border-radius: 50%; background: var(--accent, #C9A96E); color: var(--bg-dark, #1B2A4A); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 800; font-family: var(--font-heading, 'Josefin Slab', Georgia, serif); flex-shrink: 0; }
+    .pill-text { color: var(--text-on-dark, #FFF); font-size: 25px; font-weight: 600; line-height: 1.2; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+    .footer { display: flex; align-items: center; justify-content: flex-end; min-height: 32px; }
+    .cta-text { color: var(--accent, #C9A96E); font-size: 25px; font-weight: 700; letter-spacing: 1px; }
+    .cta-text[data-empty="true"] { display: none; }
+  </style>
+</head>
+<body>
+  <div class="bg-fallback"></div>
+  <img id="bg_photo" class="bg-photo" style="display:none" alt="" />
+  <div class="overlay"></div>
+  <div class="content">
+    <div class="header">
+      <span id="brand_name" class="brand-name"></span>
+      <img id="logo" class="logo-img" alt="" />
+    </div>
+    <div class="headlines">
+      <div id="headline_small" class="headline-small"></div>
+      <div id="headline_big" class="headline-big"></div>
+    </div>
+    <div class="pills-list">
+      <div class="pill" id="pill_1" data-empty="false">
+        <div class="pill-number" id="item_1_label"></div>
+        <div class="pill-text" id="item_1_texto"></div>
+      </div>
+      <div class="pill" id="pill_2" data-empty="false">
+        <div class="pill-number" id="item_2_label"></div>
+        <div class="pill-text" id="item_2_texto"></div>
+      </div>
+      <div class="pill" id="pill_3" data-empty="false">
+        <div class="pill-number" id="item_3_label"></div>
+        <div class="pill-text" id="item_3_texto"></div>
+      </div>
+      <div class="pill" id="pill_4" data-empty="true">
+        <div class="pill-number" id="item_4_label"></div>
+        <div class="pill-text" id="item_4_texto"></div>
+      </div>
+      <div class="pill" id="pill_5" data-empty="true">
+        <div class="pill-number" id="item_5_label"></div>
+        <div class="pill-text" id="item_5_texto"></div>
+      </div>
+    </div>
+    <div class="footer">
+      <span id="cta" class="cta-text" data-empty="true"></span>
+    </div>
+  </div>
+  <script>
+    document.addEventListener('renderdata', function () {
+      var d = window.__DATA__ || {};
+      var f = d.fields || {};
+      var a = d.assets || {};
+
+      // Background photo
+      if (a.photo) {
+        var bgPhoto = document.getElementById('bg_photo');
+        bgPhoto.src = 'data:image/jpeg;base64,' + a.photo;
+        bgPhoto.style.display = 'block';
+      }
+
+      // Logo
+      if (a.logo) {
+        var logo = document.getElementById('logo');
+        logo.src = 'data:image/png;base64,' + a.logo;
+        logo.style.display = 'block';
+      }
+
+      // Brand name
+      var brandEl = document.getElementById('brand_name');
+      if (f.brand_name) { brandEl.textContent = f.brand_name; } else { brandEl.style.display = 'none'; }
+
+      // Headlines
+      document.getElementById('headline_small').textContent = f.headline_small || '';
+      document.getElementById('headline_big').textContent = f.headline_big || '';
+
+      // Pills
+      function setPill(idx, label, text) {
+        var pill = document.getElementById('pill_' + idx);
+        var hasContent = (label || '') !== '' || (text || '') !== '';
+        if (!hasContent) { pill.setAttribute('data-empty', 'true'); return; }
+        pill.setAttribute('data-empty', 'false');
+        document.getElementById('item_' + idx + '_label').textContent = label || String(idx);
+        document.getElementById('item_' + idx + '_texto').textContent = text || '';
+      }
+
+      setPill(1, f.item_1_label, f.item_1_texto);
+      setPill(2, f.item_2_label, f.item_2_texto);
+      setPill(3, f.item_3_label, f.item_3_texto);
+      setPill(4, f.item_4_label, f.item_4_texto);
+      setPill(5, f.item_5_label, f.item_5_texto);
+
+      // CTA
+      var ctaEl = document.getElementById('cta');
+      if (f.cta) { ctaEl.textContent = f.cta; ctaEl.removeAttribute('data-empty'); } else { ctaEl.setAttribute('data-empty', 'true'); }
+    });
+  </script>
+</body>
+</html>

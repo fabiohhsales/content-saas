@@ -1,0 +1,54 @@
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  orchestrator:
+    image: node:20-slim
+    working_dir: /app
+    command: sh -c "npm install && npm run dev:orchestrator"
+    ports:
+      - "3002:3002"
+    env_file:
+      - .env.local
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+
+  orchestrator-worker:
+    image: node:20-slim
+    working_dir: /app
+    command: sh -c "npm install && npm run worker:orchestrator"
+    env_file:
+      - .env.local
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+
+  render:
+    image: mcr.microsoft.com/playwright:v1.44.0-jammy
+    working_dir: /app
+    command: sh -c "npm install && npm run dev:render"
+    ports:
+      - "3001:3001"
+    env_file:
+      - .env.local
+    volumes:
+      - .:/app
+
+  web:
+    image: node:20-slim
+    working_dir: /app
+    command: sh -c "npm install && npm run dev:web"
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.local
+    volumes:
+      - .:/app
+    depends_on:
+      - orchestrator
+      - render

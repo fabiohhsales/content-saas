@@ -1,0 +1,26 @@
+{
+  "name": "content-saas",
+  "version": "0.1.0",
+  "private": true,
+  "description": "SaaS de automacao de conteudo com IA, Supabase, BullMQ e render de previews.",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @content-saas/contracts && npm run build -w @content-saas/supabase && npm run build -w @content-saas/render && npm run build -w @content-saas/orchestrator && npm run build -w @content-saas/web",
+    "typecheck": "npm run build -w @content-saas/contracts && npm run build -w @content-saas/supabase && npm run typecheck -w @content-saas/render && npm run typecheck -w @content-saas/orchestrator && npm run typecheck -w @content-saas/web",
+    "test": "npm run test -w @content-saas/contracts && npm run test -w @content-saas/supabase && npm run test -w @content-saas/render && npm run test -w @content-saas/orchestrator && npm run test -w @content-saas/web",
+    "dev:web": "npm run dev -w @content-saas/web",
+    "dev:orchestrator": "npm run dev -w @content-saas/orchestrator",
+    "dev:render": "npm run dev -w @content-saas/render",
+    "worker:orchestrator": "npm run worker -w @content-saas/orchestrator"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.5.4"
+  }
+}

@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 1080px;
+      height: 1350px;
+      overflow: hidden;
+      position: relative;
+      font-family: var(--font-body, Montserrat), Arial, sans-serif;
+      background: var(--bg-dark, #1a1a1a);
+    }
+
+    /* ── Background photo ── */
+    #bg {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center top;
+      background-color: var(--bg-dark, #2a2a2a);
+    }
+
+    /* ── Dark gradient overlay ── */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        to top,
+        rgba(0, 0, 0, 0.82) 0%,
+        rgba(0, 0, 0, 0.45) 45%,
+        rgba(0, 0, 0, 0.08) 100%
+      );
+    }
+
+    /* ── Logo top-right ── */
+    .logo-wrap {
+      position: absolute;
+      top: 52px;
+      right: 60px;
+      z-index: 20;
+      max-width: 200px;
+      max-height: 72px;
+    }
+    .logo-wrap img {
+      max-width: 200px;
+      max-height: 72px;
+      object-fit: contain;
+      filter: brightness(0) invert(1); /* white version */
+    }
+    .logo-placeholder {
+      font-family: var(--font-body, Montserrat), sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      color: rgba(255, 255, 255, 0.85);
+      text-transform: uppercase;
+    }
+
+    /* ── Content block ── */
+    .content {
+      position: absolute;
+      bottom: 96px;
+      left: 80px;
+      right: 80px;
+      z-index: 10;
+      color: var(--text-on-dark, #fff);
+    }
+
+    .eyebrow {
+      font-size: 26px;
+      font-weight: 700;
+      font-style: italic;
+      letter-spacing: 0.02em;
+      color: rgba(255, 255, 255, 0.75);
+      margin-bottom: 20px;
+      line-height: 1.3;
+    }
+    .eyebrow[data-empty="true"] { display: none; }
+
+    .headline {
+      font-family: var(--font-heading, 'Cormorant Garamond'), Georgia, serif;
+      font-size: 72px;
+      font-weight: 700;
+      line-height: 1.05;
+      color: var(--text-on-dark, #fff);
+      margin-bottom: 28px;
+    }
+
+    .body {
+      font-size: 30px;
+      font-weight: 400;
+      line-height: 1.55;
+      color: rgba(255, 255, 255, 0.85);
+    }
+    .body[data-empty="true"] { display: none; }
+  </style>
+</head>
+<body>
+  <div id="bg"></div>
+  <div class="overlay"></div>
+
+  <div class="logo-wrap" id="logo-wrap">
+    <span class="logo-placeholder" id="logo-placeholder"></span>
+    <img id="logo-img" src="" alt="" style="display:none" />
+  </div>
+
+  <div class="content">
+    <p class="eyebrow" id="eyebrow"></p>
+    <h1 class="headline" id="headline">Headline do post aqui</h1>
+    <p class="body" id="body"></p>
+  </div>
+
+  <script>
+    document.addEventListener('renderdata', function () {
+      var d = (window.__DATA__ || {});
+      var f = d.fields || {};
+      var a = d.assets || {};
+
+      // Background photo
+      if (a.photo) {
+        document.getElementById('bg').style.backgroundImage =
+          'url(data:image/jpeg;base64,' + a.photo + ')';
+      }
+
+      // Logo
+      if (a.logo) {
+        document.getElementById('logo-img').src = 'data:image/png;base64,' + a.logo;
+        document.getElementById('logo-img').style.display = 'block';
+        document.getElementById('logo-placeholder').style.display = 'none';
+      } else if (f.brand_name) {
+        document.getElementById('logo-placeholder').textContent = f.brand_name;
+      }
+
+      // Text fields
+      if (f.eyebrow) {
+        document.getElementById('eyebrow').textContent = f.eyebrow;
+      } else {
+        document.getElementById('eyebrow').setAttribute('data-empty', 'true');
+      }
+
+      if (f.headline) {
+        document.getElementById('headline').textContent = f.headline;
+      }
+
+      if (f.body) {
+        document.getElementById('body').textContent = f.body;
+      } else {
+        document.getElementById('body').setAttribute('data-empty', 'true');
+      }
+    });
+  </script>
+</body>
+</html>

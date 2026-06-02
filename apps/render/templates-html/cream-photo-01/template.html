@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Montserrat:ital,wght@0,400;0,500;1,700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink: var(--text-on-light, #172b42);
+      --paper: var(--bg-light, #f7f0e6);
+      --watermark: rgba(23, 43, 66, 0.07);
+    }
+
+    body {
+      width: 1080px;
+      height: 1350px;
+      overflow: hidden;
+      position: relative;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--font-body, Montserrat), Arial, sans-serif;
+    }
+
+    /* ── Watermark letter ── */
+    .watermark {
+      position: absolute;
+      right: -175px;
+      top: 360px;
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 780px;
+      line-height: 0.8;
+      font-weight: 700;
+      color: transparent;
+      -webkit-text-stroke: 34px var(--watermark);
+      transform: scaleX(0.86);
+      user-select: none;
+      pointer-events: none;
+    }
+
+    /* ── Copy block ── */
+    .copy {
+      position: relative;
+      z-index: 2;
+      width: 820px;
+      margin: 0 auto;
+      padding-top: 197px;
+      text-align: center;
+    }
+
+    .eyebrow {
+      font-size: 35px;
+      line-height: 1.22;
+      font-weight: 700;
+      font-style: italic;
+    }
+    .eyebrow[data-empty="true"] { display: none; }
+
+    .headline {
+      margin-top: 62px;
+      font-family: var(--font-heading, 'Cormorant Garamond'), Georgia, serif;
+      font-size: 52px;
+      line-height: 1.05;
+      font-weight: 700;
+    }
+    .headline[data-empty="true"] { display: none; }
+
+    .body-copy {
+      width: 780px;
+      margin: 53px auto 0;
+      font-size: 34px;
+      line-height: 1.48;
+      font-weight: 400;
+    }
+    .body-copy[data-empty="true"] { display: none; }
+
+    /* ── Photo window ── */
+    .photo-window {
+      position: absolute;
+      z-index: 2;
+      left: 96px;
+      bottom: 109px;
+      width: 888px;
+      height: 494px;
+      overflow: hidden;
+      background: var(--bg-light, #e8dfd3);
+    }
+    .photo-window[data-empty="true"] { display: none; }
+
+    .photo-window img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+    }
+
+    /* ── Logo bottom center (fallback) ── */
+    .logo-wrap {
+      position: absolute;
+      bottom: 72px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 20;
+    }
+    .logo-wrap img {
+      max-width: 160px;
+      max-height: 56px;
+      object-fit: contain;
+    }
+    .logo-placeholder {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      color: rgba(23, 43, 66, 0.5);
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="watermark" id="watermark">H</div>
+
+  <section class="copy">
+    <p class="eyebrow" id="eyebrow">Eyebrow text aqui</p>
+    <h1 class="headline" id="headline"></h1>
+    <p class="body-copy" id="body">Corpo do texto aqui</p>
+  </section>
+
+  <figure class="photo-window" id="photo-window">
+    <img id="photo-img" src="" alt="" />
+  </figure>
+
+  <div class="logo-wrap" id="logo-wrap">
+    <span class="logo-placeholder" id="logo-placeholder"></span>
+    <img id="logo-img" src="" alt="" style="display:none" />
+  </div>
+
+  <script>
+    document.addEventListener('renderdata', function () {
+      var d = (window.__DATA__ || {});
+      var f = d.fields || {};
+      var a = d.assets || {};
+
+      // Watermark letter
+      if (f.brand_letter) document.getElementById('watermark').textContent = f.brand_letter;
+
+      // Logo
+      if (a.logo) {
+        document.getElementById('logo-img').src = 'data:image/png;base64,' + a.logo;
+        document.getElementById('logo-img').style.display = 'block';
+        document.getElementById('logo-placeholder').style.display = 'none';
+      } else if (f.brand_name) {
+        document.getElementById('logo-placeholder').textContent = f.brand_name;
+      } else {
+        document.getElementById('logo-wrap').style.display = 'none';
+      }
+
+      // Eyebrow
+      if (f.eyebrow) {
+        document.getElementById('eyebrow').textContent = f.eyebrow;
+      } else {
+        document.getElementById('eyebrow').setAttribute('data-empty', 'true');
+      }
+
+      // Headline
+      if (f.headline) {
+        document.getElementById('headline').textContent = f.headline;
+      } else {
+        document.getElementById('headline').setAttribute('data-empty', 'true');
+      }
+
+      // Body
+      if (f.body) {
+        document.getElementById('body').textContent = f.body;
+      } else {
+        document.getElementById('body').setAttribute('data-empty', 'true');
+      }
+
+      // Photo
+      if (a.photo) {
+        document.getElementById('photo-img').src = 'data:image/jpeg;base64,' + a.photo;
+      } else {
+        document.getElementById('photo-window').setAttribute('data-empty', 'true');
+        // Reposition logo when no photo
+        document.getElementById('logo-wrap').style.bottom = '72px';
+      }
+    });
+  </script>
+</body>
+</html>

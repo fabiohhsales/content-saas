@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <style>
+    * { box-sizing: border-box; }
+    body { width: 1080px; height: 1350px; margin: 0; overflow: hidden; background: var(--bg-dark, #1B2A4A); color: var(--text-on-dark, #F8F5F0); font-family: var(--font-body, Arial), Helvetica, sans-serif; }
+    .post { width: 1080px; height: 1350px; position: relative; }
+    .photo-layer { position: absolute; inset: 0; overflow: hidden; }
+    .photo-layer img { width: 100%; height: 100%; object-fit: cover; display: none; }
+    .photo-layer .placeholder { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: linear-gradient(160deg, var(--bg-dark, #25344a), var(--bg-dark, #0E1A33)); color: rgba(201,169,110,.22); font-family: Georgia, serif; font-size: 260px; }
+    .scrim { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(11,22,42,.45) 0%, rgba(11,22,42,.15) 40%, rgba(11,22,42,.85) 100%); }
+    .top { position: absolute; top: 82px; left: 76px; right: 76px; display: flex; justify-content: space-between; align-items: flex-start; z-index: 2; }
+    .brand { color: var(--text-on-dark, #F8F5F0); font-size: 22px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; text-shadow: 0 1px 6px rgba(0,0,0,.45); }
+    .logo { max-width: 160px; max-height: 56px; object-fit: contain; display: none; filter: brightness(0) invert(1); }
+    .card { position: absolute; left: 76px; right: 76px; bottom: 110px; background: rgba(11,22,42,.86); border: 1px solid rgba(201,169,110,.4); padding: var(--space-xl, 44px) var(--space-xl, 48px); z-index: 2; backdrop-filter: blur(4px); }
+    .tag { display: inline-block; background: var(--accent, #C9A96E); color: var(--text-on-light, #1B2A4A); padding: 6px 14px; font-size: 18px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 22px; }
+    .tag[data-empty="true"] { display: none; }
+    h1 { margin: 0; font-family: var(--font-heading, Georgia), 'Times New Roman', serif; font-size: 56px; line-height: 1.08; color: var(--text-on-dark, #F8F5F0); font-weight: 700; }
+    .subtitle { margin-top: var(--space-md, 18px); font-size: 26px; line-height: 1.36; color: rgba(248,245,240,.78); }
+    .subtitle[data-empty="true"] { display: none; }
+    .overlay-accent { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+    .overlay-accent::before { content: ""; position: absolute; inset: 0; background: linear-gradient(var(--gradient-angle, 180deg), var(--gradient-start, rgba(11,22,42,.18)), var(--gradient-end, rgba(11,22,42,.85))); opacity: var(--overlay-opacity, 1); }
+    .overlay-accent .shape { position: absolute; opacity: var(--shape-opacity, .45); }
+    .overlay-accent .shape.line { width: 112px; height: 2px; background: var(--accent, #C9A96E); }
+    .overlay-accent .shape.circle { width: 88px; height: 88px; border: 1px solid rgba(201,169,110,.45); border-radius: 50%; }
+    .overlay-accent .shape[data-placement="top-left"] { top: 36px; left: 36px; }
+    .overlay-accent .shape[data-placement="top-right"] { top: 36px; right: 36px; }
+    .overlay-accent .shape[data-placement="bottom-left"] { bottom: 36px; left: 36px; }
+    .overlay-accent .shape[data-placement="bottom-right"] { bottom: 36px; right: 36px; }
+  </style>
+</head>
+<body>
+  <main class="post">
+    <div class="photo-layer">
+      <div class="placeholder">H</div>
+      <img id="photo" />
+    </div>
+    <div class="scrim"></div>
+    <div id="overlay-accent" class="overlay-accent"></div>
+    <div class="top"><div id="brand_name" class="brand"></div><img id="logo" class="logo" /></div>
+    <div class="card">
+      <div id="tag" class="tag"></div>
+      <h1 id="title"></h1>
+      <p id="subtitle" class="subtitle"></p>
+    </div>
+  </main>
+  <script>
+    document.addEventListener('renderdata', function () {
+      var d = window.__DATA__ || {};
+      var f = d.fields || {};
+      var a = d.assets || {};
+      var deco = d.decorators || {};
+      document.getElementById('brand_name').textContent = f.brand_name || '';
+      var tag = document.getElementById('tag');
+      if (f.tag) tag.textContent = f.tag; else tag.setAttribute('data-empty', 'true');
+      document.getElementById('title').textContent = f.title || '';
+      var sub = document.getElementById('subtitle');
+      if (f.subtitle) sub.textContent = f.subtitle; else sub.setAttribute('data-empty', 'true');
+      if (a.logo) { var logo = document.getElementById('logo'); logo.src = 'data:image/png;base64,' + a.logo; logo.style.display = 'block'; }
+      if (a.photo) {
+        var photo = document.getElementById('photo');
+        photo.src = 'data:image/jpeg;base64,' + a.photo;
+        photo.style.display = 'block';
+        document.querySelector('.photo-layer .placeholder').style.display = 'none';
+      }
+      if (deco.gradient_overlay) {
+        var overlay = document.getElementById('overlay-accent');
+        var gradientsByPreset = {
+          none: { start: 'rgba(11,22,42,0)', end: 'rgba(11,22,42,0)', angle: 180, opacity: 0 },
+          dark: { start: 'rgba(11,22,42,.1)', end: 'rgba(11,22,42,.86)', angle: 180, opacity: 1 },
+          light: { start: 'rgba(248,245,240,.05)', end: 'rgba(248,245,240,.25)', angle: 180, opacity: 1 },
+          accent: { start: 'rgba(201,169,110,.08)', end: 'rgba(11,22,42,.78)', angle: 160, opacity: 1 }
+        };
+
+        if (typeof deco.gradient_overlay === 'string') {
+          var presetGradient = gradientsByPreset[deco.gradient_overlay] || gradientsByPreset.none;
+          overlay.style.setProperty('--gradient-start', presetGradient.start);
+          overlay.style.setProperty('--gradient-end', presetGradient.end);
+          overlay.style.setProperty('--gradient-angle', presetGradient.angle + 'deg');
+          overlay.style.setProperty('--overlay-opacity', String(presetGradient.opacity));
+        } else {
+          if (deco.gradient_overlay.start) overlay.style.setProperty('--gradient-start', deco.gradient_overlay.start);
+          if (deco.gradient_overlay.end) overlay.style.setProperty('--gradient-end', deco.gradient_overlay.end);
+          if (deco.gradient_overlay.angle !== undefined) overlay.style.setProperty('--gradient-angle', deco.gradient_overlay.angle + 'deg');
+          if (deco.gradient_overlay.opacity !== undefined) overlay.style.setProperty('--overlay-opacity', String(deco.gradient_overlay.opacity));
+          if (deco.gradient_overlay.preset && gradientsByPreset[deco.gradient_overlay.preset]) {
+            var p = gradientsByPreset[deco.gradient_overlay.preset];
+            if (!deco.gradient_overlay.start) overlay.style.setProperty('--gradient-start', p.start);
+            if (!deco.gradient_overlay.end) overlay.style.setProperty('--gradient-end', p.end);
+            if (deco.gradient_overlay.angle === undefined) overlay.style.setProperty('--gradient-angle', p.angle + 'deg');
+            if (deco.gradient_overlay.opacity === undefined) overlay.style.setProperty('--overlay-opacity', String(p.opacity));
+          }
+        }
+      }
+      if (deco.shape_accents && deco.shape_accents.length) {
+        var host = document.getElementById('overlay-accent');
+        var placementAliases = {
+          tl: 'top-left',
+          tr: 'top-right',
+          bl: 'bottom-left',
+          br: 'bottom-right'
+        };
+        deco.shape_accents.forEach(function (shape) {
+          var el = document.createElement('div');
+          el.className = 'shape ' + shape.type;
+          el.setAttribute('data-placement', placementAliases[shape.placement] || shape.placement);
+          host.appendChild(el);
+        });
+      }
+    });
+  </script>
+</body>
+</html>

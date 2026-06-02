@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { width: 1080px; height: 1350px; overflow: hidden; font-family: var(--font-body, 'Lato', Arial, sans-serif); background: var(--bg-light, #F5F0E8); color: var(--text-on-light, #1B2A4A); }
+    .wrap { height: 100%; display: flex; flex-direction: column; padding: 56px 72px 48px; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 36px; min-height: 64px; }
+    .brand-block { display: flex; flex-direction: column; gap: 4px; }
+    .brand-name { font-size: 22px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--primary, #1B2A4A); }
+    .specialty-line { font-size: 18px; font-weight: 400; color: var(--accent, #C9A96E); letter-spacing: 0.5px; }
+    .brand-block[data-empty="true"] .brand-name { display: none; }
+    .brand-block[data-empty="true"] .specialty-line { display: none; }
+    .logo-img { max-width: 160px; max-height: 56px; object-fit: contain; display: none; }
+    .comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; height: 560px; margin-bottom: 28px; border-radius: 10px; overflow: hidden; flex-shrink: 0; }
+    .side { position: relative; overflow: hidden; }
+    .side-photo { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
+    .side-fallback { width: 100%; height: 100%; background: var(--bg-dark, #1B2A4A); }
+    .side-label { position: absolute; bottom: 0; left: 0; right: 0; background: var(--accent, #C9A96E); color: var(--bg-dark, #1B2A4A); text-align: center; font-size: 22px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; padding: 9px 12px; }
+    .body-section { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 10px; margin-bottom: 20px; }
+    .support-text { font-size: 26px; font-weight: 400; color: var(--primary, #1B2A4A); opacity: 0.7; line-height: 1.3; }
+    .support-text[data-empty="true"] { display: none; }
+    .main-title { font-size: 50px; font-weight: 800; line-height: 1.05; font-family: var(--font-heading, 'Josefin Slab', Georgia, serif); color: var(--primary, #1B2A4A); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+    .footer { display: flex; flex-direction: column; gap: 7px; border-top: 2px solid var(--accent, #C9A96E); padding-top: 14px; }
+    .disclaimer { font-size: 15px; font-weight: 400; color: var(--text-on-light, #1B2A4A); opacity: 0.45; line-height: 1.4; }
+    .disclaimer[data-empty="true"] { display: none; }
+    .cta-line { font-size: 22px; font-weight: 700; color: var(--accent, #C9A96E); letter-spacing: 1px; }
+    .cta-line[data-empty="true"] { display: none; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <div class="brand-block" id="brand_block">
+        <div id="brand_name" class="brand-name"></div>
+        <div id="specialty_line" class="specialty-line"></div>
+      </div>
+      <img id="logo" class="logo-img" alt="" />
+    </div>
+
+    <div class="comparison">
+      <div class="side" id="side_left">
+        <div class="side-fallback" id="side_left_fallback"></div>
+        <img id="photo_left" class="side-photo" style="display:none" alt="Antes" />
+        <div id="left_label" class="side-label"></div>
+      </div>
+      <div class="side" id="side_right">
+        <div class="side-fallback" id="side_right_fallback"></div>
+        <img id="photo_right" class="side-photo" style="display:none" alt="Depois" />
+        <div id="right_label" class="side-label"></div>
+      </div>
+    </div>
+
+    <div class="body-section">
+      <div id="support_text" class="support-text" data-empty="true"></div>
+      <div id="main_title" class="main-title"></div>
+    </div>
+
+    <div class="footer">
+      <div id="disclaimer" class="disclaimer" data-empty="true"></div>
+      <div id="cta" class="cta-line" data-empty="true"></div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('renderdata', function () {
+      var d = window.__DATA__ || {};
+      var f = d.fields || {};
+      var a = d.assets || {};
+
+      // Logo
+      if (a.logo) {
+        var logo = document.getElementById('logo');
+        logo.src = 'data:image/png;base64,' + a.logo;
+        logo.style.display = 'block';
+      }
+
+      // Brand name + specialty
+      var hasBrand = f.brand_name || f.specialty_line;
+      var brandBlock = document.getElementById('brand_block');
+      if (!hasBrand && !a.logo) { brandBlock.setAttribute('data-empty', 'true'); }
+      if (f.brand_name) document.getElementById('brand_name').textContent = f.brand_name;
+      if (f.specialty_line) document.getElementById('specialty_line').textContent = f.specialty_line;
+
+      // Photo left (before / photo)
+      if (a.photo) {
+        var photoLeft = document.getElementById('photo_left');
+        photoLeft.src = 'data:image/jpeg;base64,' + a.photo;
+        photoLeft.style.display = 'block';
+        document.getElementById('side_left_fallback').style.display = 'none';
+      }
+
+      // Photo right (after / photo2)
+      if (a.photo2) {
+        var photoRight = document.getElementById('photo_right');
+        photoRight.src = 'data:image/jpeg;base64,' + a.photo2;
+        photoRight.style.display = 'block';
+        document.getElementById('side_right_fallback').style.display = 'none';
+      }
+
+      // Labels
+      document.getElementById('left_label').textContent = f.left_label || 'Antes';
+      document.getElementById('right_label').textContent = f.right_label || 'Depois';
+
+      // Body
+      var supportEl = document.getElementById('support_text');
+      if (f.support_text) { supportEl.textContent = f.support_text; supportEl.removeAttribute('data-empty'); }
+
+      document.getElementById('main_title').textContent = f.main_title || '';
+
+      // Footer
+      var disclaimerEl = document.getElementById('disclaimer');
+      if (f.disclaimer) { disclaimerEl.textContent = f.disclaimer; disclaimerEl.removeAttribute('data-empty'); }
+
+      var ctaEl = document.getElementById('cta');
+      if (f.cta) { ctaEl.textContent = f.cta; ctaEl.removeAttribute('data-empty'); }
+    });
+  </script>
+</body>
+</html>

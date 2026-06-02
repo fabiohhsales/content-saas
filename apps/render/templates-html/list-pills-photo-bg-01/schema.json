@@ -1,0 +1,24 @@
+{
+  "template_id": "list-pills-photo-bg-01",
+  "format": { "type": "post", "width": 1080, "height": 1350 },
+  "fields": {
+    "brand_name": { "max_chars": 30, "required": false },
+    "headline_small": { "max_chars": 35, "required": true },
+    "headline_big": { "max_chars": 24, "required": true },
+    "item_1_label": { "max_chars": 4, "required": true },
+    "item_1_texto": { "max_chars": 40, "required": true },
+    "item_2_label": { "max_chars": 4, "required": true },
+    "item_2_texto": { "max_chars": 40, "required": true },
+    "item_3_label": { "max_chars": 4, "required": true },
+    "item_3_texto": { "max_chars": 40, "required": true },
+    "item_4_label": { "max_chars": 4, "required": false },
+    "item_4_texto": { "max_chars": 40, "required": false },
+    "item_5_label": { "max_chars": 4, "required": false },
+    "item_5_texto": { "max_chars": 40, "required": false },
+    "cta": { "max_chars": 35, "required": false }
+  },
+  "asset_slots": {
+    "logo": { "required": false, "accepted_types": ["logo"] },
+    "photo": { "required": true, "accepted_types": ["brand_image", "stock_image", "generated_image"] }
+  }
+}

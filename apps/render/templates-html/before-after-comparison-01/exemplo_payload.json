@@ -1,0 +1,19 @@
+{
+  "template_id": "before-after-comparison-01",
+  "fields": {
+    "brand_name": "@clinicahairgrow",
+    "specialty_line": "Tricologia & Saúde Capilar",
+    "left_label": "Antes",
+    "right_label": "Depois",
+    "support_text": "Resultado após 6 meses de tratamento",
+    "main_title": "Transformação real, sem filtros",
+    "disclaimer": "Resultados individuais podem variar. Imagens com autorização da paciente.",
+    "cta": "@clinicahairgrow"
+  },
+  "asset_refs": {
+    "photo_id": "photo-before-1",
+    "photo2_id": "photo-after-1"
+  },
+  "justification": "Post de resultado antes/depois — prova visual de eficácia para meio/fundo de funil",
+  "render_ready": true
+}

@@ -1,0 +1,15 @@
+{
+  "template_id": "hero-cinematografico-01",
+  "format": "1080x1350",
+  "fields": {
+    "kicker": { "max_chars": 30, "required": false },
+    "headline": { "max_chars": 110, "required": true },
+    "destaque": { "max_chars": 30, "required": false },
+    "sub": { "max_chars": 140, "required": false }
+  },
+  "asset_slots": {
+    "logo": { "required": false, "accepted_types": ["logo"] },
+    "seal": { "required": false, "accepted_types": ["seal", "badge"] },
+    "photo": { "required": false, "accepted_types": ["photo"] }
+  }
+}

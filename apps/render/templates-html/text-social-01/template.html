@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <style>
+    * { box-sizing: border-box; }
+    body { width: 1080px; height: 1350px; margin: 0; overflow: hidden; background: var(--bg-light, #F8F5F0); color: var(--text-on-light, #1B2A4A); font-family: var(--font-body, Arial), Helvetica, sans-serif; }
+    .post { width: 1080px; height: 1350px; padding: 92px 92px 86px; display: flex; flex-direction: column; }
+    .top { display: flex; justify-content: space-between; align-items: center; }
+    .brand { color: var(--text-on-light, #1B2A4A); font-size: 22px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; opacity: .68; }
+    .logo { max-width: 160px; max-height: 56px; object-fit: contain; display: none; }
+    .profile { display: flex; align-items: center; gap: 22px; margin-top: 86px; }
+    .avatar { width: 110px; height: 110px; border-radius: 50%; background: var(--bg-dark, #1B2A4A); color: var(--text-on-dark, #F8F5F0); display: flex; align-items: center; justify-content: center; font-family: Georgia, serif; font-size: 56px; overflow: hidden; flex-shrink: 0; }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; display: none; }
+    .profile-info { display: flex; flex-direction: column; }
+    .handle { font-size: 28px; font-weight: 800; color: var(--text-on-light, #1B2A4A); }
+    .meta { font-size: 22px; color: rgba(27,42,74,.55); margin-top: 4px; }
+    h1 { margin: 70px 0 38px; font-family: var(--font-heading, Georgia), 'Times New Roman', serif; font-size: 60px; line-height: 1.08; max-width: 880px; font-weight: 700; }
+    .body { font-size: 30px; line-height: 1.42; max-width: 880px; color: rgba(27,42,74,.84); white-space: pre-line; }
+    .cta { margin-top: auto; padding-top: 32px; border-top: 3px solid var(--accent, #C9A96E); color: var(--text-on-light, #1B2A4A); font-weight: 800; font-size: 28px; text-transform: uppercase; letter-spacing: 1.2px; }
+    .cta[data-empty="true"] { display: none; }
+  </style>
+</head>
+<body>
+  <main class="post">
+    <div class="top"><div id="brand_name" class="brand"></div><img id="logo" class="logo" /></div>
+    <div class="profile">
+      <div class="avatar"><span id="avatar-letter">H</span><img id="icon" /></div>
+      <div class="profile-info">
+        <div id="handle" class="handle"></div>
+        <div class="meta">especialista</div>
+      </div>
+    </div>
+    <h1 id="headline"></h1>
+    <p id="body" class="body"></p>
+    <div id="cta" class="cta"></div>
+  </main>
+  <script>
+    document.addEventListener('renderdata', function () {
+      var d = window.__DATA__ || {};
+      var f = d.fields || {};
+      var a = d.assets || {};
+      document.getElementById('brand_name').textContent = f.brand_name || '';
+      var handle = f.handle || '';
+      document.getElementById('handle').textContent = handle;
+      document.getElementById('avatar-letter').textContent = (handle.replace('@','').charAt(0) || 'H').toUpperCase();
+      document.getElementById('headline').textContent = f.headline || '';
+      document.getElementById('body').textContent = f.body || '';
+      var cta = document.getElementById('cta');
+      if (f.cta) cta.textContent = f.cta; else cta.setAttribute('data-empty', 'true');
+      if (a.logo) { var logo = document.getElementById('logo'); logo.src = 'data:image/png;base64,' + a.logo; logo.style.display = 'block'; }
+      if (a.icon) {
+        var icon = document.getElementById('icon');
+        icon.src = 'data:image/png;base64,' + a.icon;
+        icon.style.display = 'block';
+        document.getElementById('avatar-letter').style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>

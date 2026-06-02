@@ -1,0 +1,22 @@
+{
+  "template_id": "list-pills-photo-bg-01",
+  "fields": {
+    "brand_name": "@clinicahairgrow",
+    "headline_small": "Benefícios de cuidar da",
+    "headline_big": "saúde capilar",
+    "item_1_label": "1",
+    "item_1_texto": "Entenda a causa da queda",
+    "item_2_label": "2",
+    "item_2_texto": "Escolha o tratamento certo",
+    "item_3_label": "3",
+    "item_3_texto": "Acompanhe a evolução",
+    "item_4_label": "4",
+    "item_4_texto": "Mantenha os resultados",
+    "cta": "@clinicahairgrow"
+  },
+  "asset_refs": {
+    "photo_id": "photo-1"
+  },
+  "justification": "Checklist rápido para topo de funil — capta atenção com foto de fundo e lista visual numerada",
+  "render_ready": true
+}

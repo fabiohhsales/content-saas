@@ -1,0 +1,15 @@
+{
+  "template_id": "cream-photo-01",
+  "format": "1080x1350",
+  "fields": {
+    "eyebrow": { "max_chars": 80, "required": false },
+    "headline": { "max_chars": 100, "required": true },
+    "body": { "max_chars": 220, "required": false },
+    "brand_letter": { "max_chars": 1, "required": false },
+    "brand_name": { "max_chars": 40, "required": false }
+  },
+  "asset_slots": {
+    "photo": { "required": false, "accepted_types": ["person_photo", "environment_photo", "generated_image", "before_after"] },
+    "logo": { "required": false, "accepted_types": ["logo"] }
+  }
+}

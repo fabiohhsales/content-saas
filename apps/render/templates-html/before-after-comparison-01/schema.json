@@ -1,0 +1,19 @@
+{
+  "template_id": "before-after-comparison-01",
+  "format": { "type": "post", "width": 1080, "height": 1350 },
+  "fields": {
+    "brand_name": { "max_chars": 30, "required": false },
+    "specialty_line": { "max_chars": 50, "required": false },
+    "left_label": { "max_chars": 20, "required": true },
+    "right_label": { "max_chars": 20, "required": true },
+    "support_text": { "max_chars": 80, "required": false },
+    "main_title": { "max_chars": 60, "required": true },
+    "disclaimer": { "max_chars": 120, "required": false },
+    "cta": { "max_chars": 35, "required": false }
+  },
+  "asset_slots": {
+    "logo": { "required": false, "accepted_types": ["logo"] },
+    "photo": { "required": true, "accepted_types": ["before_after", "brand_image"] },
+    "photo2": { "required": true, "accepted_types": ["before_after", "brand_image"] }
+  }
+}

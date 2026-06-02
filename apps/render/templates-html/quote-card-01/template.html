@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <style>
+    * { box-sizing: border-box; }
+    body { width: 1080px; height: 1350px; margin: 0; overflow: hidden; background: var(--bg-light, #f6efe4); color: var(--text-on-light, #172334); font-family: var(--font-body, Arial), Helvetica, sans-serif; }
+    .post { position: relative; width: 1080px; height: 1350px; padding: 92px 92px 86px; display: flex; flex-direction: column; }
+    .top { display: flex; justify-content: space-between; align-items: flex-start; }
+    .brand { color: var(--accent, #8a6f42); font-size: 22px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; }
+    .logo { max-width: 170px; max-height: 64px; object-fit: contain; display: none; }
+    .quote-mark { margin-top: 170px; color: var(--accent, #cbb184); font-family: Georgia, serif; font-size: 170px; line-height: .6; }
+    h1 { margin: 0; max-width: 880px; font-family: var(--font-heading, Georgia), 'Times New Roman', serif; font-size: 72px; line-height: 1.08; letter-spacing: 0; }
+    h1 span { color: var(--accent, #9d7f4d); font-style: italic; }
+    .autor { margin-top: 48px; color: var(--accent, #8a6f42); font-size: 27px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.4px; }
+    .sub { margin-top: 30px; max-width: 760px; font-size: 28px; line-height: 1.4; color: rgba(23,35,52,.78); }
+    .rule { margin-top: auto; width: 240px; height: 6px; background: var(--accent, #cbb184); }
+  </style>
+</head>
+<body>
+  <main class="post">
+    <div class="top"><div id="brand_name" class="brand"></div><img id="logo" class="logo" /></div>
+    <div class="quote-mark">"</div>
+    <h1 id="quote"></h1>
+    <div id="autor" class="autor"></div>
+    <div id="sub" class="sub"></div>
+    <div class="rule"></div>
+  </main>
+  <script>
+    document.addEventListener('renderdata', function () {
+      var d = window.__DATA__ || {};
+      var f = d.fields || {};
+      var a = d.assets || {};
+      document.getElementById('brand_name').textContent = f.brand_name || '';
+      var quote = f.quote || '';
+      var quoteEl = document.getElementById('quote');
+      if (f.destaque && quote.indexOf(f.destaque) >= 0) {
+        quoteEl.textContent = '';
+        var before = quote.slice(0, quote.indexOf(f.destaque));
+        var after = quote.slice(quote.indexOf(f.destaque) + f.destaque.length);
+        quoteEl.appendChild(document.createTextNode(before));
+        var span = document.createElement('span');
+        span.textContent = f.destaque;
+        quoteEl.appendChild(span);
+        quoteEl.appendChild(document.createTextNode(after));
+      } else {
+        quoteEl.textContent = quote;
+      }
+      document.getElementById('autor').textContent = f.autor || '';
+      document.getElementById('sub').textContent = f.sub || '';
+      if (a.logo) { var logo = document.getElementById('logo'); logo.src = 'data:image/png;base64,' + a.logo; logo.style.display = 'block'; }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "template_id": "paper-editorial-01",
+  "format": "1080x1350",
+  "fields": {
+    "kicker": { "max_chars": 30, "required": false },
+    "headline": { "max_chars": 70, "required": true },
+    "destaque": { "max_chars": 30, "required": false },
+    "body": { "max_chars": 200, "required": true },
+    "cta": { "max_chars": 60, "required": true }
+  },
+  "asset_slots": {
+    "logo": { "required": false, "accepted_types": ["logo"] }
+  }
+}
