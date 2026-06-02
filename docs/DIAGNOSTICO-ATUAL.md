@@ -59,6 +59,7 @@ Responsavel pela experiencia do usuario:
 - Detalhe/edicao de marca em `/brands/[brandId]`.
 - Wizard de onboarding da marca em `/brands/[brandId]/onboarding`.
 - Biblioteca de assets em `/brands/[brandId]/assets`.
+- Planejamento de conteudo em `/plans` e `/plans/[planId]`.
 - Biblioteca de templates em `/templates` e detalhe em `/templates/[templateId]`.
 - Central de aprovacoes em `/approvals`.
 - Painel de jobs/logs em `/jobs`, com filtros e retry manual para jobs suportados.
@@ -70,6 +71,9 @@ Arquivos-chave:
 - `apps/web/src/lib/demo.ts`: dados ficticios para navegacao local.
 - `apps/web/src/lib/supabase.ts`: client Supabase SSR.
 - `apps/web/src/app/brands/actions.ts`: server actions de marcas, assets e memoria.
+- `apps/web/src/app/plans/page.tsx`: lista, filtros e criacao de planos de conteudo.
+- `apps/web/src/app/plans/[planId]/page.tsx`: detalhe do plano, itens planejados e status.
+- `apps/web/src/app/plans/actions.ts`: server actions de planos, itens e aprovacao.
 - `apps/web/src/app/templates/page.tsx`: biblioteca de templates.
 - `apps/web/src/app/templates/[templateId]/page.tsx`: detalhe de contrato/campos do template.
 - `apps/web/src/app/approvals/page.tsx`: central de aprovacao humana.
@@ -82,6 +86,7 @@ Modo demo:
 - Ativado por `DEMO_MODE=true`.
 - Permite navegar sem Supabase configurado.
 - Cria workspace, marcas, assets e memoria mockados em memoria estatica.
+- Inclui planos editoriais e itens de conteudo mockados para avaliacao de fluxo.
 - Atualmente serve para avaliacao de fluxo/UX, nao para persistencia real.
 
 ### 3.2 Orchestrator (`apps/orchestrator`)
@@ -235,6 +240,7 @@ flowchart TD
   E --> I["Painel /jobs com execucoes e logs demo"]
   E --> J["Biblioteca /templates com contratos demo"]
   E --> K["Central /approvals com decisoes demo"]
+  E --> L["Planos /plans com itens editoriais demo"]
 ```
 
 Objetivo:
@@ -289,6 +295,19 @@ flowchart TD
   F --> G["Abre aprovacao humana"]
 ```
 
+### 6.5 Fluxo atual de planejamento de conteudo
+
+```mermaid
+flowchart TD
+  A["Usuario abre /plans"] --> B["Filtra por marca/status ou cria plano manual"]
+  B --> C["Plano grava content_plans com plan_json.schema_version"]
+  C --> D["Usuario abre /plans/[planId]"]
+  D --> E["Cria content_items com copy_json.schema_version"]
+  E --> F["Atualiza status do item"]
+  D --> G["Envia plano para aprovacao"]
+  G --> H["Cria approvals target_type=content_plan"]
+```
+
 ## 7. Rotas atuais
 
 ### Web
@@ -303,6 +322,8 @@ flowchart TD
 | `/brands/[brandId]` | funcional | edita marca e mostra memorias |
 | `/brands/[brandId]/onboarding` | funcional | wizard inicial |
 | `/brands/[brandId]/assets` | funcional | biblioteca e upload |
+| `/plans` | funcional | lista, filtra e cria planos de conteudo; demo ativo |
+| `/plans/[planId]` | funcional | gerencia itens, status e envio para aprovacao |
 | `/templates` | funcional | biblioteca de templates; demo ativo |
 | `/templates/[templateId]` | funcional | detalhe de campos, slots e contrato |
 | `/approvals` | funcional | central de aprovacoes, filtros e decisoes |
@@ -387,6 +408,8 @@ Rotas demo verificadas com HTTP 200:
 - `/brands/demo-brand-health-grow`
 - `/brands/demo-brand-health-grow/onboarding`
 - `/brands/demo-brand-health-grow/assets`
+- `/plans`
+- `/plans/demo-plan-aurora-2026-06`
 - `/templates`
 - `/templates/photo-overlay-01`
 - `/approvals`
@@ -400,6 +423,7 @@ Rotas demo verificadas com HTTP 200:
 - Estrutura de marca e assets.
 - Biblioteca inicial de templates.
 - Central inicial de aprovacoes humanas.
+- Planejamento manual de conteudo com planos e itens.
 - Memoria de marca mockada.
 - Painel inicial de jobs/logs no web.
 - Arquitetura de monorepo.
@@ -415,7 +439,6 @@ Rotas demo verificadas com HTTP 200:
 ### Ainda nao implementado
 
 - IA real para memoria de marca.
-- CRUD de content plans e content items.
 - Render preview integrado ao web/orchestrator.
 - Gestao de membros do workspace.
 - CI GitHub Actions.
@@ -451,8 +474,8 @@ Ordem sugerida:
 4. Subir Supabase/Redis local e validar fluxo real de `generate_brand_memory`.
 5. Integrar `generate_brand_memory` real com provider IA.
 6. Criar fluxo de render preview e salvar em `generated_assets`.
-7. Criar CRUD de content plans e content items.
-8. Conectar aprovacoes aos detalhes reais de memoria, plano, item e asset gerado.
+7. Conectar aprovacoes aos detalhes reais de memoria, plano, item e asset gerado.
+8. Adicionar geracao automatica de content plans/content items via orchestrator.
 9. Adicionar CI no GitHub Actions.
 
 ## 13. Checklist de handoff

@@ -372,6 +372,100 @@ export const demoApprovals = [
   },
 ];
 
+export const demoContentPlans = [
+  {
+    id: 'demo-plan-aurora-2026-06',
+    workspace_id: DEMO_WORKSPACE_ID,
+    brand_id: DEMO_BRAND_ID,
+    title: 'Plano editorial Junho/2026 - Clinica Aurora',
+    period_start: '2026-06-01',
+    period_end: '2026-06-30',
+    status: 'draft',
+    plan_json: {
+      schema_version: 1,
+      objective: 'Educar pacientes sobre tratamentos capilares com autoridade medica e linguagem acolhedora.',
+      channels: ['Instagram', 'LinkedIn'],
+      pillars: ['educacao', 'prova social', 'conversao'],
+    },
+    created_at: new Date(Date.now() - 1000 * 60 * 70).toISOString(),
+  },
+  {
+    id: 'demo-plan-renovo-2026-06',
+    workspace_id: DEMO_WORKSPACE_ID,
+    brand_id: 'demo-brand-renovo',
+    title: 'Plano editorial Junho/2026 - Renovo Hair',
+    period_start: '2026-06-01',
+    period_end: '2026-06-30',
+    status: 'awaiting_approval',
+    plan_json: {
+      schema_version: 1,
+      objective: 'Apoiar decisao de pacientes que estao comparando clinicas de transplante capilar.',
+      channels: ['Instagram'],
+      pillars: ['diagnostico', 'metodo', 'bastidores'],
+    },
+    created_at: new Date(Date.now() - 1000 * 60 * 240).toISOString(),
+  },
+];
+
+export const demoContentItems = [
+  {
+    id: 'demo-content-item-001',
+    workspace_id: DEMO_WORKSPACE_ID,
+    brand_id: DEMO_BRAND_ID,
+    content_plan_id: 'demo-plan-aurora-2026-06',
+    title: 'Quando investigar queda capilar persistente?',
+    status: 'draft',
+    scheduled_for: '2026-06-05T13:00:00.000Z',
+    channel: 'Instagram',
+    format: 'post_unico',
+    template_id: 'photo-overlay-01',
+    copy_json: {
+      schema_version: 1,
+      hook: 'Queda capilar persistente merece investigacao, nao improviso.',
+      caption: 'Entenda sinais que indicam a hora de buscar avaliacao medica e evitar promessas rapidas.',
+      cta: 'Agende uma avaliacao individualizada.',
+    },
+    created_at: new Date(Date.now() - 1000 * 60 * 62).toISOString(),
+  },
+  {
+    id: 'demo-content-item-002',
+    workspace_id: DEMO_WORKSPACE_ID,
+    brand_id: DEMO_BRAND_ID,
+    content_plan_id: 'demo-plan-aurora-2026-06',
+    title: '3 mitos sobre tratamento capilar',
+    status: 'awaiting_approval',
+    scheduled_for: '2026-06-12T13:00:00.000Z',
+    channel: 'Instagram',
+    format: 'carrossel',
+    template_id: 'triptych-grid-01',
+    copy_json: {
+      schema_version: 1,
+      hook: 'Nem todo conselho popular ajuda seu cabelo.',
+      slides: ['Shampoo nao resolve tudo', 'Suplemento sem diagnostico pode frustrar', 'Resultado exige plano e acompanhamento'],
+      cta: 'Salve para conversar com seu medico.',
+    },
+    created_at: new Date(Date.now() - 1000 * 60 * 50).toISOString(),
+  },
+  {
+    id: 'demo-content-item-003',
+    workspace_id: DEMO_WORKSPACE_ID,
+    brand_id: 'demo-brand-renovo',
+    content_plan_id: 'demo-plan-renovo-2026-06',
+    title: 'O que avaliar antes do transplante capilar',
+    status: 'changes_requested',
+    scheduled_for: '2026-06-18T13:00:00.000Z',
+    channel: 'Instagram',
+    format: 'post_unico',
+    template_id: 'paper-editorial-01',
+    copy_json: {
+      schema_version: 1,
+      hook: 'A decisao pelo transplante comeca antes da tecnica.',
+      caption: 'Briefing pede mais conteudo de fundo de funil antes da aprovacao.',
+    },
+    created_at: new Date(Date.now() - 1000 * 60 * 190).toISOString(),
+  },
+];
+
 export function getDemoBrand(brandId: string) {
   return demoBrands.find((brand) => brand.id === brandId) ?? demoBrands[0]!;
 }
@@ -389,4 +483,12 @@ export function getDemoMemories(brandId: string) {
 
 export function getDemoTemplate(templateId: string) {
   return demoTemplates.find((template) => template.template_id === templateId || template.id === templateId) ?? demoTemplates[0]!;
+}
+
+export function getDemoContentPlan(planId: string) {
+  return demoContentPlans.find((plan) => plan.id === planId) ?? demoContentPlans[0]!;
+}
+
+export function getDemoContentItems(planId: string) {
+  return demoContentItems.filter((item) => item.content_plan_id === planId);
 }

@@ -22,6 +22,7 @@ export default async function BrandDetailPage({ params }: { params: Promise<{ br
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <Link className="button secondary" href={`/brands/${brand.id}/onboarding`}>Wizard</Link>
             <Link className="button secondary" href={`/brands/${brand.id}/assets`}>Assets</Link>
+            <Link className="button secondary" href={`/plans?brand_id=${brand.id}`}>Planos</Link>
             <form action={requestBrandMemory.bind(null, brand.id)}>
               <button type="submit">Gerar memoria</button>
             </form>
@@ -100,6 +101,7 @@ export default async function BrandDetailPage({ params }: { params: Promise<{ br
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <Link className="button secondary" href={`/brands/${brand.id}/onboarding`}>Wizard</Link>
           <Link className="button secondary" href={`/brands/${brand.id}/assets`}>Assets</Link>
+          <Link className="button secondary" href={`/plans?brand_id=${brand.id}`}>Planos</Link>
           <form action={requestBrandMemory.bind(null, brand.id)}>
             <button type="submit">Gerar memoria</button>
           </form>
