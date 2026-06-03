@@ -13,6 +13,11 @@ const ElementUpdateSchema = z.object({
   element_type: z.enum(['text', 'image', 'shape']),
   text: z.string().max(2000).optional(),
   asset_ref: z.string().optional(),
+  x: z.number().optional(),
+  y: z.number().optional(),
+  width: z.number().positive().optional(),
+  height: z.number().positive().optional(),
+  rotation: z.number().optional(),
   change_summary: z.string().max(500).optional(),
 });
 
@@ -25,6 +30,13 @@ function requiredWorkspaceId(membership: Awaited<ReturnType<typeof getCurrentWor
 function optionalText(value: FormDataEntryValue | null) {
   const text = typeof value === 'string' ? value.trim() : '';
   return text.length > 0 ? text : undefined;
+}
+
+function optionalNumber(value: FormDataEntryValue | null) {
+  const text = typeof value === 'string' ? value.trim() : '';
+  if (!text) return undefined;
+  const number = Number(text);
+  return Number.isFinite(number) ? number : undefined;
 }
 
 function parseAssetRef(assetRef?: string) {
@@ -56,15 +68,27 @@ function updateElement(documentJson: CreativeDocumentJson, input: z.infer<typeof
           if (element.id !== input.element_id) return element;
           changed = true;
 
+          const layoutPatch = element.locked
+            ? {}
+            : {
+                x: input.x ?? element.x,
+                y: input.y ?? element.y,
+                width: input.width ?? element.width,
+                height: input.height ?? element.height,
+                rotation: input.rotation ?? element.rotation,
+              };
+
           if (input.element_type === 'text') {
             return {
               ...element,
+              ...layoutPatch,
               text: input.text ?? '',
             };
           }
 
           return {
             ...element,
+            ...layoutPatch,
             asset_id: asset.asset_id,
             asset_source: asset.asset_source,
           };
@@ -117,6 +141,11 @@ export async function updateCreativeElement(documentId: string, formData: FormDa
     element_type: formData.get('element_type'),
     text: optionalText(formData.get('text')) ?? '',
     asset_ref: optionalText(formData.get('asset_ref')),
+    x: optionalNumber(formData.get('x')),
+    y: optionalNumber(formData.get('y')),
+    width: optionalNumber(formData.get('width')),
+    height: optionalNumber(formData.get('height')),
+    rotation: optionalNumber(formData.get('rotation')),
     change_summary: optionalText(formData.get('change_summary')),
   });
 

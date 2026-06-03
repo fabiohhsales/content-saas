@@ -410,17 +410,22 @@ Tabelas atuais sustentam o MVP, mas estes ajustes sao recomendados:
 
 Entrega:
 
-- Canvas com preview visual.
-- Selecao de elemento.
-- Painel de propriedades basico.
-- Editar texto.
-- Trocar asset/logo.
-- Salvar versao.
-- Render final.
+- Canvas com preview visual. Implementado inicialmente com DOM responsivo.
+- Selecao de elemento. Implementado inicialmente via canvas e painel de camadas.
+- Painel de propriedades basico. Implementado inicialmente para texto, asset e geometria.
+- Editar texto. Implementado via server action existente.
+- Trocar asset/logo. Implementado via select de assets da marca/global no painel.
+- Persistir geometria (`x`, `y`, `width`, `height`, `rotation`). Implementado via server action, ainda sem drag/resize visual com handles.
+- Salvar versao. Implementado via server action existente.
+- Render final. Implementado via job `render_creative_document`.
 
 Criterio de pronto:
 
 - Um documento demo e um documento real podem ser abertos, editados, versionados e renderizados.
+
+Status atual:
+
+- Parcialmente implementado. Falta drag/resize visual com handles, snap e validacao visual de overflow antes de considerar a fase madura.
 
 ### Fase 2 - Biblioteca de assets dentro do editor
 
@@ -600,4 +605,3 @@ O MVP simples esta pronto quando:
 - Documento e render passam pelos contratos Zod.
 - RLS impede acesso entre workspaces.
 - Build, typecheck e testes passam.
-

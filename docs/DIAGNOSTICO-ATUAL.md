@@ -85,7 +85,8 @@ Arquivos-chave:
 - `apps/web/src/app/plans/[planId]/page.tsx`: detalhe do plano, itens planejados e status.
 - `apps/web/src/app/plans/actions.ts`: server actions de planos, itens e aprovacao.
 - `apps/web/src/app/editor/page.tsx`: lista documentos criativos editaveis derivados de previews.
-- `apps/web/src/app/editor/[documentId]/page.tsx`: revisao assistida por placeholders, assets, biblioteca global e versoes.
+- `apps/web/src/app/editor/[documentId]/page.tsx`: carrega dados, auth e contratos do documento criativo.
+- `apps/web/src/app/editor/[documentId]/editor-client.tsx`: workbench visual client-side com canvas selecionavel, camadas, painel de propriedades, assets e versoes.
 - `apps/web/src/app/editor/actions.ts`: salva edicoes de elementos, cria versoes e envia documentos criativos para aprovacao.
 - `docs/PLANO-MVP-EDITOR-VISUAL.md`: planejamento da evolucao do editor assistido para um MVP visual tipo Canva controlado.
 - `apps/web/src/app/templates/page.tsx`: biblioteca de templates.
@@ -601,7 +602,7 @@ Rotas demo verificadas com HTTP 200:
 - Central inicial de aprovacoes humanas.
 - Aprovacoes conectadas aos detalhes de memoria, plano, item e preview.
 - Planejamento manual de conteudo com planos e itens.
-- Editor assistido inicial para revisar criativos por placeholders, assets da marca e biblioteca global.
+- Editor assistido visual inicial para revisar criativos por canvas, camadas, placeholders, assets da marca e biblioteca global.
 - Planejamento do MVP de editor visual tipo Canva controlado, com fases, UX do designer, contratos e riscos.
 - Geracao mockada de planos e itens via orchestrator.
 - Fila inicial de render preview com persistencia em `generated_assets`.
@@ -621,7 +622,7 @@ Rotas demo verificadas com HTTP 200:
 - Upload real: implementado no web, mas depende de Supabase Storage configurado.
 - Jobs: contrato, worker, painel visual e retry inicial existem, mas falta integracao ponta a ponta real em ambiente com Redis/Supabase.
 - Render preview: posts unicos/carrosseis implementados no orchestrator/web, mas precisam ambiente real com Redis, Supabase Storage e render service rodando para teste ponta a ponta.
-- Editor assistido: contratos, tabelas, demo, UI inicial, persistencia de edicao, aprovacao, endpoint de render final e job de persistencia em Storage existem, mas ainda falta validacao ponta a ponta real com Redis/Supabase/render.
+- Editor assistido: contratos, tabelas, demo, canvas client-side, selecao de elementos, painel de propriedades, persistencia de texto/asset/layout, aprovacao, endpoint de render final e job de persistencia em Storage existem, mas ainda falta drag/resize com handles, asset picker mais completo e validacao ponta a ponta real com Redis/Supabase/render.
 - Biblioteca global de assets: schema, leitura autenticada e hardening para remover upload livre existem; falta fluxo administrativo/curadoria para inserir assets globais.
 - Geracao de plano: job mockado implementado, mas precisa provider IA real para producao.
 - Gestao de membros: CRUD inicial por `user_id` e convite por link existem, mas falta envio de e-mail transacional.
@@ -632,7 +633,7 @@ Rotas demo verificadas com HTTP 200:
 - IA real para memoria de marca.
 - IA real para geracao de planos e itens.
 - Render preview avancado com escolha assistida de template e assets reais da marca.
-- Editor visual com canvas real, selecao, drag/resize, painel de propriedades e asset picker integrado.
+- Drag/resize visual com handles no editor, snap basico e asset picker avancado integrado ao canvas.
 - Envio de e-mail transacional para convites.
 - Testes SQL/RLS executados contra Supabase real/local com usuarios de workspaces diferentes.
 
@@ -669,7 +670,7 @@ Ordem sugerida:
 4. Subir Supabase/Redis/render local e validar fluxos reais de `generate_brand_memory`, `generate_content_plan` e `render_preview`.
 5. Integrar `generate_brand_memory` e `generate_content_plan` com provider IA.
 6. Evoluir render preview para selecionar templates/assets reais da marca.
-7. Implementar Fase 1 do `docs/PLANO-MVP-EDITOR-VISUAL.md`: canvas real, selecao, edicao de texto/asset e persistencia validada.
+7. Completar Fase 1/2 do `docs/PLANO-MVP-EDITOR-VISUAL.md`: drag/resize com handles, asset picker filtravel e validacao visual de overflow.
 8. Criar fluxo admin/service-role para curadoria e upload em `global-assets`.
 9. Adicionar envio transacional de e-mail para convites.
 10. Adicionar testes SQL/RLS executados contra Supabase real/local com usuarios de workspaces diferentes.
