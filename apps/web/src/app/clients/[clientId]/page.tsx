@@ -188,49 +188,100 @@ export default async function ClientWorkspacePage({ params }: { params: Promise<
   ];
   const completion = progress(checklist);
   const latestMemory = memories[0];
+  const nextStep = checklist.find((item) => !item.done);
+  const currentPlan = plans[0];
+  const assetCategories = Array.from(new Set(assets.map((asset) => asset.category))).slice(0, 4);
 
   return (
     <AppShell>
-      <div className="toolbar client-workspace-hero">
-        <div>
+      <section className="client-studio-hero">
+        <div className="client-hero-copy">
           <small className="muted">Painel do cliente</small>
           <h1>{client.name}</h1>
-          <p className="muted">{client.industry || 'Segmento nao definido'} - {client.status}</p>
+          <p>{client.positioning || 'Central operacional para briefing, identidade, assets, estrategia, criativos e aprovacao.'}</p>
+          <div className="client-hero-meta">
+            <span>{client.industry || 'Segmento nao definido'}</span>
+            <span>{client.status === 'active' ? 'Ativo' : 'Em setup'}</span>
+            <span>{completion}% pronto</span>
+          </div>
         </div>
-        <div className="client-actions">
-          <Link className="button secondary" href="/clients">Clientes</Link>
-          <Link className="button secondary" href={`/brands/${client.id}`}>Dados avancados</Link>
-          <Link className="button" href="#geracao">Gerar conteudo</Link>
-        </div>
-      </div>
+        <aside className="client-next-action">
+          <small className="muted">Proxima acao</small>
+          <strong>{nextStep ? nextStep.label : 'Cliente pronto para producao'}</strong>
+          <p className="muted">
+            {nextStep
+              ? 'Complete este bloco para liberar um fluxo de criacao mais confiavel.'
+              : 'Revise o cronograma, gere previews e envie criativos para aprovacao.'}
+          </p>
+          <div className="client-actions">
+            <Link className="button" href={nextStep ? '#perfil' : '#criativos'}>
+              {nextStep ? 'Continuar setup' : 'Revisar criativos'}
+            </Link>
+            <Link className="button secondary" href="/clients">Clientes</Link>
+          </div>
+        </aside>
+      </section>
 
-      <section className="client-command-strip">
-        <div>
-          <small className="muted">Identidade</small>
+      <nav className="client-quick-nav" aria-label="Atalhos do painel do cliente">
+        <Link href="#perfil">Briefing</Link>
+        <Link href="#assets">Assets</Link>
+        <Link href="#geracao">IA</Link>
+        <Link href="#estrategia">Cronograma</Link>
+        <Link href="#templates">Templates</Link>
+        <Link href="#criativos">Criativos</Link>
+        <Link href={`/brands/${client.id}`}>Avancado</Link>
+      </nav>
+
+      <section className="client-control-grid">
+        <div className="client-identity-card">
+          <div>
+            <small className="muted">Identidade</small>
+            <strong>{clientIdentity.font_family}</strong>
+          </div>
           <div className="brand-token-row">
             <span style={{ background: clientIdentity.primary_color }} />
             <span style={{ background: clientIdentity.secondary_color }} />
-            <strong>{clientIdentity.font_family}</strong>
           </div>
+          <p className="muted">{clientIdentity.visual_notes || 'Sem observacoes visuais registradas.'}</p>
         </div>
-        <div><strong>{assets.length}</strong><span>assets</span></div>
-        <div><strong>{templates.length}</strong><span>templates disponiveis</span></div>
-        <div><strong>{plans.length}</strong><span>cronogramas</span></div>
-        <div><strong>{documents.length}</strong><span>criativos</span></div>
+
+        <div className="client-command-card">
+          <strong>{assets.length}</strong>
+          <span>assets na biblioteca</span>
+          <small>{assetCategories.length ? assetCategories.join(', ') : 'Aguardando upload'}</small>
+        </div>
+        <div className="client-command-card">
+          <strong>{templates.length}</strong>
+          <span>templates disponiveis</span>
+          <small>{linkedTemplateIds.size} vinculados ao cliente</small>
+        </div>
+        <div className="client-command-card">
+          <strong>{plans.length}</strong>
+          <span>cronogramas</span>
+          <small>{currentPlan ? `${formatDate(currentPlan.period_start)} a ${formatDate(currentPlan.period_end)}` : 'Nenhum plano ativo'}</small>
+        </div>
+        <div className="client-command-card">
+          <strong>{documents.length}</strong>
+          <span>criativos editaveis</span>
+          <small>{latestMemory ? `Memoria v${latestMemory.version}` : 'IA ainda sem memoria'}</small>
+        </div>
       </section>
 
       <section className="panel client-flow-panel">
-        <div>
-          <small className="muted">Progresso operacional</small>
-          <h2>{completion}% pronto para producao</h2>
+        <div className="client-flow-heading">
+          <div>
+            <small className="muted">Progresso operacional</small>
+            <h2>{completion}% pronto para producao</h2>
+          </div>
+          <span>{checklist.filter((item) => item.done).length}/{checklist.length} etapas</span>
         </div>
         <div className="client-progress">
           <span style={{ width: `${completion}%` }} />
         </div>
-        <div className="client-steps">
-          {checklist.map((item) => (
+        <div className="client-workflow-lane">
+          {checklist.map((item, index) => (
             <span className={item.done ? 'done' : ''} key={item.label}>
-              <strong>{item.done ? 'OK' : '--'}</strong>
+              <strong>{index + 1}</strong>
               {item.label}
             </span>
           ))}
