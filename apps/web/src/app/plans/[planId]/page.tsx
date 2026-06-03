@@ -5,6 +5,7 @@ import { getCurrentWorkspace } from '@/lib/auth';
 import { demoBrands, demoCreativeDocuments, getDemoContentItems, getDemoContentPlan, getDemoGeneratedAssets, isDemoMode } from '@/lib/demo';
 import {
   archiveContentPlan,
+  createCreativeDocumentFromItem,
   createContentItem,
   createPlanApproval,
   requestRenderPreview,
@@ -42,6 +43,14 @@ type GeneratedAssetLike = {
   metadata?: Record<string, unknown>;
   signedUrl?: string | null;
   created_at?: string;
+};
+
+type CreativeDocumentLike = {
+  id: string;
+  content_item_id: string | null;
+  title: string;
+  status: string;
+  template_ref: string;
 };
 
 function statusLabel(status: string) {
@@ -88,6 +97,7 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ pla
   let plan: PlanDetail | null = null;
   let items: ItemLike[] = [];
   let generatedAssets: GeneratedAssetLike[] = [];
+  let creativeDocuments: CreativeDocumentLike[] = [];
 
   if (isDemoMode()) {
     const demoPlan = getDemoContentPlan(planId);
@@ -98,6 +108,7 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ pla
     };
     items = getDemoContentItems(demoPlan.id);
     generatedAssets = getDemoGeneratedAssets(items.map((item) => item.id));
+    creativeDocuments = demoCreativeDocuments.filter((document) => items.some((item) => item.id === document.content_item_id));
   } else {
     const [{ data: planRow }, { data: itemRows }] = await Promise.all([
       supabase
@@ -130,6 +141,17 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ pla
           .order('created_at', { ascending: false });
 
         generatedAssets = (assetRows ?? []) as GeneratedAssetLike[];
+
+        const { data: documentRows } = await supabase
+          .from('creative_documents')
+          .select('id, content_item_id, title, status, template_ref')
+          .eq('workspace_id', membership.workspace_id)
+          .eq('brand_id', plan.brand_id)
+          .in('content_item_id', itemIds)
+          .neq('status', 'archived')
+          .order('updated_at', { ascending: false });
+
+        creativeDocuments = (documentRows ?? []) as CreativeDocumentLike[];
       }
     }
 
@@ -146,6 +168,11 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ pla
   const assetsByItem = generatedAssets.reduce<Record<string, GeneratedAssetLike[]>>((acc, asset) => {
     if (!asset.content_item_id) return acc;
     acc[asset.content_item_id] = [...(acc[asset.content_item_id] ?? []), asset];
+    return acc;
+  }, {});
+  const documentsByItem = creativeDocuments.reduce<Record<string, CreativeDocumentLike[]>>((acc, document) => {
+    if (!document.content_item_id) return acc;
+    acc[document.content_item_id] = [...(acc[document.content_item_id] ?? []), document];
     return acc;
   }, {});
 
@@ -255,19 +282,37 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ pla
             <div className="grid" style={{ marginTop: 16 }}>
               <div className="toolbar" style={{ marginBottom: 0 }}>
                 <div>
-                  <small className="muted">Previews gerados</small>
-                  <p className="muted" style={{ margin: '4px 0 0' }}>Render PNG/JPG salvo em Storage e enviado para aprovacao humana.</p>
+                  <small className="muted">Preview e editor</small>
+                  <p className="muted" style={{ margin: '4px 0 0' }}>Gere PNG/JPG ou transforme este item em documento visual editavel.</p>
                 </div>
-                <form action={requestRenderPreview.bind(null, plan.id, item.id)} style={{ display: 'flex', gap: 8, alignItems: 'end', flexWrap: 'wrap' }}>
-                  <label style={{ minWidth: 120 }}>
-                    Formato
-                    <select name="output_format" defaultValue="png">
-                      <option value="png">PNG</option>
-                      <option value="jpg">JPG</option>
-                    </select>
-                  </label>
-                  <button type="submit">Gerar preview</button>
-                </form>
+                <div className="client-actions">
+                  <form action={requestRenderPreview.bind(null, plan.id, item.id)} style={{ display: 'flex', gap: 8, alignItems: 'end', flexWrap: 'wrap' }}>
+                    <label style={{ minWidth: 120 }}>
+                      Formato
+                      <select name="output_format" defaultValue="png">
+                        <option value="png">PNG</option>
+                        <option value="jpg">JPG</option>
+                      </select>
+                    </label>
+                    <button type="submit">Gerar preview</button>
+                  </form>
+                  <form action={createCreativeDocumentFromItem.bind(null, plan.id, item.id)} style={{ display: 'flex', gap: 8, alignItems: 'end', flexWrap: 'wrap' }}>
+                    <label style={{ minWidth: 180 }}>
+                      Template
+                      <input name="template_id" defaultValue={String(item.copy_json?.template_id ?? 'paper-editorial-01')} />
+                    </label>
+                    <button type="submit">Criar criativo editavel</button>
+                  </form>
+                </div>
+              </div>
+              <div className="grid two">
+                {(documentsByItem[item.id] ?? []).map((document) => (
+                  <article className="card" key={document.id}>
+                    <small className="muted">{document.template_ref} - {statusLabel(document.status)}</small>
+                    <strong>{document.title}</strong>
+                    <Link className="button secondary" href={`/editor/${document.id}`} style={{ marginTop: 10 }}>Abrir no editor</Link>
+                  </article>
+                ))}
               </div>
               <div className="grid two">
                 {(assetsByItem[item.id] ?? []).map((asset) => (

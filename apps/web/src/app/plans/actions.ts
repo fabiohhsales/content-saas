@@ -3,9 +3,9 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
-import { ContentItemStatusSchema, RenderOutputFormatSchema } from '@content-saas/contracts';
+import { ContentItemStatusSchema, CreativeDocumentJsonSchema, RenderOutputFormatSchema } from '@content-saas/contracts';
 import { getCurrentWorkspace } from '@/lib/auth';
-import { isDemoMode } from '@/lib/demo';
+import { demoCreativeDocuments, isDemoMode } from '@/lib/demo';
 
 const ContentPlanFormSchema = z.object({
   brand_id: z.string().min(1),
@@ -30,6 +30,10 @@ const ContentItemFormSchema = z.object({
   hook: z.string().optional(),
   caption: z.string().optional(),
   cta: z.string().optional(),
+});
+
+const CreativeFromItemSchema = z.object({
+  template_id: z.string().optional(),
 });
 
 function requiredWorkspaceId(membership: Awaited<ReturnType<typeof getCurrentWorkspace>>['membership']) {
@@ -359,4 +363,143 @@ export async function requestRenderPreview(planId: string, contentItemId: string
   revalidatePath(`/plans/${planId}`);
   revalidatePath('/jobs');
   redirect('/jobs?queue=render-preview');
+}
+
+export async function createCreativeDocumentFromItem(planId: string, contentItemId: string, formData: FormData) {
+  const input = CreativeFromItemSchema.parse({
+    template_id: optionalText(formData.get('template_id')),
+  });
+
+  if (isDemoMode()) {
+    const demoDocument = demoCreativeDocuments.find((document) => document.content_item_id === contentItemId) ?? demoCreativeDocuments[0]!;
+    redirect(`/editor/${demoDocument.id}`);
+  }
+
+  const { supabase, user, membership } = await getCurrentWorkspace();
+  const workspaceId = requiredWorkspaceId(membership);
+
+  const { data: item, error: itemError } = await supabase
+    .from('content_items')
+    .select('id, brand_id, title, copy_json')
+    .eq('id', contentItemId)
+    .eq('content_plan_id', planId)
+    .eq('workspace_id', workspaceId)
+    .single();
+
+  if (itemError || !item) throw new Error(itemError?.message ?? 'Content item not found');
+
+  const templateId = input.template_id
+    || (typeof item.copy_json?.template_id === 'string' ? item.copy_json.template_id : '')
+    || 'paper-editorial-01';
+  const hook = typeof item.copy_json?.hook === 'string' ? item.copy_json.hook : item.title;
+  const caption = typeof item.copy_json?.caption === 'string' ? item.copy_json.caption : '';
+  const cta = typeof item.copy_json?.cta === 'string' ? item.copy_json.cta : '';
+
+  const documentJson = CreativeDocumentJsonSchema.parse({
+    schema_version: 1,
+    canvas: { width: 1080, height: 1350, format: 'instagram_post' },
+    template_id: templateId,
+    brand_id: item.brand_id,
+    content_item_id: item.id,
+    tokens: {
+      primary_color: '#0f766e',
+      background_color: '#f8fafc',
+      text_color: '#1f2933',
+      font_family: 'Arial',
+    },
+    slides: [
+      {
+        id: 'slide-1',
+        name: 'Criativo principal',
+        background: { color: '#f8fafc' },
+        elements: [
+          {
+            id: 'headline',
+            type: 'text',
+            role: 'headline',
+            placeholder: 'headline',
+            locked: false,
+            visible: true,
+            text: hook,
+            x: 84,
+            y: 250,
+            width: 820,
+            height: 220,
+            rotation: 0,
+            style: { font_size: 58, font_weight: 700, color: '#1f2933' },
+          },
+          {
+            id: 'body',
+            type: 'text',
+            role: 'body',
+            placeholder: 'body',
+            locked: false,
+            visible: true,
+            text: caption || 'Texto de apoio a revisar no editor.',
+            x: 84,
+            y: 540,
+            width: 760,
+            height: 260,
+            rotation: 0,
+            style: { font_size: 34, color: '#344054' },
+          },
+          {
+            id: 'cta',
+            type: 'text',
+            role: 'cta',
+            placeholder: 'cta',
+            locked: false,
+            visible: true,
+            text: cta || 'Adicionar CTA',
+            x: 84,
+            y: 1050,
+            width: 620,
+            height: 90,
+            rotation: 0,
+            style: { font_size: 32, color: '#0f766e' },
+          },
+        ],
+      },
+    ],
+  });
+
+  const { data: existing } = await supabase
+    .from('creative_documents')
+    .select('id')
+    .eq('workspace_id', workspaceId)
+    .eq('content_item_id', item.id)
+    .neq('status', 'archived')
+    .order('updated_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (existing?.id) {
+    redirect(`/editor/${existing.id}`);
+  }
+
+  const { data: inserted, error: insertError } = await supabase
+    .from('creative_documents')
+    .insert({
+      workspace_id: workspaceId,
+      brand_id: item.brand_id,
+      content_item_id: item.id,
+      template_ref: templateId,
+      title: `${item.title} - criativo editavel`,
+      status: 'editing',
+      document_json: documentJson,
+      metadata: {
+        schema_version: 1,
+        source: 'content_item',
+        content_plan_id: planId,
+      },
+      created_by: user.id,
+    })
+    .select('id')
+    .single();
+
+  if (insertError || !inserted) throw new Error(insertError?.message ?? 'Could not create creative document');
+
+  revalidatePath('/editor');
+  revalidatePath(`/plans/${planId}`);
+  redirect(`/editor/${inserted.id}`);
 }

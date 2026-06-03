@@ -76,6 +76,12 @@ Quarta entrega implementada:
 - `/plans` tambem recebeu campos estrategicos para manter o fluxo consistente fora do hub do cliente.
 - `GenerateContentPlanInputSchema` ganhou `strategy` versionado; web envia o briefing rico e o orchestrator usa canais, pilares, templates preferidos e restricoes no plano mockado.
 
+Quinta entrega implementada:
+
+- `/plans/[planId]` passou a listar documentos criativos ligados a cada item.
+- Cada `content_item` pode criar um `creative_document` inicial com canvas, campos editaveis e template de referencia.
+- Quando o documento ja existe, a tela mostra atalho direto para `/editor/[documentId]`.
+
 ### 3.2 Onboarding do cliente
 
 Precisa virar um wizard natural:
@@ -202,6 +208,5 @@ Todos os botoes devem deixar claro:
 
 1. Converter o hub `/clients/[clientId]` em wizard multi-step com estado salvo e validacoes por etapa.
 2. Criar subtemplates/editaveis do cliente em cima dos templates globais.
-3. Conectar criacao de `creative_documents` a partir de item/template.
-4. Adicionar testes de botoes principais no web.
-5. Rodar Supabase local/real para validar RLS e Storage de ponta a ponta.
+3. Adicionar testes de botoes principais no web.
+4. Rodar Supabase local/real para validar RLS e Storage de ponta a ponta.
