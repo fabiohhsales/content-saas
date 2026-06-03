@@ -155,11 +155,14 @@ export default async function EditorDetailPage({
         <div className="toolbar">
           <div>
             <h1>{documentRow.title}</h1>
-            <p className="muted">Documento criativo com contrato invalido.</p>
+            <p className="muted">Nao foi possivel abrir este criativo. Gere uma nova versao ou revise o template usado.</p>
           </div>
           <Link className="button secondary" href="/editor">Voltar</Link>
         </div>
-        <pre>{JSON.stringify(parsedDocument.error.format(), null, 2)}</pre>
+        <section className="panel">
+          <h2>Como resolver</h2>
+          <p className="muted">Volte ao cronograma, gere novamente o criativo ou escolha outro modelo visual para continuar a revisao.</p>
+        </section>
       </AppShell>
     );
   }
@@ -203,11 +206,6 @@ export default async function EditorDetailPage({
         placeholders={placeholders}
         versions={versions}
       />
-
-      <section className="panel" style={{ marginTop: 18 }}>
-        <h2>Contrato JSON preservado</h2>
-        <pre>{JSON.stringify(creativeDocument, null, 2)}</pre>
-      </section>
     </AppShell>
   );
 }

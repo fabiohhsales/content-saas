@@ -76,6 +76,19 @@ function durationDays(start: string, end: string) {
   return Math.max(1, Math.round((endTime - startTime) / 86400000) + 1);
 }
 
+function calendarMonthDays(value: string) {
+  const base = new Date(`${value}T00:00:00`);
+  const year = base.getFullYear();
+  const month = base.getMonth();
+  const totalDays = new Date(year, month + 1, 0).getDate();
+  const offset = new Date(year, month, 1).getDay();
+
+  return [
+    ...Array.from({ length: offset }, (_, index) => ({ key: `blank-${index}`, day: null as number | null })),
+    ...Array.from({ length: totalDays }, (_, index) => ({ key: `day-${index + 1}`, day: index + 1 })),
+  ];
+}
+
 export default async function PlansPage({
   searchParams,
 }: {
@@ -139,6 +152,14 @@ export default async function PlansPage({
     .filter((item) => filteredPlans.some((plan) => plan.id === item.content_plan_id))
     .sort((a, b) => new Date(a.scheduled_for ?? '').getTime() - new Date(b.scheduled_for ?? '').getTime());
   const reviewTodos = scheduledItems.filter((item) => ['awaiting_approval', 'changes_requested', 'draft'].includes(item.status)).slice(0, 5);
+  const calendarBase = filteredPlans[0]?.period_start ?? '2026-06-01';
+  const calendarDays = calendarMonthDays(calendarBase);
+  const calendarItemsByDay = scheduledItems.reduce<Record<number, typeof scheduledItems>>((acc, item) => {
+    if (!item.scheduled_for) return acc;
+    const day = new Date(`${item.scheduled_for}T00:00:00`).getDate();
+    acc[day] = [...(acc[day] ?? []), item];
+    return acc;
+  }, {});
 
   return (
     <AppShell>
@@ -196,14 +217,31 @@ export default async function PlansPage({
             <small className="muted">Cronograma</small>
             <h2>Calendario de publicacoes</h2>
           </div>
-          <div className="calendar-strip">
-            {scheduledItems.slice(0, 8).map((item) => (
-              <Link className="calendar-day-card" href={`/plans/${item.content_plan_id}#item-${item.id}`} key={item.id}>
-                <strong>{new Date(item.scheduled_for ?? '').getDate()}</strong>
-                <span>{item.title}</span>
-                <SocialIconRow channels={[String(item.channel ?? 'instagram')]} />
-              </Link>
+          <div className="calendar-month-grid">
+            {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'].map((weekday) => (
+              <span className="calendar-weekday" key={weekday}>{weekday}</span>
             ))}
+            {calendarDays.map((entry) => {
+              if (!entry.day) return <span className="calendar-empty" key={entry.key} />;
+              const dayItems = calendarItemsByDay[entry.day] ?? [];
+              const firstItem = dayItems[0];
+              if (!firstItem) {
+                return (
+                  <span className="calendar-date-card" key={entry.key}>
+                    <strong>{entry.day}</strong>
+                    <small>Sem publicacao</small>
+                  </span>
+                );
+              }
+              return (
+                <Link className="calendar-date-card has-items" href={`/plans/${firstItem.content_plan_id}#item-${firstItem.id}`} key={entry.key}>
+                  <strong>{entry.day}</strong>
+                  <span>{firstItem.title}</span>
+                  <SocialIconRow channels={[String(firstItem.channel ?? 'instagram')]} />
+                  {dayItems.length > 1 ? <small>+{dayItems.length - 1} item</small> : null}
+                </Link>
+              );
+            })}
             {scheduledItems.length === 0 ? <p className="muted">Sem datas programadas para os filtros atuais.</p> : null}
           </div>
         </div>
