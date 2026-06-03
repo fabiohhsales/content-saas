@@ -37,15 +37,30 @@ function memorySummary(memory: BrandMemoryRow | null) {
     : 'Memoria de marca ainda nao consolidada; usar posicionamento e briefing da marca como base.';
 }
 
+function strategy(input: GenerateContentPlanInput) {
+  return input.strategy ?? {
+    schema_version: 1,
+    objective: input.objective ?? '',
+    channels: [],
+    frequency: '',
+    pillars: [],
+    campaigns: '',
+    preferred_templates: [],
+    restrictions: '',
+  };
+}
+
 function buildPlanJson(input: GenerateContentPlanInput, brand: BrandRow, memory: BrandMemoryRow | null) {
+  const briefing = strategy(input);
   return {
     schema_version: 1,
     source: 'mock_ai',
-    objective: input.objective ?? `Construir consistencia editorial para ${brand.name}.`,
+    objective: briefing.objective || input.objective || `Construir consistencia editorial para ${brand.name}.`,
     period: {
       start: input.period_start,
       end: input.period_end,
     },
+    strategy: briefing,
     brand_context: {
       name: brand.name,
       industry: brand.industry ?? '',
@@ -54,20 +69,27 @@ function buildPlanJson(input: GenerateContentPlanInput, brand: BrandRow, memory:
       memory_summary: memorySummary(memory),
       memory_version: memory?.version ?? null,
     },
-    pillars: [
+    pillars: briefing.pillars.length ? briefing.pillars : [
       'educacao',
       'autoridade',
       'prova social',
       'conversao',
     ],
-    channels: ['Instagram', 'LinkedIn'],
+    channels: briefing.channels.length ? briefing.channels : ['Instagram', 'LinkedIn'],
+    frequency: briefing.frequency,
+    campaigns: briefing.campaigns,
+    preferred_templates: briefing.preferred_templates,
+    restrictions: briefing.restrictions,
   };
 }
 
 function buildItems(input: GenerateContentPlanInput, brand: BrandRow) {
   const brandName = brand.name;
   const industry = brand.industry ?? 'mercado';
-  const objective = input.objective ?? `fortalecer autoridade de ${brandName}`;
+  const briefing = strategy(input);
+  const objective = briefing.objective || input.objective || `fortalecer autoridade de ${brandName}`;
+  const channels = briefing.channels.length ? briefing.channels : ['Instagram', 'LinkedIn'];
+  const templates = briefing.preferred_templates.length ? briefing.preferred_templates : ['triptych-grid-01', 'statement-dark-01', 'photo-overlay-01', 'paper-editorial-01'];
 
   return [
     {
@@ -75,9 +97,9 @@ function buildItems(input: GenerateContentPlanInput, brand: BrandRow) {
       scheduled_for: dateInPeriod(input.period_start, 2),
       copy_json: {
         schema_version: 1,
-        channel: 'Instagram',
+        channel: channels[0] ?? 'Instagram',
         format: 'carrossel',
-        template_id: 'triptych-grid-01',
+        template_id: templates[0] ?? 'triptych-grid-01',
         hook: `O que toda pessoa precisa saber antes de decidir sobre ${industry}.`,
         slides: [
           'Entenda o contexto antes da solucao.',
@@ -92,9 +114,9 @@ function buildItems(input: GenerateContentPlanInput, brand: BrandRow) {
       scheduled_for: dateInPeriod(input.period_start, 7),
       copy_json: {
         schema_version: 1,
-        channel: 'LinkedIn',
+        channel: channels[1] ?? channels[0] ?? 'LinkedIn',
         format: 'post_unico',
-        template_id: 'statement-dark-01',
+        template_id: templates[1] ?? 'statement-dark-01',
         hook: `${brandName} acredita que ${objective}.`,
         caption: 'Conteudo gerado como rascunho inicial e sujeito a aprovacao humana.',
         cta: 'Converse com nossa equipe.',
@@ -105,9 +127,9 @@ function buildItems(input: GenerateContentPlanInput, brand: BrandRow) {
       scheduled_for: dateInPeriod(input.period_start, 14),
       copy_json: {
         schema_version: 1,
-        channel: 'Instagram',
+        channel: channels[0] ?? 'Instagram',
         format: 'post_unico',
-        template_id: 'photo-overlay-01',
+        template_id: templates[2] ?? 'photo-overlay-01',
         hook: 'Confianca nasce quando o processo fica claro.',
         caption: `Mostre como ${brandName} organiza etapas, criterios e acompanhamento.`,
         cta: 'Veja como funciona.',
@@ -118,9 +140,9 @@ function buildItems(input: GenerateContentPlanInput, brand: BrandRow) {
       scheduled_for: dateInPeriod(input.period_start, 21),
       copy_json: {
         schema_version: 1,
-        channel: 'Instagram',
+        channel: channels[0] ?? 'Instagram',
         format: 'post_unico',
-        template_id: 'paper-editorial-01',
+        template_id: templates[3] ?? 'paper-editorial-01',
         hook: 'Decisoes melhores comecam com diagnostico melhor.',
         caption: `Fechar o ciclo editorial com convite consultivo para ${industry}.`,
         cta: 'Agende uma conversa.',

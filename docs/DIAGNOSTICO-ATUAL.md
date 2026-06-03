@@ -170,9 +170,10 @@ Estado atual do job `render_creative_document`:
 
 Estado atual do job `generate_content_plan`:
 
-- Recebe `{ workspace_id, brand_id, requested_by, period_start, period_end, objective }`.
+- Recebe `{ workspace_id, brand_id, requested_by, period_start, period_end, objective?, strategy? }`.
 - Carrega marca e memoria de marca mais recente.
 - Gera plano editorial mockado e deterministico.
+- Usa `strategy.channels`, `strategy.pillars`, `strategy.frequency`, `strategy.campaigns`, `strategy.preferred_templates` e `strategy.restrictions` quando presentes.
 - Salva `content_plans.plan_json` com `schema_version`.
 - Salva quatro `content_items.copy_json` com `schema_version`.
 - Atualiza `job_runs` para `completed` ou `failed`.
@@ -613,6 +614,7 @@ Rotas demo verificadas com HTTP 200:
 - Presets de upload no hub do cliente para logo principal, logo secundaria, capa/fundo, foto aprovada, fonte e referencia visual.
 - Vinculo inicial de templates por cliente em `brand_templates`, com botoes para usar/remover no hub do cliente.
 - Briefing estrategico guiado em `/clients/[clientId]` e `/plans`, com canais, frequencia, pilares, campanhas, templates preferidos e restricoes.
+- Contrato `GenerateContentPlanInputSchema` aceita `strategy` versionado para transportar o briefing rico ate o orchestrator.
 - Estrutura de marca e assets.
 - Biblioteca inicial de templates.
 - Central inicial de aprovacoes humanas.
@@ -639,7 +641,7 @@ Rotas demo verificadas com HTTP 200:
 - Jobs: contrato, worker, painel visual e retry inicial existem, mas falta integracao ponta a ponta real em ambiente com Redis/Supabase.
 - Render preview: posts unicos/carrosseis implementados no orchestrator/web, mas precisam ambiente real com Redis, Supabase Storage e render service rodando para teste ponta a ponta.
 - Editor assistido: contratos, tabelas, demo, canvas client-side, selecao de elementos, painel de propriedades, persistencia de texto/asset/layout, aprovacao, endpoint de render final e job de persistencia em Storage existem, mas ainda falta drag/resize com handles, asset picker mais completo e validacao ponta a ponta real com Redis/Supabase/render.
-- Redesenho cliente-first: painel inicial, identidade visual em `brands.metadata.identity`, hub interno do cliente, metadata/presets de assets, briefing estrategico guiado, vinculo real de templates por cliente e documentacao existem; ainda falta evoluir para wizard multi-step persistente, subtemplates editaveis e testes E2E dos botoes principais.
+- Redesenho cliente-first: painel inicial, identidade visual em `brands.metadata.identity`, hub interno do cliente, metadata/presets de assets, briefing estrategico guiado com contrato rico no orchestrator, vinculo real de templates por cliente e documentacao existem; ainda falta evoluir para wizard multi-step persistente, subtemplates editaveis e testes E2E dos botoes principais.
 - Biblioteca global de assets: schema, leitura autenticada e hardening para remover upload livre existem; falta fluxo administrativo/curadoria para inserir assets globais e busca global mais forte na UI.
 - Geracao de plano: job mockado implementado, mas precisa provider IA real para producao.
 - Gestao de membros: CRUD inicial por `user_id` e convite por link existem, mas falta envio de e-mail transacional.

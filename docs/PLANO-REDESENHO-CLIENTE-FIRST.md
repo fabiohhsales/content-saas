@@ -74,7 +74,7 @@ Quarta entrega implementada:
 - Hub do cliente ganhou presets de upload para logo principal, logo secundaria, capa/fundo, foto aprovada, fonte e referencia visual.
 - Briefing de estrategia ganhou campos de canais, frequencia, pilares, campanhas/ofertas, templates preferidos e restricoes.
 - `/plans` tambem recebeu campos estrategicos para manter o fluxo consistente fora do hub do cliente.
-- `requestGeneratedContentPlan` continua usando o contrato atual do orchestrator, mas envia um resumo estruturado no campo `objective` enquanto o contrato rico dedicado nao existe.
+- `GenerateContentPlanInputSchema` ganhou `strategy` versionado; web envia o briefing rico e o orchestrator usa canais, pilares, templates preferidos e restricoes no plano mockado.
 
 ### 3.2 Onboarding do cliente
 
@@ -202,7 +202,6 @@ Todos os botoes devem deixar claro:
 
 1. Converter o hub `/clients/[clientId]` em wizard multi-step com estado salvo e validacoes por etapa.
 2. Criar subtemplates/editaveis do cliente em cima dos templates globais.
-3. Criar contrato rico para `generate_content_plan` em vez de empacotar estrategia em `objective`.
-4. Conectar criacao de `creative_documents` a partir de item/template.
-5. Adicionar testes de botoes principais no web.
-6. Rodar Supabase local/real para validar RLS e Storage de ponta a ponta.
+3. Conectar criacao de `creative_documents` a partir de item/template.
+4. Adicionar testes de botoes principais no web.
+5. Rodar Supabase local/real para validar RLS e Storage de ponta a ponta.

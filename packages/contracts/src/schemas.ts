@@ -356,6 +356,16 @@ export const GenerateContentPlanInputSchema = z.object({
   period_start: z.string().min(1),
   period_end: z.string().min(1),
   objective: z.string().optional(),
+  strategy: z.object({
+    schema_version: SchemaVersionSchema,
+    objective: z.string().default(''),
+    channels: z.array(z.string()).default([]),
+    frequency: z.string().default(''),
+    pillars: z.array(z.string()).default([]),
+    campaigns: z.string().default(''),
+    preferred_templates: z.array(z.string()).default([]),
+    restrictions: z.string().default(''),
+  }).optional(),
 });
 
 export const GenerateContentPlanOutputSchema = z.object({

@@ -160,7 +160,8 @@ export async function requestGeneratedContentPlan(formData: FormData) {
       requested_by: user.id,
       period_start: input.period_start,
       period_end: input.period_end,
-      objective: briefing.summary || input.objective,
+      objective: input.objective,
+      strategy: briefing.data,
     }),
     cache: 'no-store',
   });
