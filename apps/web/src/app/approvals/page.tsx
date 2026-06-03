@@ -291,7 +291,17 @@ export default async function ApprovalsPage({
                     <form action={decideApproval.bind(null, approval.id)} className="grid">
                       <input type="hidden" name="status" value="changes_requested" />
                       <div className="feedback-options">
-                        {['Trocar imagem', 'Ajustar texto', 'Rever cores', 'Usar outro modelo', 'Gerar nova versao'].map((option) => (
+                        {[
+                          'Promessa exagerada',
+                          'CTA fraco',
+                          'Gancho generico',
+                          'Risco medico/compliance',
+                          'Falta dor real do paciente',
+                          'Trocar imagem',
+                          'Ajustar texto',
+                          'Usar outro modelo',
+                          'Gerar nova versao',
+                        ].map((option) => (
                           <label key={option}>
                             <input type="checkbox" name="feedback_option" value={option} />
                             {option}

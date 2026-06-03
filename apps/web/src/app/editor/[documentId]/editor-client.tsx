@@ -34,6 +34,15 @@ type VersionRow = {
   created_at: string;
 };
 
+type EditorialContext = {
+  funnel_stage?: string;
+  editorial_pillar?: string;
+  headline?: string;
+  central_idea?: string;
+  cta?: string;
+  compliance_notes?: string[];
+};
+
 type TemplateLike = {
   name?: string;
   recommended_use?: string;
@@ -52,6 +61,7 @@ type EditorClientProps = {
   globalAssets: AssetRow[];
   placeholders: PlaceholderRow[];
   versions: VersionRow[];
+  editorialContext?: EditorialContext | null;
 };
 
 function statusLabel(status: string) {
@@ -106,6 +116,7 @@ export function EditorClient({
   globalAssets,
   placeholders,
   versions,
+  editorialContext,
 }: EditorClientProps) {
   const [selectedKey, setSelectedKey] = useState('');
   const slide = document.slides[0]!;
@@ -272,6 +283,29 @@ export function EditorClient({
       </main>
 
       <aside className="editor-inspector grid">
+        {editorialContext ? (
+          <section className="panel grid">
+            <div>
+              <small className="muted">Contexto editorial</small>
+              <h2>{editorialContext.headline ?? 'Direcao do conteudo'}</h2>
+              <p className="muted">{editorialContext.central_idea ?? 'Use o briefing editorial para revisar texto, CTA e imagem.'}</p>
+            </div>
+            <div className="summary-tags">
+              {editorialContext.funnel_stage ? <span>{editorialContext.funnel_stage}</span> : null}
+              {editorialContext.editorial_pillar ? <span>{editorialContext.editorial_pillar}</span> : null}
+            </div>
+            {editorialContext.cta ? <p><strong>CTA:</strong> {editorialContext.cta}</p> : null}
+            {editorialContext.compliance_notes?.length ? (
+              <div>
+                <small className="muted">Compliance</small>
+                {editorialContext.compliance_notes.slice(0, 3).map((note) => (
+                  <p className="muted" key={note}>{note}</p>
+                ))}
+              </div>
+            ) : null}
+          </section>
+        ) : null}
+
         {selectedElement ? (
           <form action={updateCreativeElement.bind(null, documentId)} className="panel grid">
             <div>

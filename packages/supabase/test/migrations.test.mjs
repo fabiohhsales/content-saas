@@ -43,6 +43,8 @@ describe('Supabase migrations coverage', () => {
       'creative_documents',
       'creative_versions',
       'creative_renders',
+      'editorial_playbooks',
+      'brand_playbooks',
     ];
 
     for (const table of tables) {
@@ -72,6 +74,8 @@ describe('Supabase migrations coverage', () => {
       'creative_documents',
       'creative_versions',
       'creative_renders',
+      'editorial_playbooks',
+      'brand_playbooks',
     ];
 
     for (const table of rlsTables) {
@@ -105,6 +109,7 @@ describe('Supabase migrations coverage', () => {
       'creative_documents',
       'creative_versions',
       'creative_renders',
+      'brand_playbooks',
     ];
 
     for (const table of memberReadTables) {
@@ -128,6 +133,8 @@ describe('Supabase migrations coverage', () => {
       'context_json',
       'constraints_json',
       'document_json',
+      'playbook_json',
+      'editorial_profile_json',
     ];
 
     for (const column of jsonColumns) {
@@ -154,5 +161,12 @@ describe('Supabase migrations coverage', () => {
     expectSql(/bucket_id = 'global-assets'\s+and auth\.role\(\) = 'authenticated'/, 'global asset read policy must require authenticated users');
     expectSql(/drop policy if exists "workspace editors can upload workspace global asset objects"/, 'broad global asset upload policy must be dropped by hardening migration');
   });
-});
 
+  it('keeps editorial playbooks reusable and tenant scoped', () => {
+    expectSql(/create table public\.editorial_playbooks\s*\(/, 'missing editorial playbooks table');
+    expectSql(/create table public\.brand_playbooks\s*\(/, 'missing brand playbooks table');
+    expectSql(/workspace_id is null\s+or public\.is_workspace_member\(workspace_id\)/, 'global playbooks must be readable while workspace playbooks stay tenant scoped');
+    expectSql(/where ep\.id = playbook_id[\s\S]*?and \(ep\.workspace_id is null or ep\.workspace_id = brand_playbooks\.workspace_id\)/, 'brand playbooks must link only global or same-workspace playbooks');
+    expectSql(/'transplante-capilar'/, 'missing seeded hair transplant playbook');
+  });
+});

@@ -4,6 +4,7 @@ import {
   type GenerateBrandMemoryInput,
   type GenerateBrandMemoryOutput,
 } from '@content-saas/contracts';
+import { loadBrandEditorialContext } from '../editorial-playbooks.js';
 import { supabase } from '../supabase.js';
 
 type BrandRow = {
@@ -30,19 +31,22 @@ function summarizeAssets(assets: AssetRow[]) {
   }, {});
 }
 
-function buildMockMemory(brand: BrandRow, assets: AssetRow[]) {
+function buildMockMemory(brand: BrandRow, assets: AssetRow[], editorialContext: Awaited<ReturnType<typeof loadBrandEditorialContext>>) {
   const assetCounts = summarizeAssets(assets);
   const summary = `${brand.name} tem uma base inicial com ${assets.length} assets estruturados para orientar conteudo e identidade visual.`;
+  const playbook = editorialContext?.playbook_json;
 
   return BrandMemoryJsonSchema.parse({
     schema_version: 1,
-    summary,
-    positioning: brand.positioning || `Posicionamento inicial de ${brand.name} aguardando refinamento humano.`,
-    target_audience: brand.industry ? `Publico relacionado a ${brand.industry}.` : 'Publico a definir no refinamento da marca.',
+    summary: playbook
+      ? `${summary} Estrategia editorial vinculada ao playbook ${editorialContext.slug}, com foco em dores reais, funil e compliance.`
+      : summary,
+    positioning: brand.positioning || playbook?.positioning || `Posicionamento inicial de ${brand.name} aguardando refinamento humano.`,
+    target_audience: playbook?.audience_diagnosis ?? (brand.industry ? `Publico relacionado a ${brand.industry}.` : 'Publico a definir no refinamento da marca.'),
     voice: {
-      tone: brand.voice_notes || 'claro, consultivo e consistente',
-      adjectives: ['claro', 'confiavel', 'humano'],
-      forbidden_words: [],
+      tone: brand.voice_notes || playbook?.voice.tone.join(', ') || 'claro, consultivo e consistente',
+      adjectives: playbook ? ['medico', 'acessivel', 'seguro', 'humano'] : ['claro', 'confiavel', 'humano'],
+      forbidden_words: playbook?.voice.avoid ?? [],
       preferred_words: [],
     },
     visual_identity: {
@@ -53,10 +57,23 @@ function buildMockMemory(brand: BrandRow, assets: AssetRow[]) {
     content_rules: [
       'Preservar consistencia de tom e identidade visual.',
       'Usar assets aprovados da biblioteca da marca.',
+      ...(playbook?.quality_criteria ?? []),
     ],
     restrictions: [
       'Nao publicar sem aprovacao humana.',
+      ...(playbook?.compliance_rules ?? []),
     ],
+    ...(editorialContext ? {
+      editorial_strategy: {
+        playbook_slug: editorialContext.slug,
+        playbook_version: editorialContext.playbook_json.version,
+        vertical: editorialContext.vertical,
+        positioning: editorialContext.playbook_json.positioning,
+        funnel_distribution: editorialContext.playbook_json.funnel_distribution,
+        pillars: editorialContext.playbook_json.editorial_pillars.map((pillar) => pillar.name),
+        compliance_rules: editorialContext.playbook_json.compliance_rules,
+      },
+    } : {}),
     confidence: assets.length > 0 ? 0.72 : 0.48,
   });
 }
@@ -100,7 +117,9 @@ export async function generateBrandMemory(input: GenerateBrandMemoryInput, jobRu
     .maybeSingle();
 
   const version = (latest?.version ?? 0) + 1;
-  const memory = buildMockMemory(brand as BrandRow, (assets ?? []) as AssetRow[]);
+  const typedBrand = brand as BrandRow;
+  const editorialContext = await loadBrandEditorialContext(typedBrand);
+  const memory = buildMockMemory(typedBrand, (assets ?? []) as AssetRow[], editorialContext);
 
   const { data: inserted, error: insertError } = await supabase
     .from('brand_memories')
@@ -126,6 +145,10 @@ export async function generateBrandMemory(input: GenerateBrandMemoryInput, jobRu
     version,
     summary: memory.summary,
     confidence: memory.confidence,
+    ...(editorialContext ? {
+      playbook_slug: editorialContext.slug,
+      playbook_version: editorialContext.playbook_json.version,
+    } : {}),
   };
 
   await supabase

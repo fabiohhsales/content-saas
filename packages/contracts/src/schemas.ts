@@ -22,6 +22,10 @@ export const ContentItemStatusSchema = z.enum([
   'cancelled',
 ]);
 
+export const EditorialPlaybookStatusSchema = z.enum(['draft', 'active', 'archived']);
+export const FunnelStageSchema = z.enum(['topo', 'meio', 'fundo', 'institucional']);
+export const CommercialIntentSchema = z.enum(['baixo', 'medio', 'alto']);
+
 export const WorkspaceSchema = z.object({
   id: z.string().uuid(),
   name: z.string().min(2),
@@ -75,6 +79,116 @@ export const BrandAssetSchema = z.object({
   metadata: z.record(z.unknown()).default({}),
 });
 
+export const EditorialPlaybookJsonSchema = z.object({
+  schema_version: SchemaVersionSchema,
+  version: z.number().int().positive().default(1),
+  vertical: z.string().min(1),
+  positioning: z.string().min(1),
+  audience_diagnosis: z.string().min(1),
+  core_questions: z.array(z.string()).default([]),
+  voice: z.object({
+    tone: z.array(z.string()).default([]),
+    avoid: z.array(z.string()).default([]),
+  }).default({ tone: [], avoid: [] }),
+  editorial_pillars: z.array(z.object({
+    key: z.string().min(1),
+    name: z.string().min(1),
+    description: z.string().min(1),
+    ideal_format: z.string().default(''),
+    examples: z.array(z.string()).default([]),
+  })).default([]),
+  funnel_distribution: z.record(FunnelStageSchema, z.number().min(0).max(100)).default({
+    topo: 35,
+    meio: 35,
+    fundo: 20,
+    institucional: 10,
+  }),
+  formats: z.array(z.object({
+    key: z.string().min(1),
+    name: z.string().min(1),
+    structure: z.array(z.string()).default([]),
+  })).default([]),
+  headline_formulas: z.array(z.string()).default([]),
+  ctas: z.object({
+    recommended: z.array(z.string()).default([]),
+    forbidden: z.array(z.string()).default([]),
+  }).default({ recommended: [], forbidden: [] }),
+  compliance_rules: z.array(z.string()).default([]),
+  quality_criteria: z.array(z.string()).default([]),
+});
+
+export const EditorialPlaybookSchema = z.object({
+  id: z.string().uuid(),
+  workspace_id: z.string().uuid().nullable().optional(),
+  slug: z.string().min(1),
+  name: z.string().min(1),
+  vertical: z.string().min(1),
+  status: EditorialPlaybookStatusSchema.default('draft'),
+  playbook_json: EditorialPlaybookJsonSchema,
+  metadata: z.record(z.unknown()).default({ schema_version: 1 }),
+});
+
+export const BrandEditorialProfileSchema = z.object({
+  schema_version: SchemaVersionSchema,
+  playbook_slug: z.string().min(1),
+  playbook_version: z.number().int().positive(),
+  differentiators: z.array(z.string()).default([]),
+  preferred_ctas: z.array(z.string()).default([]),
+  forbidden_topics: z.array(z.string()).default([]),
+  custom_restrictions: z.array(z.string()).default([]),
+  commercial_priority: z.string().default('avaliacao responsavel'),
+});
+
+export const BrandPlaybookSchema = z.object({
+  id: z.string().uuid(),
+  workspace_id: z.string().uuid(),
+  brand_id: z.string().uuid(),
+  playbook_id: z.string().uuid(),
+  status: z.enum(['active', 'archived']).default('active'),
+  editorial_profile_json: BrandEditorialProfileSchema,
+});
+
+export const ContentPlanStrategySchema = z.object({
+  schema_version: SchemaVersionSchema,
+  objective: z.string().default(''),
+  channels: z.array(z.string()).default([]),
+  frequency: z.string().default(''),
+  pillars: z.array(z.string()).default([]),
+  campaigns: z.string().default(''),
+  preferred_templates: z.array(z.string()).default([]),
+  restrictions: z.string().default(''),
+  playbook_slug: z.string().optional(),
+  playbook_version: z.number().int().positive().optional(),
+  funnel_distribution: z.record(FunnelStageSchema, z.number().min(0).max(100)).optional(),
+});
+
+export const ContentItemCopyJsonSchema = z.object({
+  schema_version: SchemaVersionSchema,
+  channel: z.string().default(''),
+  format: z.string().default(''),
+  template_id: z.string().default(''),
+  funnel_stage: FunnelStageSchema.optional(),
+  editorial_pillar: z.string().optional(),
+  theme: z.string().optional(),
+  headline: z.string().optional(),
+  hook: z.string().optional(),
+  central_idea: z.string().optional(),
+  script_outline: z.array(z.string()).default([]),
+  slides: z.array(z.string()).default([]),
+  caption: z.string().optional(),
+  cta: z.string().optional(),
+  visual_direction: z.string().optional(),
+  commercial_intent: CommercialIntentSchema.optional(),
+  compliance_notes: z.array(z.string()).default([]),
+  quality_check: z.array(z.object({
+    criterion: z.string().min(1),
+    passed: z.boolean(),
+  })).default([]),
+  playbook_slug: z.string().optional(),
+  playbook_version: z.number().int().positive().optional(),
+  generation_mode: z.string().optional(),
+});
+
 export const BrandMemoryJsonSchema = z.object({
   schema_version: SchemaVersionSchema,
   summary: z.string().min(1),
@@ -93,6 +207,15 @@ export const BrandMemoryJsonSchema = z.object({
   }),
   content_rules: z.array(z.string()).default([]),
   restrictions: z.array(z.string()).default([]),
+  editorial_strategy: z.object({
+    playbook_slug: z.string().min(1),
+    playbook_version: z.number().int().positive(),
+    vertical: z.string().min(1),
+    positioning: z.string().min(1),
+    funnel_distribution: z.record(FunnelStageSchema, z.number().min(0).max(100)),
+    pillars: z.array(z.string()).default([]),
+    compliance_rules: z.array(z.string()).default([]),
+  }).optional(),
   confidence: z.number().min(0).max(1),
 });
 
@@ -147,7 +270,7 @@ export const ContentItemSchema = z.object({
   title: z.string().min(1),
   status: ContentItemStatusSchema,
   scheduled_for: z.string().nullable().optional(),
-  copy_json: z.record(z.unknown()).default({ schema_version: 1 }),
+  copy_json: ContentItemCopyJsonSchema.default({ schema_version: 1 }),
 });
 
 export const RenderOutputFormatSchema = z.enum(['png', 'jpg']).default('png');
@@ -356,16 +479,7 @@ export const GenerateContentPlanInputSchema = z.object({
   period_start: z.string().min(1),
   period_end: z.string().min(1),
   objective: z.string().optional(),
-  strategy: z.object({
-    schema_version: SchemaVersionSchema,
-    objective: z.string().default(''),
-    channels: z.array(z.string()).default([]),
-    frequency: z.string().default(''),
-    pillars: z.array(z.string()).default([]),
-    campaigns: z.string().default(''),
-    preferred_templates: z.array(z.string()).default([]),
-    restrictions: z.string().default(''),
-  }).optional(),
+  strategy: ContentPlanStrategySchema.optional(),
 });
 
 export const GenerateContentPlanOutputSchema = z.object({

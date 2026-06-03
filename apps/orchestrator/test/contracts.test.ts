@@ -1,9 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  ContentItemCopyJsonSchema,
+  EditorialPlaybookJsonSchema,
   GenerateBrandMemoryInputSchema,
   GenerateContentPlanInputSchema,
   GenerateRenderPreviewInputSchema,
+  HAIR_TRANSPLANT_PLAYBOOK,
   RenderCreativeDocumentInputSchema,
 } from '@content-saas/contracts';
 
@@ -46,6 +49,14 @@ test('generate_content_plan input contract accepts canonical payload', () => {
       campaigns: 'Campanha de avaliacao inicial',
       preferred_templates: ['photo-overlay-01'],
       restrictions: 'Evitar promessas absolutas.',
+      playbook_slug: 'transplante-capilar',
+      playbook_version: 1,
+      funnel_distribution: {
+        topo: 35,
+        meio: 35,
+        fundo: 20,
+        institucional: 10,
+      },
     },
   });
 
@@ -53,6 +64,40 @@ test('generate_content_plan input contract accepts canonical payload', () => {
   assert.equal(parsed.objective, 'Gerar autoridade editorial para a marca.');
   assert.deepEqual(parsed.strategy?.channels, ['Instagram', 'LinkedIn']);
   assert.deepEqual(parsed.strategy?.preferred_templates, ['photo-overlay-01']);
+  assert.equal(parsed.strategy?.playbook_slug, 'transplante-capilar');
+});
+
+test('hair transplant editorial playbook validates canonical strategy payload', () => {
+  const parsed = EditorialPlaybookJsonSchema.parse(HAIR_TRANSPLANT_PLAYBOOK);
+
+  assert.equal(parsed.vertical, 'transplante_capilar');
+  assert.equal(parsed.funnel_distribution.topo, 35);
+  assert.ok(parsed.compliance_rules.some((rule) => rule.includes('Nao prometer resultado')));
+});
+
+test('content item copy contract accepts editorial review fields', () => {
+  const parsed = ContentItemCopyJsonSchema.parse({
+    schema_version: 1,
+    channel: 'Instagram',
+    format: 'carrossel',
+    template_id: 'paper-editorial-01',
+    funnel_stage: 'meio',
+    editorial_pillar: 'Tecnica e processo',
+    theme: 'FUE No Shave',
+    headline: 'FUE No Shave: para quem faz sentido?',
+    central_idea: 'Explicar tecnica sem vender como solucao universal.',
+    script_outline: ['Hook', 'Resposta direta', 'Ressalva medica'],
+    cta: 'Entenda qual tecnica faz sentido para o seu caso.',
+    commercial_intent: 'medio',
+    compliance_notes: ['Cada caso precisa de avaliacao individual.'],
+    quality_check: [{ criterion: 'A headline responde uma dor real?', passed: true }],
+    playbook_slug: 'transplante-capilar',
+    playbook_version: 1,
+    generation_mode: 'mock_structured_playbook',
+  });
+
+  assert.equal(parsed.funnel_stage, 'meio');
+  assert.equal(parsed.quality_check[0]?.passed, true);
 });
 
 test('render_creative_document input contract accepts canonical payload and defaults png', () => {

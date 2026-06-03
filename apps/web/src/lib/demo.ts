@@ -1,3 +1,8 @@
+import {
+  HAIR_TRANSPLANT_PLAYBOOK,
+  HAIR_TRANSPLANT_PLAYBOOK_SLUG,
+} from '@content-saas/contracts';
+
 export const DEMO_WORKSPACE_ID = '00000000-0000-4000-8000-000000000101';
 export const DEMO_USER_ID = '00000000-0000-4000-8000-000000000102';
 export const DEMO_BRAND_ID = 'demo-brand-health-grow';
@@ -284,6 +289,15 @@ export const demoMemories = [
       schema_version: 1,
       summary: 'Clínica Aurora combina autoridade médica, acolhimento e estética premium. A comunicação deve educar sem prometer resultado garantido.',
       confidence: 0.72,
+      editorial_strategy: {
+        playbook_slug: HAIR_TRANSPLANT_PLAYBOOK_SLUG,
+        playbook_version: HAIR_TRANSPLANT_PLAYBOOK.version,
+        vertical: HAIR_TRANSPLANT_PLAYBOOK.vertical,
+        positioning: HAIR_TRANSPLANT_PLAYBOOK.positioning,
+        funnel_distribution: HAIR_TRANSPLANT_PLAYBOOK.funnel_distribution,
+        pillars: HAIR_TRANSPLANT_PLAYBOOK.editorial_pillars.map((pillar) => pillar.name),
+        compliance_rules: HAIR_TRANSPLANT_PLAYBOOK.compliance_rules,
+      },
       voice: {
         tone: 'consultivo, humano e criterioso',
         adjectives: ['claro', 'seguro', 'premium'],
@@ -293,6 +307,39 @@ export const demoMemories = [
         'Evitar antes/depois sem autorização explícita.',
         'Usar assets aprovados da biblioteca da marca.',
       ],
+    },
+  },
+];
+
+export const demoEditorialPlaybooks = [
+  {
+    id: '00000000-0000-4000-8000-000000000901',
+    workspace_id: null,
+    slug: HAIR_TRANSPLANT_PLAYBOOK_SLUG,
+    name: 'Transplante capilar',
+    vertical: HAIR_TRANSPLANT_PLAYBOOK.vertical,
+    status: 'active',
+    playbook_json: HAIR_TRANSPLANT_PLAYBOOK,
+    metadata: { schema_version: 1, seeded: true },
+  },
+];
+
+export const demoBrandPlaybooks = [
+  {
+    id: 'demo-brand-playbook-aurora',
+    workspace_id: DEMO_WORKSPACE_ID,
+    brand_id: DEMO_BRAND_ID,
+    playbook_id: '00000000-0000-4000-8000-000000000901',
+    status: 'active',
+    editorial_profile_json: {
+      schema_version: 1,
+      playbook_slug: HAIR_TRANSPLANT_PLAYBOOK_SLUG,
+      playbook_version: HAIR_TRANSPLANT_PLAYBOOK.version,
+      differentiators: ['Atendimento premium', 'Acompanhamento criterioso', 'Conteúdo médico acessível'],
+      preferred_ctas: HAIR_TRANSPLANT_PLAYBOOK.ctas.recommended.slice(0, 3),
+      forbidden_topics: ['promessa de resultado', 'urgência falsa'],
+      custom_restrictions: ['Sempre mencionar avaliação individual em conteúdos de procedimento.'],
+      commercial_priority: 'pré-avaliação responsável pelo WhatsApp',
     },
   },
 ];
@@ -619,8 +666,27 @@ export const demoContentPlans = [
     plan_json: {
       schema_version: 1,
       objective: 'Educar pacientes sobre tratamentos capilares com autoridade medica e linguagem acolhedora.',
+      strategy: {
+        schema_version: 1,
+        objective: 'Educar pacientes sobre tratamentos capilares com autoridade medica e linguagem acolhedora.',
+        channels: ['Instagram', 'LinkedIn'],
+        frequency: '3 posts por semana',
+        pillars: HAIR_TRANSPLANT_PLAYBOOK.editorial_pillars.slice(0, 5).map((pillar) => pillar.name),
+        campaigns: 'Avaliacao capilar responsavel',
+        preferred_templates: ['photo-overlay-01', 'triptych-grid-01', 'paper-editorial-01'],
+        restrictions: 'Evitar promessas absolutas e antes/depois sem autorizacao.',
+        playbook_slug: HAIR_TRANSPLANT_PLAYBOOK_SLUG,
+        playbook_version: HAIR_TRANSPLANT_PLAYBOOK.version,
+        funnel_distribution: HAIR_TRANSPLANT_PLAYBOOK.funnel_distribution,
+      },
+      editorial_playbook: {
+        slug: HAIR_TRANSPLANT_PLAYBOOK_SLUG,
+        version: HAIR_TRANSPLANT_PLAYBOOK.version,
+        vertical: HAIR_TRANSPLANT_PLAYBOOK.vertical,
+      },
+      generation_mode: 'mock_structured_playbook',
       channels: ['Instagram', 'LinkedIn'],
-      pillars: ['educacao', 'prova social', 'conversao'],
+      pillars: HAIR_TRANSPLANT_PLAYBOOK.editorial_pillars.slice(0, 5).map((pillar) => pillar.name),
     },
     created_at: new Date(Date.now() - 1000 * 60 * 70).toISOString(),
   },
@@ -656,9 +722,22 @@ export const demoContentItems = [
     template_id: 'photo-overlay-01',
     copy_json: {
       schema_version: 1,
+      funnel_stage: 'meio',
+      editorial_pillar: 'Duvidas e objecoes',
+      theme: 'Quando investigar queda capilar',
+      headline: 'Queda capilar persistente merece investigacao, nao improviso.',
       hook: 'Queda capilar persistente merece investigacao, nao improviso.',
+      central_idea: 'Mostrar sinais de alerta e orientar avaliacao medica sem prometer solucao rapida.',
+      script_outline: ['Nomear a dor real.', 'Explicar sinais de persistencia.', 'Convidar para avaliacao individual.'],
       caption: 'Entenda sinais que indicam a hora de buscar avaliacao medica e evitar promessas rapidas.',
       cta: 'Agende uma avaliacao individualizada.',
+      visual_direction: 'Post premium com foto de consulta e texto forte em primeiro plano.',
+      commercial_intent: 'medio',
+      compliance_notes: HAIR_TRANSPLANT_PLAYBOOK.compliance_rules.slice(0, 2),
+      quality_check: HAIR_TRANSPLANT_PLAYBOOK.quality_criteria.slice(0, 4).map((criterion) => ({ criterion, passed: true })),
+      playbook_slug: HAIR_TRANSPLANT_PLAYBOOK_SLUG,
+      playbook_version: HAIR_TRANSPLANT_PLAYBOOK.version,
+      generation_mode: 'mock_structured_playbook',
     },
     created_at: new Date(Date.now() - 1000 * 60 * 62).toISOString(),
   },
@@ -675,9 +754,22 @@ export const demoContentItems = [
     template_id: 'triptych-grid-01',
     copy_json: {
       schema_version: 1,
+      funnel_stage: 'topo',
+      editorial_pillar: 'Mitos e verdades',
+      theme: 'Conselhos populares sobre cabelo',
+      headline: 'Nem todo conselho popular ajuda seu cabelo.',
       hook: 'Nem todo conselho popular ajuda seu cabelo.',
+      central_idea: 'Desmontar mitos comuns com linguagem acessivel e criterio medico.',
+      script_outline: ['Abrir com mito forte.', 'Corrigir com explicacao simples.', 'Orientar avaliacao quando houver queda persistente.'],
       slides: ['Shampoo nao resolve tudo', 'Suplemento sem diagnostico pode frustrar', 'Resultado exige plano e acompanhamento'],
       cta: 'Salve para conversar com seu medico.',
+      visual_direction: 'Carrossel com capa limpa, cards de mito e correcao tecnica.',
+      commercial_intent: 'baixo',
+      compliance_notes: HAIR_TRANSPLANT_PLAYBOOK.compliance_rules.slice(0, 2),
+      quality_check: HAIR_TRANSPLANT_PLAYBOOK.quality_criteria.slice(0, 4).map((criterion) => ({ criterion, passed: true })),
+      playbook_slug: HAIR_TRANSPLANT_PLAYBOOK_SLUG,
+      playbook_version: HAIR_TRANSPLANT_PLAYBOOK.version,
+      generation_mode: 'mock_structured_playbook',
     },
     created_at: new Date(Date.now() - 1000 * 60 * 50).toISOString(),
   },

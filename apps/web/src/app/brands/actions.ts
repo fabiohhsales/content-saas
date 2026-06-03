@@ -35,6 +35,15 @@ const BrandTemplateFormSchema = z.object({
   usage_notes: z.string().optional(),
 });
 
+const BrandPlaybookFormSchema = z.object({
+  playbook_id: z.string().uuid(),
+  differentiators: z.string().optional(),
+  preferred_ctas: z.string().optional(),
+  forbidden_topics: z.string().optional(),
+  custom_restrictions: z.string().optional(),
+  commercial_priority: z.string().optional(),
+});
+
 function requiredWorkspaceId(membership: Awaited<ReturnType<typeof getCurrentWorkspace>>['membership']) {
   const workspaceId = membership?.workspace_id;
   if (!workspaceId) throw new Error('Workspace is required');
@@ -74,6 +83,13 @@ function assetMetadata(input: z.infer<typeof AssetMetadataFormSchema>) {
     tags,
     usage_notes: input.usage_notes ?? '',
   };
+}
+
+function listFromText(value?: string) {
+  return (value ?? '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
 }
 
 export async function createBrand(formData: FormData) {
@@ -311,6 +327,70 @@ export async function archiveBrandTemplate(brandId: string, templateId: string) 
 
   if (error) throw new Error(error.message);
   revalidatePath(`/clients/${brandId}`);
+}
+
+export async function linkBrandPlaybook(brandId: string, formData: FormData) {
+  if (isDemoMode()) {
+    revalidatePath(`/clients/${brandId}`);
+    return;
+  }
+
+  const { supabase, user, membership } = await getCurrentWorkspace();
+  const workspaceId = requiredWorkspaceId(membership);
+  const input = BrandPlaybookFormSchema.parse({
+    playbook_id: formData.get('playbook_id'),
+    differentiators: optionalText(formData.get('differentiators')),
+    preferred_ctas: optionalText(formData.get('preferred_ctas')),
+    forbidden_topics: optionalText(formData.get('forbidden_topics')),
+    custom_restrictions: optionalText(formData.get('custom_restrictions')),
+    commercial_priority: optionalText(formData.get('commercial_priority')),
+  });
+
+  const { data: playbook, error: playbookError } = await supabase
+    .from('editorial_playbooks')
+    .select('id, slug, playbook_json')
+    .eq('id', input.playbook_id)
+    .eq('status', 'active')
+    .or(`workspace_id.is.null,workspace_id.eq.${workspaceId}`)
+    .single();
+
+  if (playbookError || !playbook) throw new Error(playbookError?.message ?? 'Editorial playbook not found');
+  const playbookJson = playbook.playbook_json as { version?: number; ctas?: { recommended?: string[] } };
+
+  await supabase
+    .from('brand_playbooks')
+    .update({ status: 'archived' })
+    .eq('workspace_id', workspaceId)
+    .eq('brand_id', brandId)
+    .eq('status', 'active');
+
+  const { error } = await supabase.from('brand_playbooks').insert({
+    workspace_id: workspaceId,
+    brand_id: brandId,
+    playbook_id: playbook.id,
+    status: 'active',
+    editorial_profile_json: {
+      schema_version: 1,
+      playbook_slug: playbook.slug,
+      playbook_version: playbookJson.version ?? 1,
+      differentiators: listFromText(input.differentiators),
+      preferred_ctas: listFromText(input.preferred_ctas).length
+        ? listFromText(input.preferred_ctas)
+        : (playbookJson.ctas?.recommended ?? []).slice(0, 3),
+      forbidden_topics: listFromText(input.forbidden_topics),
+      custom_restrictions: listFromText(input.custom_restrictions),
+      commercial_priority: input.commercial_priority ?? 'avaliacao responsavel',
+    },
+    metadata: {
+      schema_version: 1,
+      source: 'client_workspace',
+    },
+    created_by: user.id,
+  });
+
+  if (error) throw new Error(error.message);
+  revalidatePath(`/clients/${brandId}`);
+  revalidatePath(`/brands/${brandId}`);
 }
 
 export async function requestBrandMemory(brandId: string) {

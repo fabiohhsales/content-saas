@@ -5,6 +5,7 @@ import { AppShell } from '@/components/app-shell';
 import { getCurrentWorkspace } from '@/lib/auth';
 import {
   demoAssets,
+  demoContentItems,
   demoGlobalAssets,
   getDemoCreativeDocument,
   getDemoCreativeVersions,
@@ -86,6 +87,7 @@ export default async function EditorDetailPage({
   let globalAssets: AssetRow[] = [];
   let placeholders: PlaceholderRow[] = [];
   let versions: VersionRow[] = [];
+  let editorialContext: Record<string, any> | null = null;
 
   if (isDemoMode()) {
     documentRow = getDemoCreativeDocument(documentId) as CreativeDocumentRow;
@@ -93,6 +95,7 @@ export default async function EditorDetailPage({
     globalAssets = demoGlobalAssets.filter((asset) => asset.status === 'ready') as AssetRow[];
     placeholders = getDemoTemplatePlaceholders(documentRow.template_ref) as PlaceholderRow[];
     versions = getDemoCreativeVersions(documentRow.id) as VersionRow[];
+    editorialContext = (demoContentItems.find((item) => item.id === documentRow?.content_item_id)?.copy_json ?? null) as Record<string, any> | null;
   } else {
     const { data } = await supabase
       .from('creative_documents')
@@ -104,7 +107,7 @@ export default async function EditorDetailPage({
     documentRow = data as CreativeDocumentRow | null;
     if (!documentRow) notFound();
 
-    const [{ data: brandAssetRows }, { data: globalAssetRows }, { data: placeholderRows }, { data: versionRows }] = await Promise.all([
+    const [{ data: brandAssetRows }, { data: globalAssetRows }, { data: placeholderRows }, { data: versionRows }, { data: contentItemRow }] = await Promise.all([
       supabase
         .from('brand_assets')
         .select('id, category, status, file_name, mime_type, storage_bucket, storage_path, metadata')
@@ -129,12 +132,21 @@ export default async function EditorDetailPage({
         .eq('workspace_id', membership.workspace_id)
         .eq('creative_document_id', documentRow.id)
         .order('version', { ascending: false }),
+      documentRow.content_item_id
+        ? supabase
+          .from('content_items')
+          .select('copy_json')
+          .eq('workspace_id', membership.workspace_id)
+          .eq('id', documentRow.content_item_id)
+          .maybeSingle()
+        : Promise.resolve({ data: null }),
     ]);
 
     brandAssets = (brandAssetRows ?? []) as AssetRow[];
     globalAssets = (globalAssetRows ?? []) as AssetRow[];
     placeholders = (placeholderRows ?? []) as PlaceholderRow[];
     versions = (versionRows ?? []) as VersionRow[];
+    editorialContext = (contentItemRow?.copy_json as Record<string, any> | null) ?? null;
 
     const signAsset = async (asset: AssetRow) => {
       if (!asset.storage_bucket || !asset.storage_path || !asset.mime_type.startsWith('image/')) return asset;
@@ -205,6 +217,7 @@ export default async function EditorDetailPage({
         globalAssets={globalAssets}
         placeholders={placeholders}
         versions={versions}
+        editorialContext={editorialContext}
       />
     </AppShell>
   );

@@ -5,6 +5,8 @@ import { getCurrentWorkspace } from '@/lib/auth';
 import {
   demoContentPlans,
   demoCreativeDocuments,
+  demoBrandPlaybooks,
+  demoEditorialPlaybooks,
   demoMemories,
   demoTemplates,
   getDemoAssets,
@@ -14,6 +16,7 @@ import {
 import {
   archiveBrandTemplate,
   completeBrandOnboarding,
+  linkBrandPlaybook,
   linkBrandTemplate,
   requestBrandMemory,
   updateBrand,
@@ -39,6 +42,20 @@ type AssetRow = {
   size_bytes: number;
   metadata?: Record<string, any> | null;
   signedUrl?: string | null;
+};
+
+type EditorialPlaybookRow = {
+  id: string;
+  slug: string;
+  name: string;
+  vertical: string;
+  playbook_json: Record<string, any>;
+};
+
+type BrandPlaybookRow = {
+  id: string;
+  playbook_id: string;
+  editorial_profile_json?: Record<string, any> | null;
 };
 
 function identity(client: ClientRow) {
@@ -85,6 +102,8 @@ export default async function ClientWorkspacePage({ params }: { params: Promise<
   let documents: Array<{ id: string; title: string; status: string; template_ref: string }> = [];
   let templates: Array<{ id?: string; template_id: string; name: string; type: string; recommended_use?: string | null }> = [];
   let linkedTemplateIds = new Set<string>();
+  let editorialPlaybooks: EditorialPlaybookRow[] = [];
+  let activeBrandPlaybook: BrandPlaybookRow | null = null;
 
   if (isDemoMode()) {
     client = getDemoBrand(clientId) as ClientRow;
@@ -94,6 +113,8 @@ export default async function ClientWorkspacePage({ params }: { params: Promise<
     documents = demoCreativeDocuments.filter((document) => document.brand_id === client!.id);
     templates = demoTemplates;
     linkedTemplateIds = new Set(demoTemplates.slice(0, 2).map((template) => template.id));
+    editorialPlaybooks = demoEditorialPlaybooks as EditorialPlaybookRow[];
+    activeBrandPlaybook = demoBrandPlaybooks.find((playbook) => playbook.brand_id === client!.id) as BrandPlaybookRow | null;
   } else {
     const { data: brand } = await supabase
       .from('brands')
@@ -112,6 +133,8 @@ export default async function ClientWorkspacePage({ params }: { params: Promise<
       { data: documentRows },
       { data: templateRows },
       { data: brandTemplateRows },
+      { data: editorialPlaybookRows },
+      { data: brandPlaybookRows },
     ] = await Promise.all([
       supabase
         .from('brand_assets')
@@ -155,6 +178,19 @@ export default async function ClientWorkspacePage({ params }: { params: Promise<
         .eq('workspace_id', membership.workspace_id)
         .eq('brand_id', client.id)
         .eq('status', 'active'),
+      supabase
+        .from('editorial_playbooks')
+        .select('id, slug, name, vertical, playbook_json')
+        .eq('status', 'active')
+        .or(`workspace_id.is.null,workspace_id.eq.${membership.workspace_id}`)
+        .order('name', { ascending: true }),
+      supabase
+        .from('brand_playbooks')
+        .select('id, playbook_id, editorial_profile_json')
+        .eq('workspace_id', membership.workspace_id)
+        .eq('brand_id', client.id)
+        .eq('status', 'active')
+        .maybeSingle(),
     ]);
 
     assets = await Promise.all((assetRows ?? []).map(async (asset: any) => {
@@ -172,15 +208,21 @@ export default async function ClientWorkspacePage({ params }: { params: Promise<
       recommended_use: template.metadata?.recommended_use ?? null,
     }));
     linkedTemplateIds = new Set((brandTemplateRows ?? []).map((row: any) => row.template_id));
+    editorialPlaybooks = (editorialPlaybookRows ?? []) as EditorialPlaybookRow[];
+    activeBrandPlaybook = (brandPlaybookRows ?? null) as BrandPlaybookRow | null;
   }
 
   if (!client) notFound();
 
   const clientIdentity = identity(client);
+  const selectedPlaybook = editorialPlaybooks.find((playbook) => playbook.id === activeBrandPlaybook?.playbook_id) ?? editorialPlaybooks[0];
+  const editorialProfile = activeBrandPlaybook?.editorial_profile_json ?? {};
+  const selectedPlaybookJson = selectedPlaybook?.playbook_json ?? {};
   const checklist = [
     { label: 'Perfil e voz', done: Boolean(client.positioning || client.voice_notes) },
     { label: 'Identidade visual', done: Boolean(clientIdentity.primary_color && clientIdentity.font_family) },
     { label: 'Assets aprovados', done: assets.length > 0 },
+    { label: 'Estrategia editorial', done: Boolean(activeBrandPlaybook || selectedPlaybook) },
     { label: 'Memoria de marca', done: memories.length > 0 },
     { label: 'Templates vinculados', done: linkedTemplateIds.size > 0 },
     { label: 'Estrategia/cronograma', done: plans.length > 0 },
@@ -225,6 +267,7 @@ export default async function ClientWorkspacePage({ params }: { params: Promise<
       <nav className="client-quick-nav" aria-label="Atalhos do painel do cliente">
         <Link href="#perfil">Briefing</Link>
         <Link href="#assets">Assets</Link>
+        <Link href="#estrategia-editorial">Playbook</Link>
         <Link href="#geracao">IA</Link>
         <Link href="#estrategia">Cronograma</Link>
         <Link href="#templates">Templates</Link>
@@ -437,10 +480,80 @@ export default async function ClientWorkspacePage({ params }: { params: Promise<
         </div>
       </section>
 
+      <section id="estrategia-editorial" className="client-workspace-grid">
+        <form action={linkBrandPlaybook.bind(null, client.id)} className="panel grid">
+          <div>
+            <small className="muted">3. Estrategia editorial</small>
+            <h2>Playbook aplicado</h2>
+            <p className="muted">Use um playbook por vertical para orientar perguntas, funil, pilares, CTAs e compliance antes da IA gerar qualquer cronograma.</p>
+          </div>
+          <label>
+            Vertical editorial
+            <select name="playbook_id" defaultValue={selectedPlaybook?.id ?? ''} required>
+              {editorialPlaybooks.map((playbook) => (
+                <option value={playbook.id} key={playbook.id}>{playbook.name}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Diferenciais do cliente
+            <input name="differentiators" defaultValue={Array.isArray(editorialProfile.differentiators) ? editorialProfile.differentiators.join(', ') : ''} placeholder="Atendimento premium, medico especialista, acompanhamento..." />
+          </label>
+          <label>
+            CTAs preferidos
+            <input name="preferred_ctas" defaultValue={Array.isArray(editorialProfile.preferred_ctas) ? editorialProfile.preferred_ctas.join(', ') : ''} placeholder="Agende uma avaliacao, Fale pelo WhatsApp..." />
+          </label>
+          <div className="grid two">
+            <label>
+              Temas proibidos
+              <input name="forbidden_topics" defaultValue={Array.isArray(editorialProfile.forbidden_topics) ? editorialProfile.forbidden_topics.join(', ') : ''} placeholder="promessa de resultado, urgencia falsa" />
+            </label>
+            <label>
+              Prioridade comercial
+              <input name="commercial_priority" defaultValue={typeof editorialProfile.commercial_priority === 'string' ? editorialProfile.commercial_priority : ''} placeholder="pre-avaliacao responsavel pelo WhatsApp" />
+            </label>
+          </div>
+          <label>
+            Restricoes customizadas
+            <textarea name="custom_restrictions" defaultValue={Array.isArray(editorialProfile.custom_restrictions) ? editorialProfile.custom_restrictions.join(', ') : ''} placeholder="Regras especificas deste cliente para IA, criativos e aprovacao." />
+          </label>
+          <button type="submit">Salvar estrategia editorial</button>
+        </form>
+
+        <div className="panel grid">
+          <div>
+            <small className="muted">Playbook ativo</small>
+            <h2>{selectedPlaybook?.name ?? 'Nenhum playbook'}</h2>
+            <p className="muted">{String(selectedPlaybookJson.positioning ?? 'Escolha um playbook para orientar a operacao editorial.')}</p>
+          </div>
+          <div className="summary-tags">
+            {Object.entries((selectedPlaybookJson.funnel_distribution as Record<string, number> | undefined) ?? {}).map(([stage, percent]) => (
+              <span key={stage}>{stage}: {percent}%</span>
+            ))}
+          </div>
+          <div>
+            <small className="muted">Perguntas que a IA deve responder</small>
+            <div className="review-todo-list" style={{ marginTop: 8 }}>
+              {((selectedPlaybookJson.core_questions as string[] | undefined) ?? []).slice(0, 5).map((question) => (
+                <span className="mini-card" key={question}>{question}</span>
+              ))}
+            </div>
+          </div>
+          <div>
+            <small className="muted">Alertas de compliance</small>
+            <div className="review-todo-list" style={{ marginTop: 8 }}>
+              {((selectedPlaybookJson.compliance_rules as string[] | undefined) ?? []).slice(0, 4).map((rule) => (
+                <span className="mini-card" key={rule}>{rule}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section id="geracao" className="client-workspace-grid">
         <div className="panel grid">
           <div>
-            <small className="muted">3. Memoria de marca</small>
+            <small className="muted">4. Memoria de marca</small>
             <h2>Gerar base de IA</h2>
           </div>
           {latestMemory ? (
@@ -461,7 +574,7 @@ export default async function ClientWorkspacePage({ params }: { params: Promise<
 
         <form id="estrategia" action={requestGeneratedContentPlan} className="panel grid">
           <div>
-            <small className="muted">4. Estrategia e cronograma</small>
+            <small className="muted">5. Estrategia e cronograma</small>
             <h2>Gerar plano de conteudo</h2>
           </div>
           <input type="hidden" name="brand_id" value={client.id} />
@@ -516,7 +629,7 @@ export default async function ClientWorkspacePage({ params }: { params: Promise<
       <section className="client-workspace-grid">
         <div id="templates" className="panel grid">
           <div>
-            <small className="muted">5. Templates e subtemplates</small>
+            <small className="muted">6. Templates e subtemplates</small>
             <h2>Biblioteca disponivel</h2>
           </div>
           {templates.slice(0, 4).map((template) => (
@@ -545,7 +658,7 @@ export default async function ClientWorkspacePage({ params }: { params: Promise<
 
         <div id="criativos" className="panel grid">
           <div>
-            <small className="muted">6. Conteudos e revisao</small>
+            <small className="muted">7. Conteudos e revisao</small>
             <h2>Transicao para editor</h2>
           </div>
           {plans.map((plan) => (

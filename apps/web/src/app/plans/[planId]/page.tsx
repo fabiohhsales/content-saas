@@ -92,23 +92,25 @@ function jsonValue(value: unknown) {
   return value == null || value === '' ? '-' : String(value);
 }
 
+function stringList(value: unknown) {
+  return Array.isArray(value) ? value.map(String).filter(Boolean) : [];
+}
+
 function planStrategy(planJson?: Record<string, unknown>) {
   const strategy = planJson?.strategy as Record<string, unknown> | undefined;
+  const playbook = planJson?.editorial_playbook as Record<string, unknown> | undefined;
   return {
     objective: String(strategy?.objective || planJson?.objective || 'Objetivo ainda nao consolidado.'),
-    channels: Array.isArray(strategy?.channels)
-      ? strategy.channels.map(String)
-      : Array.isArray(planJson?.channels)
-        ? planJson.channels.map(String)
-        : [],
+    channels: stringList(strategy?.channels).length ? stringList(strategy?.channels) : stringList(planJson?.channels),
     frequency: String(strategy?.frequency || 'Frequencia nao definida'),
-    pillars: Array.isArray(strategy?.pillars)
-      ? strategy.pillars.map(String)
-      : Array.isArray(planJson?.pillars)
-        ? planJson.pillars.map(String)
-        : [],
+    pillars: stringList(strategy?.pillars).length ? stringList(strategy?.pillars) : stringList(planJson?.pillars),
     campaigns: String(strategy?.campaigns || 'Sem campanha registrada'),
     restrictions: String(strategy?.restrictions || 'Sem restricoes registradas'),
+    playbookSlug: String(strategy?.playbook_slug || playbook?.slug || ''),
+    playbookVersion: String(strategy?.playbook_version || playbook?.version || ''),
+    funnelDistribution: (strategy?.funnel_distribution as Record<string, unknown> | undefined)
+      ?? (planJson?.funnel_distribution as Record<string, unknown> | undefined)
+      ?? {},
   };
 }
 
@@ -253,6 +255,17 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ pla
             <small className="muted">Restricoes</small>
             <p>{strategy.restrictions}</p>
           </div>
+          {strategy.playbookSlug ? (
+            <div>
+              <small className="muted">Playbook editorial</small>
+              <p>{strategy.playbookSlug} v{strategy.playbookVersion}</p>
+              <div className="summary-tags">
+                {Object.entries(strategy.funnelDistribution).map(([stage, percent]) => (
+                  <span key={stage}>{stage}: {String(percent)}%</span>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </article>
 
         <article className="panel plan-scoreboard">
@@ -372,10 +385,16 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ pla
               <div>
                 <small className="muted">Resumo do item</small>
                 <div className="item-copy-summary">
+                  <p><strong>Funil:</strong> {jsonValue(item.copy_json?.funnel_stage)} · <strong>Pilar:</strong> {jsonValue(item.copy_json?.editorial_pillar)} · <strong>Intencao:</strong> {jsonValue(item.copy_json?.commercial_intent)}</p>
+                  <p><strong>Headline:</strong> {jsonValue(item.copy_json?.headline || item.copy_json?.hook)}</p>
+                  <p><strong>Ideia central:</strong> {jsonValue(item.copy_json?.central_idea)}</p>
                   <p><strong>Hook:</strong> {jsonValue(item.copy_json?.hook)}</p>
                   <p><strong>Legenda:</strong> {jsonValue(item.copy_json?.caption)}</p>
                   <p><strong>CTA:</strong> {jsonValue(item.copy_json?.cta)}</p>
                   <p><strong>Direcao visual:</strong> {itemField(item, 'template_id')}</p>
+                  {stringList(item.copy_json?.compliance_notes).length ? (
+                    <p><strong>Compliance:</strong> {stringList(item.copy_json?.compliance_notes).join(' | ')}</p>
+                  ) : null}
                 </div>
               </div>
               <form action={updateContentItemStatus.bind(null, item.id, plan.id)} className="grid">
