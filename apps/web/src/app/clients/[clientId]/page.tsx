@@ -523,9 +523,9 @@ export default async function ClientWorkspacePage({ params }: { params: Promise<
             <article className="card" key={template.template_id}>
               <small className="muted">{template.type} - {template.id && linkedTemplateIds.has(template.id) ? 'vinculado' : 'global'}</small>
               <strong>{template.name}</strong>
-              <p className="muted">{template.recommended_use ?? 'Contrato pronto para campos, assets e render.'}</p>
+              <p className="muted">{template.recommended_use ?? 'Modelo pronto para combinar texto, assets e direcao visual.'}</p>
               <div className="client-actions">
-                <Link className="button secondary" href={`/templates/${template.template_id}`}>Ver contrato</Link>
+                <Link className="button secondary" href={`/templates/${template.template_id}`}>Ver modelo</Link>
                 {template.id && linkedTemplateIds.has(template.id) ? (
                   <form action={archiveBrandTemplate.bind(null, client.id, template.id)}>
                     <button className="secondary" type="submit">Remover</button>
