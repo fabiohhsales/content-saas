@@ -12,7 +12,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         <p className="muted">
           {demo ? 'Modo demo ativo. Entre no produto com dados fictícios.' : 'Use seu e-mail para receber um link de acesso.'}
         </p>
-        {demo ? <Link className="button" href="/brands">Abrir demo</Link> : null}
+        {demo ? <Link className="button" href="/clients">Abrir demo</Link> : null}
         {query.sent ? <p>Link enviado. Verifique sua caixa de entrada.</p> : null}
         <form action={signInWithEmail} className="grid" style={{ marginTop: 18 }}>
           <label>

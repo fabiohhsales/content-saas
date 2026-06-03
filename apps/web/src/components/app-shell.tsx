@@ -11,7 +11,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <Link className="brandmark" href="/">Content SaaS</Link>
         <nav className="nav">
           {demo ? <span>Demo mode</span> : null}
-          <Link href="/brands">Marcas</Link>
+          <Link href="/clients">Clientes</Link>
           <Link href="/plans">Planos</Link>
           <Link href="/editor">Editor</Link>
           <Link href="/templates">Templates</Link>

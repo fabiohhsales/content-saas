@@ -150,6 +150,108 @@ pre {
   padding: 18px;
 }
 
+.hero-panel {
+  align-items: end;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 24px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: 28px;
+}
+
+.client-dashboard {
+  align-items: flex-start;
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+}
+
+.client-create {
+  position: sticky;
+  top: 18px;
+}
+
+.client-card {
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+}
+
+.client-card-header {
+  align-items: flex-start;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.swatches {
+  display: flex;
+  gap: 6px;
+}
+
+.swatches span {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  display: block;
+  height: 28px;
+  width: 28px;
+}
+
+.client-progress {
+  background: #eef2f6;
+  border-radius: 999px;
+  height: 8px;
+  overflow: hidden;
+}
+
+.client-progress span {
+  background: var(--accent);
+  display: block;
+  height: 100%;
+}
+
+.client-steps {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+}
+
+.client-steps a {
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--muted);
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+}
+
+.client-steps a.done {
+  background: #eef4f3;
+  border-color: rgba(15, 118, 110, .28);
+  color: var(--accent-strong);
+}
+
+.client-metrics,
+.client-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.client-metrics span {
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  padding: 7px 10px;
+}
+
 .asset-preview {
   align-items: center;
   background: #f1f5f9;
@@ -169,14 +271,14 @@ pre {
 }
 
 .editor-layout {
-  align-items: start;
+  align-items: flex-start;
   display: grid;
   gap: 18px;
   grid-template-columns: minmax(220px, 280px) minmax(360px, 1fr) minmax(220px, 280px);
 }
 
 .editor-workbench {
-  align-items: start;
+  align-items: flex-start;
   display: grid;
   gap: 18px;
   grid-template-columns: minmax(220px, 250px) minmax(360px, 1fr) minmax(260px, 300px);
@@ -379,6 +481,15 @@ pre {
 
   .editor-workbench {
     grid-template-columns: 1fr;
+  }
+
+  .client-dashboard,
+  .hero-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .client-create {
+    position: static;
   }
 
   .stage-toolbar {

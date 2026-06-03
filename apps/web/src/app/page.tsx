@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { AppShell } from '@/components/app-shell';
 import { getCurrentWorkspace } from '@/lib/auth';
 
 export default async function HomePage() {
@@ -7,22 +8,19 @@ export default async function HomePage() {
   if (!membership) redirect('/onboarding');
 
   return (
-    <div className="shell">
-      <header className="topbar">
-        <div className="brandmark">Content SaaS</div>
-        <nav className="nav">
-          <Link href="/brands">Marcas</Link>
-        </nav>
-      </header>
-      <main className="main">
-        <div className="toolbar">
-          <div>
-            <h1>Operacao de conteudo</h1>
-            <p className="muted">Workspace pronto. Comece cadastrando marcas e assets.</p>
-          </div>
-          <Link className="button" href="/brands">Abrir marcas</Link>
+    <AppShell>
+      <section className="hero-panel">
+        <div>
+          <small className="muted">Content SaaS</small>
+          <h1>Operacao de conteudo orientada a clientes</h1>
+          <p className="muted">Cadastre o cliente, defina identidade, suba logos/assets/templates, planeje estrategia e avance para geracao, editor e aprovacao.</p>
         </div>
-      </main>
-    </div>
+        <div className="client-actions">
+          <Link className="button" href="/clients">Abrir clientes</Link>
+          <Link className="button secondary" href="/plans">Cronogramas</Link>
+          <Link className="button secondary" href="/editor">Editor</Link>
+        </div>
+      </section>
+    </AppShell>
   );
 }

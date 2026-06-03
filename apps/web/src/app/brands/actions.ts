@@ -14,12 +14,35 @@ const BrandFormSchema = z.object({
   industry: z.string().optional(),
   positioning: z.string().optional(),
   voice_notes: z.string().optional(),
+  primary_color: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
+  secondary_color: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
+  font_family: z.string().optional(),
+  visual_notes: z.string().optional(),
 });
 
 function requiredWorkspaceId(membership: Awaited<ReturnType<typeof getCurrentWorkspace>>['membership']) {
   const workspaceId = membership?.workspace_id;
   if (!workspaceId) throw new Error('Workspace is required');
   return workspaceId;
+}
+
+function optionalText(value: FormDataEntryValue | null) {
+  const text = typeof value === 'string' ? value.trim() : '';
+  return text.length > 0 ? text : undefined;
+}
+
+function brandMetadata(input: z.infer<typeof BrandFormSchema>, previous?: Record<string, unknown> | null) {
+  return {
+    ...previous,
+    schema_version: 1,
+    identity: {
+      ...((previous?.identity as Record<string, unknown> | undefined) ?? {}),
+      primary_color: input.primary_color ?? '',
+      secondary_color: input.secondary_color ?? '',
+      font_family: input.font_family ?? '',
+      visual_notes: input.visual_notes ?? '',
+    },
+  };
 }
 
 export async function createBrand(formData: FormData) {
@@ -31,9 +54,13 @@ export async function createBrand(formData: FormData) {
   const workspaceId = requiredWorkspaceId(membership);
   const input = BrandFormSchema.parse({
     name: formData.get('name'),
-    industry: formData.get('industry') || undefined,
-    positioning: formData.get('positioning') || undefined,
-    voice_notes: formData.get('voice_notes') || undefined,
+    industry: optionalText(formData.get('industry')),
+    positioning: optionalText(formData.get('positioning')),
+    voice_notes: optionalText(formData.get('voice_notes')),
+    primary_color: optionalText(formData.get('primary_color')),
+    secondary_color: optionalText(formData.get('secondary_color')),
+    font_family: optionalText(formData.get('font_family')),
+    visual_notes: optionalText(formData.get('visual_notes')),
   });
 
   const { data, error } = await supabase
@@ -46,6 +73,7 @@ export async function createBrand(formData: FormData) {
       industry: input.industry ?? null,
       positioning: input.positioning ?? null,
       voice_notes: input.voice_notes ?? null,
+      metadata: brandMetadata(input),
       created_by: user.id,
     })
     .select('id')
@@ -53,6 +81,7 @@ export async function createBrand(formData: FormData) {
 
   if (error || !data) throw new Error(error?.message ?? 'Could not create brand');
   revalidatePath('/brands');
+  revalidatePath('/clients');
   redirect(`/brands/${data.id}/onboarding`);
 }
 
@@ -66,10 +95,21 @@ export async function updateBrand(brandId: string, formData: FormData) {
   const workspaceId = requiredWorkspaceId(membership);
   const input = BrandFormSchema.parse({
     name: formData.get('name'),
-    industry: formData.get('industry') || undefined,
-    positioning: formData.get('positioning') || undefined,
-    voice_notes: formData.get('voice_notes') || undefined,
+    industry: optionalText(formData.get('industry')),
+    positioning: optionalText(formData.get('positioning')),
+    voice_notes: optionalText(formData.get('voice_notes')),
+    primary_color: optionalText(formData.get('primary_color')),
+    secondary_color: optionalText(formData.get('secondary_color')),
+    font_family: optionalText(formData.get('font_family')),
+    visual_notes: optionalText(formData.get('visual_notes')),
   });
+
+  const { data: currentBrand } = await supabase
+    .from('brands')
+    .select('metadata')
+    .eq('id', brandId)
+    .eq('workspace_id', workspaceId)
+    .maybeSingle();
 
   const { error } = await supabase
     .from('brands')
@@ -79,6 +119,7 @@ export async function updateBrand(brandId: string, formData: FormData) {
       industry: input.industry ?? null,
       positioning: input.positioning ?? null,
       voice_notes: input.voice_notes ?? null,
+      metadata: brandMetadata(input, (currentBrand?.metadata as Record<string, unknown> | null) ?? null),
     })
     .eq('id', brandId)
     .eq('workspace_id', workspaceId);
@@ -86,6 +127,7 @@ export async function updateBrand(brandId: string, formData: FormData) {
   if (error) throw new Error(error.message);
   revalidatePath(`/brands/${brandId}`);
   revalidatePath('/brands');
+  revalidatePath('/clients');
 }
 
 export async function archiveBrand(brandId: string) {
@@ -103,7 +145,8 @@ export async function archiveBrand(brandId: string) {
 
   if (error) throw new Error(error.message);
   revalidatePath('/brands');
-  redirect('/brands');
+  revalidatePath('/clients');
+  redirect('/clients');
 }
 
 export async function completeBrandOnboarding(brandId: string) {

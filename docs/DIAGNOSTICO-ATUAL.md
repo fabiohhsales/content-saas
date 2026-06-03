@@ -1,6 +1,6 @@
 # Diagnostico atual do Content SaaS
 
-Atualizado em: 2026-06-02
+Atualizado em: 2026-06-03
 
 ## 1. Resumo executivo
 
@@ -36,6 +36,7 @@ content-saas/
     workflows/       CI do monorepo
   docs/
     DIAGNOSTICO-ATUAL.md
+    PLANO-REDESENHO-CLIENTE-FIRST.md
     PLANO-MVP-EDITOR-VISUAL.md
 ```
 
@@ -60,6 +61,7 @@ Responsavel pela experiencia do usuario:
 - Login por Supabase Auth.
 - Callback de auth em `/auth/callback`.
 - Onboarding de workspace em `/onboarding`.
+- Painel cliente-first em `/clients`.
 - Listagem e criacao de marcas em `/brands`.
 - Detalhe/edicao de marca em `/brands/[brandId]`.
 - Wizard de onboarding da marca em `/brands/[brandId]/onboarding`.
@@ -80,6 +82,7 @@ Arquivos-chave:
 - `apps/web/src/lib/auth.ts`: autentica usuario ou injeta usuario demo.
 - `apps/web/src/lib/demo.ts`: dados ficticios para navegacao local.
 - `apps/web/src/lib/supabase.ts`: client Supabase SSR.
+- `apps/web/src/app/clients/page.tsx`: painel cliente-first com setup visual, progresso e atalhos operacionais.
 - `apps/web/src/app/brands/actions.ts`: server actions de marcas, assets e memoria.
 - `apps/web/src/app/plans/page.tsx`: lista, filtros e criacao de planos de conteudo.
 - `apps/web/src/app/plans/[planId]/page.tsx`: detalhe do plano, itens planejados e status.
@@ -88,6 +91,7 @@ Arquivos-chave:
 - `apps/web/src/app/editor/[documentId]/page.tsx`: carrega dados, auth e contratos do documento criativo.
 - `apps/web/src/app/editor/[documentId]/editor-client.tsx`: workbench visual client-side com canvas selecionavel, camadas, painel de propriedades, assets e versoes.
 - `apps/web/src/app/editor/actions.ts`: salva edicoes de elementos, cria versoes e envia documentos criativos para aprovacao.
+- `docs/PLANO-REDESENHO-CLIENTE-FIRST.md`: plano de redesenho completo do fluxo por cliente.
 - `docs/PLANO-MVP-EDITOR-VISUAL.md`: planejamento da evolucao do editor assistido para um MVP visual tipo Canva controlado.
 - `apps/web/src/app/templates/page.tsx`: biblioteca de templates.
 - `apps/web/src/app/templates/[templateId]/page.tsx`: detalhe de contrato/campos do template.
@@ -459,6 +463,7 @@ flowchart TD
 | `/auth/callback` | funcional | troca code por session |
 | `/` | funcional | redireciona conforme workspace |
 | `/onboarding` | funcional | cria workspace real |
+| `/clients` | funcional | painel cliente-first; demo ativo |
 | `/brands` | funcional | lista/cria marcas; demo ativo |
 | `/brands/[brandId]` | funcional | edita marca e mostra memorias |
 | `/brands/[brandId]/onboarding` | funcional | wizard inicial |
@@ -575,6 +580,8 @@ npm test -w @content-saas/orchestrator
 Rotas demo verificadas com HTTP 200:
 
 - `/login`
+- `/`
+- `/clients`
 - `/brands`
 - `/brands/demo-brand-health-grow`
 - `/brands/demo-brand-health-grow/onboarding`
@@ -597,6 +604,7 @@ Rotas demo verificadas com HTTP 200:
 ### Pronto para avaliacao de produto
 
 - Navegacao demo local.
+- Painel cliente-first inicial em `/clients`, com setup visual, progresso e atalhos para assets, estrategia, editor e templates.
 - Estrutura de marca e assets.
 - Biblioteca inicial de templates.
 - Central inicial de aprovacoes humanas.
@@ -623,6 +631,7 @@ Rotas demo verificadas com HTTP 200:
 - Jobs: contrato, worker, painel visual e retry inicial existem, mas falta integracao ponta a ponta real em ambiente com Redis/Supabase.
 - Render preview: posts unicos/carrosseis implementados no orchestrator/web, mas precisam ambiente real com Redis, Supabase Storage e render service rodando para teste ponta a ponta.
 - Editor assistido: contratos, tabelas, demo, canvas client-side, selecao de elementos, painel de propriedades, persistencia de texto/asset/layout, aprovacao, endpoint de render final e job de persistencia em Storage existem, mas ainda falta drag/resize com handles, asset picker mais completo e validacao ponta a ponta real com Redis/Supabase/render.
+- Redesenho cliente-first: painel inicial, identidade visual em `brands.metadata.identity` e documentacao existem; ainda falta transformar onboarding/assets/templates/estrategia em fluxo unico guiado.
 - Biblioteca global de assets: schema, leitura autenticada e hardening para remover upload livre existem; falta fluxo administrativo/curadoria para inserir assets globais.
 - Geracao de plano: job mockado implementado, mas precisa provider IA real para producao.
 - Gestao de membros: CRUD inicial por `user_id` e convite por link existem, mas falta envio de e-mail transacional.
@@ -634,6 +643,7 @@ Rotas demo verificadas com HTTP 200:
 - IA real para geracao de planos e itens.
 - Render preview avancado com escolha assistida de template e assets reais da marca.
 - Drag/resize visual com handles no editor, snap basico e asset picker avancado integrado ao canvas.
+- Wizard cliente-first completo para identidade, logo/capa/fonte, templates/subtemplates e estrategia.
 - Envio de e-mail transacional para convites.
 - Testes SQL/RLS executados contra Supabase real/local com usuarios de workspaces diferentes.
 
