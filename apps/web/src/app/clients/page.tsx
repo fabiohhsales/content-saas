@@ -201,6 +201,10 @@ export default async function ClientsPage({
                 <div className="client-progress">
                   <span style={{ width: `${percent}%` }} />
                 </div>
+                <div className="portfolio-card-status">
+                  <strong>{percent}% setup</strong>
+                  <span>{stats.plans > 0 ? 'Cronograma iniciado' : 'Sem cronograma'}</span>
+                </div>
 
                 <div className="client-steps">
                   {steps.map((step) => (
