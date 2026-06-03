@@ -1,13 +1,14 @@
 :root {
   color-scheme: light;
-  --bg: #f7f7f4;
+  --bg: #fcfcf9;
   --panel: #ffffff;
-  --ink: #1f2933;
-  --muted: #667085;
-  --line: #d9dee7;
-  --accent: #0f766e;
-  --accent-strong: #115e59;
+  --ink: #0f172a;
+  --muted: #64748b;
+  --line: #e2e8f0;
+  --accent: #059669;
+  --accent-strong: #047857;
   --danger: #b42318;
+  --soft-shadow: 0 4px 20px rgba(15, 23, 42, .05);
 }
 
 * {
@@ -18,7 +19,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--ink);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: Inter, Arial, Helvetica, sans-serif;
 }
 
 a {
@@ -53,15 +54,16 @@ a {
 
 .main {
   margin: 0 auto;
-  max-width: 1120px;
-  padding: 32px 24px 56px;
+  max-width: 1280px;
+  padding: 28px 24px 56px;
 }
 
 .panel {
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 8px;
-  padding: 24px;
+  box-shadow: var(--soft-shadow);
+  padding: 20px;
 }
 
 .grid {
@@ -71,6 +73,10 @@ a {
 
 .grid.two {
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.grid.three {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
 .toolbar {
@@ -147,11 +153,12 @@ pre {
   background: #ffffff;
   border: 1px solid var(--line);
   border-radius: 8px;
+  box-shadow: var(--soft-shadow);
   padding: 18px;
 }
 
 .hero-panel {
-  align-items: end;
+  align-items: flex-end;
   background: #ffffff;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -212,6 +219,159 @@ pre {
 
 .portfolio-filters {
   margin-bottom: 18px;
+}
+
+.compact-hero {
+  padding: 20px;
+}
+
+.compact-hero h1 {
+  font-size: 34px;
+  line-height: 1.08;
+  margin: 4px 0 8px;
+}
+
+.compact-metrics {
+  gap: 10px;
+}
+
+.compact-metrics div {
+  padding: 14px 16px;
+}
+
+.compact-panel {
+  padding: 16px;
+}
+
+.form-actions {
+  align-items: end;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.client-table-panel {
+  padding: 0;
+}
+
+.client-table {
+  border-collapse: collapse;
+  min-width: 900px;
+  width: 100%;
+}
+
+.client-table th,
+.client-table td {
+  border-bottom: 1px solid var(--line);
+  padding: 14px 16px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.client-table th {
+  background: #f8fafc;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.client-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.client-name-cell {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+}
+
+.client-name-cell strong,
+.client-name-cell small {
+  display: block;
+}
+
+.client-name-cell small {
+  color: var(--muted);
+  margin-top: 3px;
+}
+
+.client-avatar {
+  align-items: center;
+  border-radius: 8px;
+  color: #ffffff;
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 800;
+  height: 36px;
+  justify-content: center;
+  width: 36px;
+}
+
+.status-pill {
+  background: #ecfdf5;
+  border: 1px solid rgba(5, 150, 105, .18);
+  border-radius: 999px;
+  color: var(--accent-strong);
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 6px 9px;
+}
+
+.table-progress {
+  background: #eef2f6;
+  border-radius: 999px;
+  height: 7px;
+  margin-bottom: 5px;
+  overflow: hidden;
+  width: 90px;
+}
+
+.table-progress span {
+  background: var(--accent);
+  display: block;
+  height: 100%;
+}
+
+.row-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.row-actions .button {
+  min-height: 34px;
+  padding: 8px 10px;
+}
+
+.social-icon-row {
+  align-items: center;
+  display: inline-flex;
+  gap: 6px;
+}
+
+.social-icon {
+  align-items: center;
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--ink);
+  display: inline-flex;
+  height: 30px;
+  justify-content: center;
+  width: 30px;
+}
+
+.social-icon svg {
+  fill: none;
+  height: 17px;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+  width: 17px;
 }
 
 .client-portfolio-grid {
@@ -690,6 +850,245 @@ pre {
 .asset-preview.small {
   height: 110px;
   min-height: 110px;
+}
+
+.pipeline-board {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(5, minmax(220px, 1fr));
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+
+.pipeline-column {
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  min-height: 420px;
+  padding: 12px;
+}
+
+.pipeline-column-header {
+  align-items: flex-start;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.pipeline-column-header strong,
+.pipeline-column-header small {
+  display: block;
+}
+
+.pipeline-column-header small {
+  color: var(--muted);
+  line-height: 1.35;
+  margin-top: 4px;
+}
+
+.pipeline-column-header span {
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  padding: 5px 8px;
+}
+
+.pipeline-card-list {
+  display: grid;
+  gap: 10px;
+}
+
+.pipeline-card {
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--soft-shadow);
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+}
+
+.pipeline-card small,
+.pipeline-card p {
+  color: var(--muted);
+  margin: 0;
+}
+
+.pipeline-card p {
+  display: -webkit-box;
+  line-height: 1.4;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.calendar-workspace {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+  margin-bottom: 16px;
+}
+
+.calendar-panel,
+.review-todo-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.calendar-strip {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.calendar-day-card {
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 8px;
+  min-height: 132px;
+  padding: 12px;
+}
+
+.calendar-day-card strong {
+  color: var(--accent-strong);
+  font-size: 28px;
+  line-height: 1;
+}
+
+.calendar-day-card span {
+  color: var(--ink);
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.review-todo-list {
+  display: grid;
+  gap: 8px;
+}
+
+.review-todo-list a {
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+}
+
+.review-todo-list span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.approval-list {
+  display: grid;
+  gap: 12px;
+}
+
+.approval-card {
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--soft-shadow);
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
+  padding: 18px;
+}
+
+.approval-card-main {
+  display: grid;
+  gap: 9px;
+}
+
+.approval-card-main h2,
+.approval-card-main p {
+  margin: 0;
+}
+
+.approval-card-main small {
+  color: var(--muted);
+}
+
+.approval-card-actions {
+  border-left: 1px solid var(--line);
+  display: grid;
+  gap: 12px;
+  padding-left: 18px;
+}
+
+.feedback-options {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+}
+
+.feedback-options label {
+  align-items: center;
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: flex;
+  gap: 8px;
+  padding: 8px 10px;
+}
+
+.feedback-options input {
+  margin: 0;
+  min-height: auto;
+  width: auto;
+}
+
+.brand-design-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, .9fr);
+  margin-bottom: 16px;
+}
+
+.brand-token-panel,
+.brand-template-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.brand-token-list,
+.template-minimal-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.brand-token-card,
+.template-minimal-card {
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+}
+
+.brand-token-card {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+.brand-token-card small,
+.brand-token-card p,
+.template-minimal-card small,
+.template-minimal-card p {
+  color: var(--muted);
+  margin: 0;
+}
+
+.template-minimal-grid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
 .plan-board-hero {
@@ -1183,6 +1582,9 @@ pre {
   .client-portfolio-grid,
   .plan-overview,
   .plan-board-grid,
+  .calendar-workspace,
+  .approval-card,
+  .brand-design-grid,
   .client-workspace-grid,
   .client-studio-hero,
   .hero-panel {
@@ -1208,6 +1610,17 @@ pre {
     border-top: 1px solid var(--line);
     padding-left: 0;
     padding-top: 12px;
+  }
+
+  .approval-card-actions {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+    padding-left: 0;
+    padding-top: 14px;
+  }
+
+  .pipeline-board {
+    grid-template-columns: repeat(5, minmax(240px, 1fr));
   }
 
   .client-studio-hero {

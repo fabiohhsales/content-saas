@@ -12,10 +12,11 @@ export function AppShell({ children }: { children: ReactNode }) {
         <nav className="nav">
           {demo ? <span>Demo mode</span> : null}
           <Link href="/clients">Clientes</Link>
-          <Link href="/plans">Planos</Link>
+          <Link href="/pipeline">Pipeline</Link>
+          <Link href="/plans">Cronograma</Link>
           <Link href="/editor">Editor</Link>
-          <Link href="/templates">Templates</Link>
-          <Link href="/approvals">Aprovacoes</Link>
+          <Link href="/approvals">Aprovacao</Link>
+          <Link href="/brand-design">Brand Design</Link>
           <Link href="/jobs">Jobs</Link>
           <Link href="/settings/members">Membros</Link>
           <form action={signOutFromApp}>

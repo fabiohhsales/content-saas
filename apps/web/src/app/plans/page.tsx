@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { AppShell } from '@/components/app-shell';
+import { SocialIconRow } from '@/components/social-icons';
 import { getCurrentWorkspace } from '@/lib/auth';
 import { demoBrands, demoContentItems, demoContentPlans, isDemoMode } from '@/lib/demo';
 import { createContentPlan, requestGeneratedContentPlan } from './actions';
@@ -134,6 +135,10 @@ export default async function PlansPage({
     },
     { items: 0, awaiting: 0, approved: 0, inProgress: 0 },
   );
+  const scheduledItems = demoContentItems
+    .filter((item) => filteredPlans.some((plan) => plan.id === item.content_plan_id))
+    .sort((a, b) => new Date(a.scheduled_for ?? '').getTime() - new Date(b.scheduled_for ?? '').getTime());
+  const reviewTodos = scheduledItems.filter((item) => ['awaiting_approval', 'changes_requested', 'draft'].includes(item.status)).slice(0, 5);
 
   return (
     <AppShell>
@@ -185,6 +190,38 @@ export default async function PlansPage({
         </form>
       </section>
 
+      <section className="calendar-workspace">
+        <div className="panel calendar-panel">
+          <div>
+            <small className="muted">Cronograma</small>
+            <h2>Calendario de publicacoes</h2>
+          </div>
+          <div className="calendar-strip">
+            {scheduledItems.slice(0, 8).map((item) => (
+              <Link className="calendar-day-card" href={`/plans/${item.content_plan_id}#item-${item.id}`} key={item.id}>
+                <strong>{new Date(item.scheduled_for ?? '').getDate()}</strong>
+                <span>{item.title}</span>
+                <SocialIconRow channels={[String(item.channel ?? 'instagram')]} />
+              </Link>
+            ))}
+            {scheduledItems.length === 0 ? <p className="muted">Sem datas programadas para os filtros atuais.</p> : null}
+          </div>
+        </div>
+        <aside className="panel review-todo-panel">
+          <small className="muted">To-do de revisao</small>
+          <h2>Pendencias</h2>
+          <div className="review-todo-list">
+            {reviewTodos.map((item) => (
+              <Link href={`/plans/${item.content_plan_id}#item-${item.id}`} key={item.id}>
+                <strong>{item.title}</strong>
+                <span>{item.status === 'changes_requested' ? 'Ajustes solicitados' : item.status === 'awaiting_approval' ? 'Aguardando aprovacao' : 'Revisar briefing'}</span>
+              </Link>
+            ))}
+            {reviewTodos.length === 0 ? <p className="muted">Nenhuma revisao pendente.</p> : null}
+          </div>
+        </aside>
+      </section>
+
       <section className="plan-board-grid">
         <div className="panel plan-list-panel">
           <div>
@@ -203,6 +240,7 @@ export default async function PlansPage({
                     <h2>{plan.title}</h2>
                     <p>{planObjective(plan)}</p>
                     <div className="summary-tags">
+                      <SocialIconRow channels={channels} />
                       {channels.slice(0, 3).map((channel) => <span key={channel}>{channel}</span>)}
                       {pillars.slice(0, 2).map((pillar) => <span key={pillar}>{pillar}</span>)}
                     </div>

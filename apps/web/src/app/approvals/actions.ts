@@ -12,9 +12,12 @@ const DecisionSchema = z.object({
 });
 
 export async function decideApproval(approvalId: string, formData: FormData) {
+  const options = formData.getAll('feedback_option').map(String).filter(Boolean);
+  const rawNotes = String(formData.get('notes') || '');
+  const notes = [...options, rawNotes].filter(Boolean).join(' | ') || undefined;
   const input = DecisionSchema.parse({
     status: formData.get('status'),
-    notes: formData.get('notes') || undefined,
+    notes,
   });
 
   if (isDemoMode()) {

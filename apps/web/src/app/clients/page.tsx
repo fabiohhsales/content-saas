@@ -1,7 +1,9 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { AppShell } from '@/components/app-shell';
+import { SocialIconRow } from '@/components/social-icons';
 import { getCurrentWorkspace } from '@/lib/auth';
+import { clientChannels, clientStageLabel } from '@/lib/client-view';
 import { demoAssets, demoBrands, demoContentPlans, demoCreativeDocuments, demoTemplates, isDemoMode } from '@/lib/demo';
 
 type ClientRow = {
@@ -35,12 +37,12 @@ function identity(client: ClientRow) {
 function setupSteps(client: ClientRow, stats: ClientStats) {
   const brandIdentity = identity(client);
   return [
-    { label: 'Perfil', done: Boolean(client.positioning || client.voice_notes), href: `/clients/${client.id}#perfil` },
-    { label: 'Identidade', done: Boolean(brandIdentity.primary_color && brandIdentity.font_family), href: `/clients/${client.id}#identidade` },
-    { label: 'Assets', done: stats.assets > 0, href: `/clients/${client.id}#assets` },
-    { label: 'Templates', done: stats.templates > 0, href: `/clients/${client.id}#templates` },
-    { label: 'Estrategia', done: stats.plans > 0, href: `/clients/${client.id}#estrategia` },
-    { label: 'Criativos', done: stats.documents > 0, href: `/clients/${client.id}#criativos` },
+    { done: Boolean(client.positioning || client.voice_notes) },
+    { done: Boolean(brandIdentity.primary_color && brandIdentity.font_family) },
+    { done: stats.assets > 0 },
+    { done: stats.templates > 0 },
+    { done: stats.plans > 0 },
+    { done: stats.documents > 0 },
   ];
 }
 
@@ -51,7 +53,7 @@ function progressPercent(steps: Array<{ done: boolean }>) {
 export default async function ClientsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; status?: string }>;
+  searchParams: Promise<{ q?: string; status?: string; stage?: string }>;
 }) {
   const filters = await searchParams;
   const { supabase, membership } = await getCurrentWorkspace();
@@ -115,11 +117,13 @@ export default async function ClientsPage({
 
   const visibleClients = clients.filter((client) => {
     const query = (filters.q ?? '').trim().toLowerCase();
+    const stageFilter = (filters.stage ?? '').toLowerCase();
     const matchesQuery = !query
       || client.name.toLowerCase().includes(query)
       || (client.industry ?? '').toLowerCase().includes(query);
     const matchesStatus = !filters.status || client.status === filters.status;
-    return matchesQuery && matchesStatus;
+    const matchesStage = !stageFilter || String(clientStageLabel(client)).toLowerCase() === stageFilter;
+    return matchesQuery && matchesStatus && matchesStage;
   });
   const portfolioStats = visibleClients.reduce(
     (acc, client) => {
@@ -136,28 +140,28 @@ export default async function ClientsPage({
 
   return (
     <AppShell>
-      <section className="portfolio-hero">
+      <section className="portfolio-hero compact-hero">
         <div>
-          <small className="muted">Operacao cliente-first</small>
-          <h1>Clientes</h1>
-          <p className="muted">Visao geral do portfolio: setup, identidade, cronogramas, criativos e pendencias de cada cliente.</p>
+          <small className="muted">Painel / Clientes</small>
+          <h1>Clientes ativos</h1>
+          <p className="muted">Overview operacional dos clientes por etapa, canais, setup, cronogramas e revisoes.</p>
         </div>
         <div className="client-actions">
           <Link className="button" href="/clients/new">Novo cliente</Link>
-          <Link className="button secondary" href="/plans">Ver cronogramas</Link>
+          <Link className="button secondary" href="/pipeline">Pipeline</Link>
         </div>
       </section>
 
-      <section className="portfolio-summary">
-        <div><strong>{visibleClients.length}</strong><span>clientes filtrados</span></div>
+      <section className="portfolio-summary compact-metrics">
+        <div><strong>{visibleClients.length}</strong><span>clientes</span></div>
         <div><strong>{portfolioStats.active}</strong><span>ativos</span></div>
-        <div><strong>{portfolioStats.assets}</strong><span>assets</span></div>
+        <div><strong>{portfolioStats.draft}</strong><span>em setup</span></div>
         <div><strong>{portfolioStats.plans}</strong><span>cronogramas</span></div>
         <div><strong>{portfolioStats.documents}</strong><span>criativos</span></div>
       </section>
 
-      <section className="panel portfolio-filters">
-        <form className="grid two" action="/clients">
+      <section className="panel portfolio-filters compact-panel">
+        <form className="grid three" action="/clients">
           <label>
             Buscar cliente
             <input name="q" defaultValue={filters.q ?? ''} placeholder="Nome ou segmento" />
@@ -170,68 +174,71 @@ export default async function ClientsPage({
               <option value="draft">Em setup</option>
             </select>
           </label>
-          <div className="client-actions">
+          <div className="client-actions form-actions">
             <button type="submit">Filtrar</button>
             <Link className="button secondary" href="/clients">Limpar</Link>
           </div>
         </form>
       </section>
 
-      <section className="client-portfolio-grid">
-          {visibleClients.map((client) => {
-            const stats = statsByClient[client.id] ?? { assets: 0, plans: 0, documents: 0, templates: 0 };
-            const steps = setupSteps(client, stats);
-            const percent = progressPercent(steps);
-            const clientIdentity = identity(client);
+      <section className="panel client-table-panel">
+        <div className="table-scroll">
+          <table className="client-table">
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Etapa</th>
+                <th>Canais</th>
+                <th>Setup</th>
+                <th>Assets</th>
+                <th>Cronogramas</th>
+                <th>Criativos</th>
+                <th />
+              </tr>
+            </thead>
+            <tbody>
+              {visibleClients.map((client) => {
+                const stats = statsByClient[client.id] ?? { assets: 0, plans: 0, documents: 0, templates: 0 };
+                const percent = progressPercent(setupSteps(client, stats));
+                const clientIdentity = identity(client);
 
-            return (
-              <article className="client-card client-card-polished" key={client.id}>
-                <div className="client-card-header">
-                  <div>
-                    <small className="muted">{client.industry || 'Segmento nao definido'} - {client.status}</small>
-                    <h2>{client.name}</h2>
-                  </div>
-                  <div className="swatches" aria-label="Cores do cliente">
-                    <span style={{ background: clientIdentity.primary_color }} />
-                    <span style={{ background: clientIdentity.secondary_color }} />
-                  </div>
-                </div>
-                <p className="muted">{client.positioning || 'Briefing ainda sem posicionamento consolidado.'}</p>
-
-                <div className="client-progress">
-                  <span style={{ width: `${percent}%` }} />
-                </div>
-                <div className="portfolio-card-status">
-                  <strong>{percent}% setup</strong>
-                  <span>{stats.plans > 0 ? 'Cronograma iniciado' : 'Sem cronograma'}</span>
-                </div>
-
-                <div className="client-steps">
-                  {steps.map((step) => (
-                    <Link className={step.done ? 'done' : ''} href={step.href} key={step.label}>
-                      <strong>{step.done ? 'OK' : '--'}</strong>
-                      {step.label}
-                    </Link>
-                  ))}
-                </div>
-
-                <div className="client-metrics">
-                  <span><strong>{stats.assets}</strong> assets</span>
-                  <span><strong>{stats.templates}</strong> templates</span>
-                  <span><strong>{stats.plans}</strong> planos</span>
-                  <span><strong>{stats.documents}</strong> criativos</span>
-                </div>
-
-                <div className="client-actions">
-                  <Link className="button" href={`/clients/${client.id}`}>Abrir painel</Link>
-                  <Link className="button secondary" href={`/clients/${client.id}#assets`}>Assets</Link>
-                  <Link className="button secondary" href={`/plans?brand_id=${client.id}`}>Estrategia</Link>
-                  <Link className="button secondary" href="/editor">Editor</Link>
-                </div>
-              </article>
-            );
-          })}
-          {visibleClients.length === 0 ? <p className="muted">Nenhum cliente encontrado para os filtros atuais.</p> : null}
+                return (
+                  <tr key={client.id}>
+                    <td>
+                      <div className="client-name-cell">
+                        <div className="client-avatar" style={{ background: clientIdentity.primary_color }}>
+                          {client.name.slice(0, 2).toUpperCase()}
+                        </div>
+                        <div>
+                          <strong>{client.name}</strong>
+                          <small>{client.industry || 'Segmento nao definido'}</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td><span className="status-pill">{clientStageLabel(client)}</span></td>
+                    <td><SocialIconRow channels={clientChannels(client)} /></td>
+                    <td>
+                      <div className="table-progress">
+                        <span style={{ width: `${percent}%` }} />
+                      </div>
+                      <small className="muted">{percent}%</small>
+                    </td>
+                    <td>{stats.assets}</td>
+                    <td>{stats.plans}</td>
+                    <td>{stats.documents}</td>
+                    <td>
+                      <div className="row-actions">
+                        <Link className="button secondary" href={`/clients/${client.id}`}>Abrir</Link>
+                        <Link className="button secondary" href={`/plans?brand_id=${client.id}`}>Cronograma</Link>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        {visibleClients.length === 0 ? <p className="muted">Nenhum cliente encontrado para os filtros atuais.</p> : null}
       </section>
     </AppShell>
   );
