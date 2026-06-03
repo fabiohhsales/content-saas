@@ -82,7 +82,7 @@ export async function createBrand(formData: FormData) {
   if (error || !data) throw new Error(error?.message ?? 'Could not create brand');
   revalidatePath('/brands');
   revalidatePath('/clients');
-  redirect(`/brands/${data.id}/onboarding`);
+  redirect(`/clients/${data.id}`);
 }
 
 export async function updateBrand(brandId: string, formData: FormData) {
@@ -126,6 +126,7 @@ export async function updateBrand(brandId: string, formData: FormData) {
 
   if (error) throw new Error(error.message);
   revalidatePath(`/brands/${brandId}`);
+  revalidatePath(`/clients/${brandId}`);
   revalidatePath('/brands');
   revalidatePath('/clients');
 }
@@ -164,7 +165,8 @@ export async function completeBrandOnboarding(brandId: string) {
 
   if (error) throw new Error(error.message);
   revalidatePath(`/brands/${brandId}`);
-  redirect(`/brands/${brandId}/assets`);
+  revalidatePath(`/clients/${brandId}`);
+  redirect(`/clients/${brandId}`);
 }
 
 export async function uploadBrandAsset(brandId: string, formData: FormData) {
@@ -209,6 +211,7 @@ export async function uploadBrandAsset(brandId: string, formData: FormData) {
   if (insertError) throw new Error(insertError.message);
   revalidatePath(`/brands/${brandId}/assets`);
   revalidatePath(`/brands/${brandId}/onboarding`);
+  revalidatePath(`/clients/${brandId}`);
 }
 
 export async function requestBrandMemory(brandId: string) {
@@ -242,6 +245,7 @@ export async function requestBrandMemory(brandId: string) {
   }
 
   revalidatePath(`/brands/${brandId}`);
+  revalidatePath(`/clients/${brandId}`);
 }
 
 export async function signOutFromApp() {

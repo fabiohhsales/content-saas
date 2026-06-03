@@ -55,6 +55,13 @@ Primeira entrega implementada:
 - Formulario de novo cliente com nome, segmento, cores RGB/HEX, fonte, posicionamento, voz e observacoes visuais.
 - Cards de clientes com progresso e atalhos.
 
+Segunda entrega implementada:
+
+- Rota `/clients/[clientId]`.
+- Hub interno do cliente com briefing, identidade, upload estruturado, memoria de marca, estrategia, templates e criativos.
+- Botoes conectados aos server actions existentes para salvar briefing, enviar assets, ativar setup, gerar memoria e gerar plano.
+- Links de transicao para biblioteca completa, planos, templates, editor e dados avancados.
+
 ### 3.2 Onboarding do cliente
 
 Precisa virar um wizard natural:
@@ -142,8 +149,9 @@ Todos os botoes devem deixar claro:
 
 - `/`: deve levar para `/clients`.
 - `/clients`: painel principal do cliente.
-- `/brands/[brandId]`: painel interno do cliente.
-- `/brands/[brandId]/onboarding`: wizard completo.
+- `/clients/[clientId]`: painel interno do cliente.
+- `/brands/[brandId]`: dados avancados/legado da marca.
+- `/brands/[brandId]/onboarding`: wizard legado, ainda precisa convergir para o fluxo cliente-first.
 - `/brands/[brandId]/assets`: upload estruturado e biblioteca.
 - `/templates`: biblioteca global/workspace.
 - `/plans`: estrategia e cronogramas.
@@ -155,11 +163,10 @@ Todos os botoes devem deixar claro:
 
 ## 5. Proximas entregas recomendadas
 
-1. Transformar `/brands/[brandId]/onboarding` em wizard com identidade, assets, templates e estrategia.
-2. Melhorar `/brands/[brandId]/assets` para upload de logo/capa/fonte com metadata.
+1. Converter o hub `/clients/[clientId]` em wizard multi-step com estado salvo e validacoes por etapa.
+2. Melhorar upload para logo/capa/fonte com metadata de variante, orientacao, tags e uso permitido.
 3. Criar vinculacao de templates por cliente em `brand_templates`.
-4. Evoluir `/plans` para briefing estrategico guiado por cliente.
+4. Evoluir estrategia para capturar canais, frequencia, pilares, campanhas e templates preferidos.
 5. Conectar criacao de `creative_documents` a partir de item/template.
 6. Adicionar testes de botoes principais no web.
 7. Rodar Supabase local/real para validar RLS e Storage de ponta a ponta.
-

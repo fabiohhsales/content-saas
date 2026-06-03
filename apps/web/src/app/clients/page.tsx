@@ -36,12 +36,12 @@ function identity(client: ClientRow) {
 function setupSteps(client: ClientRow, stats: ClientStats) {
   const brandIdentity = identity(client);
   return [
-    { label: 'Perfil', done: Boolean(client.positioning || client.voice_notes), href: `/brands/${client.id}` },
-    { label: 'Identidade', done: Boolean(brandIdentity.primary_color && brandIdentity.font_family), href: `/brands/${client.id}/onboarding` },
-    { label: 'Assets', done: stats.assets > 0, href: `/brands/${client.id}/assets` },
-    { label: 'Templates', done: stats.templates > 0, href: '/templates' },
-    { label: 'Estrategia', done: stats.plans > 0, href: `/plans?brand_id=${client.id}` },
-    { label: 'Criativos', done: stats.documents > 0, href: '/editor' },
+    { label: 'Perfil', done: Boolean(client.positioning || client.voice_notes), href: `/clients/${client.id}#perfil` },
+    { label: 'Identidade', done: Boolean(brandIdentity.primary_color && brandIdentity.font_family), href: `/clients/${client.id}#identidade` },
+    { label: 'Assets', done: stats.assets > 0, href: `/clients/${client.id}#assets` },
+    { label: 'Templates', done: stats.templates > 0, href: `/clients/${client.id}#templates` },
+    { label: 'Estrategia', done: stats.plans > 0, href: `/clients/${client.id}#estrategia` },
+    { label: 'Criativos', done: stats.documents > 0, href: `/clients/${client.id}#criativos` },
   ];
 }
 
@@ -212,8 +212,8 @@ export default async function ClientsPage() {
                 </div>
 
                 <div className="client-actions">
-                  <Link className="button" href={`/brands/${client.id}`}>Abrir painel</Link>
-                  <Link className="button secondary" href={`/brands/${client.id}/assets`}>Assets</Link>
+                  <Link className="button" href={`/clients/${client.id}`}>Abrir painel</Link>
+                  <Link className="button secondary" href={`/clients/${client.id}#assets`}>Assets</Link>
                   <Link className="button secondary" href={`/plans?brand_id=${client.id}`}>Estrategia</Link>
                   <Link className="button secondary" href="/editor">Editor</Link>
                 </div>
@@ -226,4 +226,3 @@ export default async function ClientsPage() {
     </AppShell>
   );
 }
-

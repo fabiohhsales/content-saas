@@ -221,7 +221,8 @@ pre {
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
 }
 
-.client-steps a {
+.client-steps a,
+.client-steps span {
   background: #f8fafc;
   border: 1px solid var(--line);
   border-radius: 6px;
@@ -231,7 +232,8 @@ pre {
   padding: 10px;
 }
 
-.client-steps a.done {
+.client-steps a.done,
+.client-steps span.done {
   background: #eef4f3;
   border-color: rgba(15, 118, 110, .28);
   color: var(--accent-strong);
@@ -250,6 +252,34 @@ pre {
   border-radius: 999px;
   color: var(--muted);
   padding: 7px 10px;
+}
+
+.client-workspace-hero {
+  align-items: flex-start;
+}
+
+.client-flow-panel {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.client-workspace-grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(0, 1.1fr) minmax(320px, .9fr);
+  margin-bottom: 18px;
+}
+
+.asset-strip {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+}
+
+.asset-preview.small {
+  height: 110px;
+  min-height: 110px;
 }
 
 .asset-preview {
@@ -484,6 +514,7 @@ pre {
   }
 
   .client-dashboard,
+  .client-workspace-grid,
   .hero-panel {
     grid-template-columns: 1fr;
   }

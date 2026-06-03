@@ -62,6 +62,7 @@ Responsavel pela experiencia do usuario:
 - Callback de auth em `/auth/callback`.
 - Onboarding de workspace em `/onboarding`.
 - Painel cliente-first em `/clients`.
+- Hub operacional do cliente em `/clients/[clientId]`.
 - Listagem e criacao de marcas em `/brands`.
 - Detalhe/edicao de marca em `/brands/[brandId]`.
 - Wizard de onboarding da marca em `/brands/[brandId]/onboarding`.
@@ -83,6 +84,7 @@ Arquivos-chave:
 - `apps/web/src/lib/demo.ts`: dados ficticios para navegacao local.
 - `apps/web/src/lib/supabase.ts`: client Supabase SSR.
 - `apps/web/src/app/clients/page.tsx`: painel cliente-first com setup visual, progresso e atalhos operacionais.
+- `apps/web/src/app/clients/[clientId]/page.tsx`: hub interno do cliente com briefing, identidade, assets, memoria, estrategia, templates e transicao para editor.
 - `apps/web/src/app/brands/actions.ts`: server actions de marcas, assets e memoria.
 - `apps/web/src/app/plans/page.tsx`: lista, filtros e criacao de planos de conteudo.
 - `apps/web/src/app/plans/[planId]/page.tsx`: detalhe do plano, itens planejados e status.
@@ -464,6 +466,7 @@ flowchart TD
 | `/` | funcional | redireciona conforme workspace |
 | `/onboarding` | funcional | cria workspace real |
 | `/clients` | funcional | painel cliente-first; demo ativo |
+| `/clients/[clientId]` | funcional | hub operacional do cliente com briefing, assets, memoria, estrategia, templates e criativos |
 | `/brands` | funcional | lista/cria marcas; demo ativo |
 | `/brands/[brandId]` | funcional | edita marca e mostra memorias |
 | `/brands/[brandId]/onboarding` | funcional | wizard inicial |
@@ -605,6 +608,7 @@ Rotas demo verificadas com HTTP 200:
 
 - Navegacao demo local.
 - Painel cliente-first inicial em `/clients`, com setup visual, progresso e atalhos para assets, estrategia, editor e templates.
+- Hub interno do cliente em `/clients/[clientId]`, conectando briefing, identidade, uploads, memoria, cronograma, templates e criativos em uma unica tela.
 - Estrutura de marca e assets.
 - Biblioteca inicial de templates.
 - Central inicial de aprovacoes humanas.
@@ -631,7 +635,7 @@ Rotas demo verificadas com HTTP 200:
 - Jobs: contrato, worker, painel visual e retry inicial existem, mas falta integracao ponta a ponta real em ambiente com Redis/Supabase.
 - Render preview: posts unicos/carrosseis implementados no orchestrator/web, mas precisam ambiente real com Redis, Supabase Storage e render service rodando para teste ponta a ponta.
 - Editor assistido: contratos, tabelas, demo, canvas client-side, selecao de elementos, painel de propriedades, persistencia de texto/asset/layout, aprovacao, endpoint de render final e job de persistencia em Storage existem, mas ainda falta drag/resize com handles, asset picker mais completo e validacao ponta a ponta real com Redis/Supabase/render.
-- Redesenho cliente-first: painel inicial, identidade visual em `brands.metadata.identity` e documentacao existem; ainda falta transformar onboarding/assets/templates/estrategia em fluxo unico guiado.
+- Redesenho cliente-first: painel inicial, identidade visual em `brands.metadata.identity`, hub interno do cliente e documentacao existem; ainda falta evoluir para wizard multi-step persistente, vinculo real de templates por cliente e testes E2E dos botoes principais.
 - Biblioteca global de assets: schema, leitura autenticada e hardening para remover upload livre existem; falta fluxo administrativo/curadoria para inserir assets globais.
 - Geracao de plano: job mockado implementado, mas precisa provider IA real para producao.
 - Gestao de membros: CRUD inicial por `user_id` e convite por link existem, mas falta envio de e-mail transacional.
@@ -643,7 +647,7 @@ Rotas demo verificadas com HTTP 200:
 - IA real para geracao de planos e itens.
 - Render preview avancado com escolha assistida de template e assets reais da marca.
 - Drag/resize visual com handles no editor, snap basico e asset picker avancado integrado ao canvas.
-- Wizard cliente-first completo para identidade, logo/capa/fonte, templates/subtemplates e estrategia.
+- Wizard cliente-first completo multi-step para identidade, logo/capa/fonte, templates/subtemplates e estrategia.
 - Envio de e-mail transacional para convites.
 - Testes SQL/RLS executados contra Supabase real/local com usuarios de workspaces diferentes.
 
