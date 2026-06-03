@@ -28,6 +28,9 @@ type ItemLike = {
   title: string;
   status: string;
   scheduled_for: string | null;
+  channel?: string | null;
+  format?: string | null;
+  template_id?: string | null;
   copy_json?: Record<string, unknown>;
   created_at?: string;
 };
@@ -93,9 +96,17 @@ function planStrategy(planJson?: Record<string, unknown>) {
   const strategy = planJson?.strategy as Record<string, unknown> | undefined;
   return {
     objective: String(strategy?.objective || planJson?.objective || 'Objetivo ainda nao consolidado.'),
-    channels: Array.isArray(strategy?.channels) ? strategy.channels.map(String) : [],
+    channels: Array.isArray(strategy?.channels)
+      ? strategy.channels.map(String)
+      : Array.isArray(planJson?.channels)
+        ? planJson.channels.map(String)
+        : [],
     frequency: String(strategy?.frequency || 'Frequencia nao definida'),
-    pillars: Array.isArray(strategy?.pillars) ? strategy.pillars.map(String) : [],
+    pillars: Array.isArray(strategy?.pillars)
+      ? strategy.pillars.map(String)
+      : Array.isArray(planJson?.pillars)
+        ? planJson.pillars.map(String)
+        : [],
     campaigns: String(strategy?.campaigns || 'Sem campanha registrada'),
     restrictions: String(strategy?.restrictions || 'Sem restricoes registradas'),
   };
@@ -108,6 +119,12 @@ function itemOffsetPercent(date: string | null, start: string, end: string) {
   const itemTime = new Date(date).getTime();
   if (!Number.isFinite(startTime) || !Number.isFinite(endTime) || endTime <= startTime) return 0;
   return Math.min(96, Math.max(0, Math.round(((itemTime - startTime) / (endTime - startTime)) * 100)));
+}
+
+function itemField(item: ItemLike, field: 'channel' | 'format' | 'template_id') {
+  const direct = item[field];
+  const fromCopy = item.copy_json?.[field];
+  return jsonValue(direct || fromCopy);
 }
 
 export default async function PlanDetailPage({ params }: { params: Promise<{ planId: string }> }) {
@@ -298,7 +315,7 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ pla
           </div>
           <div className="grid two">
             <label>
-              Template
+              Direcao visual
               <input name="template_id" placeholder="photo-overlay-01" />
             </label>
             <label>
@@ -346,7 +363,7 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ pla
           <article className="card" id={`item-${item.id}`} key={item.id}>
             <div className="toolbar" style={{ marginBottom: 8 }}>
               <div>
-                <small className="muted">{formatDate(item.scheduled_for)} · {jsonValue(item.copy_json?.channel)} · {jsonValue(item.copy_json?.format)}</small>
+                <small className="muted">{formatDate(item.scheduled_for)} · {itemField(item, 'channel')} · {itemField(item, 'format')}</small>
                 <h2 style={{ margin: '6px 0' }}>{item.title}</h2>
               </div>
               <span style={{ color: statusColor(item.status), fontWeight: 700 }}>{statusLabel(item.status)}</span>
@@ -358,7 +375,7 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ pla
                   <p><strong>Hook:</strong> {jsonValue(item.copy_json?.hook)}</p>
                   <p><strong>Legenda:</strong> {jsonValue(item.copy_json?.caption)}</p>
                   <p><strong>CTA:</strong> {jsonValue(item.copy_json?.cta)}</p>
-                  <p><strong>Template:</strong> {jsonValue(item.copy_json?.template_id)}</p>
+                  <p><strong>Direcao visual:</strong> {itemField(item, 'template_id')}</p>
                 </div>
               </div>
               <form action={updateContentItemStatus.bind(null, item.id, plan.id)} className="grid">
@@ -396,8 +413,8 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ pla
                   </form>
                   <form action={createCreativeDocumentFromItem.bind(null, plan.id, item.id)} style={{ display: 'flex', gap: 8, alignItems: 'end', flexWrap: 'wrap' }}>
                     <label style={{ minWidth: 180 }}>
-                      Template
-                      <input name="template_id" defaultValue={String(item.copy_json?.template_id ?? 'paper-editorial-01')} />
+                      Direcao visual
+                      <input name="template_id" defaultValue={String(item.template_id || item.copy_json?.template_id || 'paper-editorial-01')} />
                     </label>
                     <button type="submit">Criar criativo editavel</button>
                   </form>
@@ -418,16 +435,16 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ pla
                     <div className="asset-preview">
                       {asset.signedUrl ? <img alt="Preview gerado" src={asset.signedUrl} /> : <span className="muted">{statusLabel(asset.status)}</span>}
                     </div>
-                    <strong>{asset.mime_type ?? 'Preview'}</strong>
+                    <strong>{asset.mime_type?.includes('jpeg') ? 'Preview JPG' : asset.mime_type?.includes('png') ? 'Preview PNG' : 'Preview'}</strong>
                     {isDemoMode() && demoCreativeDocuments.find((document) => document.generated_asset_id === asset.id) ? (
                       <Link className="button secondary" href={`/editor/${demoCreativeDocuments.find((document) => document.generated_asset_id === asset.id)!.id}`} style={{ margin: '10px 0' }}>
                         Abrir no editor
                       </Link>
                     ) : null}
-                    <p className="muted">Status: {statusLabel(asset.status)} - {asset.storage_path ?? 'sem arquivo ainda'}</p>
+                    <p className="muted">Status: {statusLabel(asset.status)}</p>
                     <div className="item-copy-summary">
-                      <p><strong>Template:</strong> {jsonValue(asset.render_payload_json?.template_id)}</p>
-                      <p><strong>Formato:</strong> {jsonValue(asset.render_payload_json?.output_format)}</p>
+                      <p><strong>Direcao visual:</strong> {jsonValue(asset.render_payload_json?.template_id)}</p>
+                      <p><strong>Arquivo:</strong> {jsonValue(asset.render_payload_json?.output_format).toUpperCase()}</p>
                     </div>
                   </article>
                 ))}

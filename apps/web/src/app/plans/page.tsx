@@ -43,6 +43,38 @@ function formatDate(value: string) {
   }).format(new Date(`${value}T00:00:00`));
 }
 
+function planObjective(plan: PlanLike) {
+  const strategy = plan.plan_json?.strategy as Record<string, unknown> | undefined;
+  return String(strategy?.objective || plan.plan_json?.objective || 'Objetivo ainda nao registrado.');
+}
+
+function planChannels(plan: PlanLike) {
+  const strategy = plan.plan_json?.strategy as Record<string, unknown> | undefined;
+  const channels = Array.isArray(strategy?.channels)
+    ? strategy.channels
+    : Array.isArray(plan.plan_json?.channels)
+      ? plan.plan_json.channels
+      : [];
+  return channels.map(String);
+}
+
+function planPillars(plan: PlanLike) {
+  const strategy = plan.plan_json?.strategy as Record<string, unknown> | undefined;
+  const pillars = Array.isArray(strategy?.pillars)
+    ? strategy.pillars
+    : Array.isArray(plan.plan_json?.pillars)
+      ? plan.plan_json.pillars
+      : [];
+  return pillars.map(String);
+}
+
+function durationDays(start: string, end: string) {
+  const startTime = new Date(`${start}T00:00:00`).getTime();
+  const endTime = new Date(`${end}T00:00:00`).getTime();
+  if (!Number.isFinite(startTime) || !Number.isFinite(endTime)) return 0;
+  return Math.max(1, Math.round((endTime - startTime) / 86400000) + 1);
+}
+
 export default async function PlansPage({
   searchParams,
 }: {
@@ -92,119 +124,45 @@ export default async function PlansPage({
     if (item.content_plan_id) acc[item.content_plan_id] = (acc[item.content_plan_id] ?? 0) + 1;
     return acc;
   }, {});
+  const boardStats = filteredPlans.reduce(
+    (acc, plan) => {
+      acc.items += itemCounts[plan.id] ?? 0;
+      if (plan.status === 'awaiting_approval') acc.awaiting += 1;
+      if (plan.status === 'approved') acc.approved += 1;
+      if (plan.status === 'draft' || plan.status === 'generating') acc.inProgress += 1;
+      return acc;
+    },
+    { items: 0, awaiting: 0, approved: 0, inProgress: 0 },
+  );
 
   return (
     <AppShell>
-      <div className="toolbar">
+      <section className="plan-board-hero">
         <div>
+          <small className="muted">Planejamento editorial</small>
           <h1>Planos de conteudo</h1>
-          <p className="muted">Planeje campanhas editoriais por marca, periodo, canal e status de aprovacao.</p>
+          <p>Visao de cronogramas por cliente, com foco em periodo, objetivo, canais, itens planejados e aprovacao.</p>
         </div>
-        <Link className="button secondary" href="/approvals?target_type=content_plan">Ver aprovacoes</Link>
-      </div>
-
-      <section className="grid two">
-        <form action={createContentPlan} className="panel grid">
-          <h2>Novo plano</h2>
-          {isDemoMode() ? <p className="muted">No demo, este formulario abre o plano exemplo da Clinica Aurora.</p> : null}
-          <label>
-            Marca
-            <select name="brand_id" required defaultValue={brands[0]?.id ?? ''}>
-              {brands.map((brand) => (
-                <option value={brand.id} key={brand.id}>{brand.name}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Titulo
-            <input name="title" required minLength={2} placeholder="Plano editorial Junho/2026" />
-          </label>
-          <div className="grid two">
-            <label>
-              Inicio
-              <input name="period_start" type="date" required />
-            </label>
-            <label>
-              Fim
-              <input name="period_end" type="date" required />
-            </label>
-          </div>
-          <label>
-            Objetivo
-            <textarea name="objective" placeholder="Objetivo editorial, foco comercial, publico ou campanha." />
-          </label>
-          <div className="grid two">
-            <label>
-              Canais
-              <input name="channels" placeholder="Instagram, LinkedIn..." />
-            </label>
-            <label>
-              Frequencia
-              <input name="frequency" placeholder="3 posts/semana" />
-            </label>
-          </div>
-          <label>
-            Pilares
-            <input name="pillars" placeholder="educacao, prova social, conversao" />
-          </label>
-          <button type="submit">Criar plano</button>
-        </form>
-
-        <div className="panel grid">
-          <h2>Gerar com IA</h2>
-          <form action={requestGeneratedContentPlan} className="grid">
-            <label>
-              Marca
-              <select name="brand_id" required defaultValue={brands[0]?.id ?? ''}>
-                {brands.map((brand) => (
-                  <option value={brand.id} key={brand.id}>{brand.name}</option>
-                ))}
-              </select>
-            </label>
-            <div className="grid two">
-              <label>
-                Inicio
-                <input name="period_start" type="date" required />
-              </label>
-              <label>
-                Fim
-                <input name="period_end" type="date" required />
-              </label>
-            </div>
-            <label>
-              Objetivo
-              <textarea name="objective" placeholder="Ex: gerar autoridade e leads qualificados no mes." />
-            </label>
-            <div className="grid two">
-              <label>
-                Canais
-                <input name="channels" placeholder="Instagram, LinkedIn..." />
-              </label>
-              <label>
-                Frequencia
-                <input name="frequency" placeholder="3 posts/semana" />
-              </label>
-            </div>
-            <label>
-              Pilares
-              <input name="pillars" placeholder="educacao, bastidores, conversao" />
-            </label>
-            <label>
-              Campanhas e restricoes
-              <textarea name="campaigns" placeholder="Ofertas, datas, restricoes legais ou temas obrigatorios." />
-            </label>
-            <button type="submit">Gerar plano</button>
-          </form>
+        <div className="client-actions">
+          <Link className="button" href="#novo-plano">Novo plano</Link>
+          <Link className="button secondary" href="/approvals?target_type=content_plan">Ver aprovacoes</Link>
         </div>
       </section>
 
-      <section className="panel" style={{ marginTop: 18 }}>
-        <h2>Filtros</h2>
+      <section className="plan-board-metrics">
+        <div><strong>{filteredPlans.length}</strong><span>cronogramas</span></div>
+        <div><strong>{boardStats.items}</strong><span>itens planejados</span></div>
+        <div><strong>{boardStats.awaiting}</strong><span>em aprovacao</span></div>
+        <div><strong>{boardStats.approved}</strong><span>aprovados</span></div>
+        <div><strong>{boardStats.inProgress}</strong><span>em construcao</span></div>
+      </section>
+
+      <section className="panel plan-board-filters">
         <form className="grid two" action="/plans">
           <label>
-            Marca
+            Cliente
             <select name="brand_id" defaultValue={filters.brand_id ?? ''}>
-              <option value="">Todas</option>
+              <option value="">Todos</option>
               {brands.map((brand) => (
                 <option value={brand.id} key={brand.id}>{brand.name}</option>
               ))}
@@ -220,31 +178,144 @@ export default async function PlansPage({
               <option value="approved">Aprovado</option>
             </select>
           </label>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'end' }}>
+          <div className="client-actions">
             <button type="submit">Filtrar</button>
             <Link className="button secondary" href="/plans">Limpar</Link>
           </div>
         </form>
       </section>
 
-      <section className="grid" style={{ marginTop: 18 }}>
-        <div className="panel grid">
-          <h2>Planos</h2>
-          <div className="grid">
-            {filteredPlans.map((plan) => (
-              <Link className="card" href={`/plans/${plan.id}`} key={plan.id}>
-                <div className="toolbar" style={{ marginBottom: 8 }}>
-                  <div>
-                    <small className="muted">{plan.brands?.name ?? 'Marca'} · {formatDate(plan.period_start)} a {formatDate(plan.period_end)}</small>
-                    <h2 style={{ margin: '6px 0' }}>{plan.title}</h2>
+      <section className="plan-board-grid">
+        <div className="panel plan-list-panel">
+          <div>
+            <small className="muted">Carteira de cronogramas</small>
+            <h2>Planos ativos</h2>
+          </div>
+          <div className="plan-card-list">
+            {filteredPlans.map((plan) => {
+              const channels = planChannels(plan);
+              const pillars = planPillars(plan);
+              const itemCount = itemCounts[plan.id] ?? 0;
+              return (
+                <Link className="plan-board-card" href={`/plans/${plan.id}`} key={plan.id}>
+                  <div className="plan-card-main">
+                    <small>{plan.brands?.name ?? 'Cliente'}</small>
+                    <h2>{plan.title}</h2>
+                    <p>{planObjective(plan)}</p>
+                    <div className="summary-tags">
+                      {channels.slice(0, 3).map((channel) => <span key={channel}>{channel}</span>)}
+                      {pillars.slice(0, 2).map((pillar) => <span key={pillar}>{pillar}</span>)}
+                    </div>
                   </div>
-                  <span style={{ color: statusColor(plan.status), fontWeight: 700 }}>{statusLabel(plan.status)}</span>
-                </div>
-                <p className="muted">{String(plan.plan_json?.objective ?? 'Sem objetivo registrado.')}</p>
-                <small>{isDemoMode() ? `${itemCounts[plan.id] ?? 0} itens planejados` : 'Abrir itens planejados'}</small>
-              </Link>
-            ))}
+                  <div className="plan-card-side">
+                    <span style={{ color: statusColor(plan.status) }}>{statusLabel(plan.status)}</span>
+                    <strong>{itemCount}</strong>
+                    <small>itens</small>
+                    <div className="mini-gantt" aria-hidden="true">
+                      <i style={{ width: `${Math.min(100, Math.max(18, itemCount * 32))}%` }} />
+                    </div>
+                    <small>{formatDate(plan.period_start)} a {formatDate(plan.period_end)}</small>
+                    <small>{durationDays(plan.period_start, plan.period_end)} dias</small>
+                  </div>
+                </Link>
+              );
+            })}
             {filteredPlans.length === 0 ? <p className="muted">Nenhum plano encontrado para os filtros atuais.</p> : null}
+          </div>
+        </div>
+
+        <div id="novo-plano" className="plan-create-column">
+          <form action={createContentPlan} className="panel grid">
+            <h2>Novo plano</h2>
+            {isDemoMode() ? <p className="muted">No demo, este formulario abre o plano exemplo da Clinica Aurora.</p> : null}
+            <label>
+              Cliente
+              <select name="brand_id" required defaultValue={brands[0]?.id ?? ''}>
+                {brands.map((brand) => (
+                  <option value={brand.id} key={brand.id}>{brand.name}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Titulo
+              <input name="title" required minLength={2} placeholder="Plano editorial Junho/2026" />
+            </label>
+            <div className="grid two">
+              <label>
+                Inicio
+                <input name="period_start" type="date" required />
+              </label>
+              <label>
+                Fim
+                <input name="period_end" type="date" required />
+              </label>
+            </div>
+            <label>
+              Objetivo
+              <textarea name="objective" placeholder="Objetivo editorial, foco comercial, publico ou campanha." />
+            </label>
+            <div className="grid two">
+              <label>
+                Canais
+                <input name="channels" placeholder="Instagram, LinkedIn..." />
+              </label>
+              <label>
+                Frequencia
+                <input name="frequency" placeholder="3 posts/semana" />
+              </label>
+            </div>
+            <label>
+              Pilares
+              <input name="pillars" placeholder="educacao, prova social, conversao" />
+            </label>
+            <button type="submit">Criar plano</button>
+          </form>
+
+          <div className="panel grid">
+            <h2>Gerar com IA</h2>
+            <form action={requestGeneratedContentPlan} className="grid">
+              <label>
+                Cliente
+                <select name="brand_id" required defaultValue={brands[0]?.id ?? ''}>
+                  {brands.map((brand) => (
+                    <option value={brand.id} key={brand.id}>{brand.name}</option>
+                  ))}
+                </select>
+              </label>
+              <div className="grid two">
+                <label>
+                  Inicio
+                  <input name="period_start" type="date" required />
+                </label>
+                <label>
+                  Fim
+                  <input name="period_end" type="date" required />
+                </label>
+              </div>
+              <label>
+                Objetivo
+                <textarea name="objective" placeholder="Ex: gerar autoridade e leads qualificados no mes." />
+              </label>
+              <div className="grid two">
+                <label>
+                  Canais
+                  <input name="channels" placeholder="Instagram, LinkedIn..." />
+                </label>
+                <label>
+                  Frequencia
+                  <input name="frequency" placeholder="3 posts/semana" />
+                </label>
+              </div>
+              <label>
+                Pilares
+                <input name="pillars" placeholder="educacao, bastidores, conversao" />
+              </label>
+              <label>
+                Campanhas e restricoes
+                <textarea name="campaigns" placeholder="Ofertas, datas, restricoes legais ou temas obrigatorios." />
+              </label>
+              <button type="submit">Gerar plano</button>
+            </form>
           </div>
         </div>
       </section>
