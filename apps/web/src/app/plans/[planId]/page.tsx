@@ -89,6 +89,27 @@ function jsonValue(value: unknown) {
   return value == null || value === '' ? '-' : String(value);
 }
 
+function planStrategy(planJson?: Record<string, unknown>) {
+  const strategy = planJson?.strategy as Record<string, unknown> | undefined;
+  return {
+    objective: String(strategy?.objective || planJson?.objective || 'Objetivo ainda nao consolidado.'),
+    channels: Array.isArray(strategy?.channels) ? strategy.channels.map(String) : [],
+    frequency: String(strategy?.frequency || 'Frequencia nao definida'),
+    pillars: Array.isArray(strategy?.pillars) ? strategy.pillars.map(String) : [],
+    campaigns: String(strategy?.campaigns || 'Sem campanha registrada'),
+    restrictions: String(strategy?.restrictions || 'Sem restricoes registradas'),
+  };
+}
+
+function itemOffsetPercent(date: string | null, start: string, end: string) {
+  if (!date) return 0;
+  const startTime = new Date(`${start}T00:00:00`).getTime();
+  const endTime = new Date(`${end}T23:59:59`).getTime();
+  const itemTime = new Date(date).getTime();
+  if (!Number.isFinite(startTime) || !Number.isFinite(endTime) || endTime <= startTime) return 0;
+  return Math.min(96, Math.max(0, Math.round(((itemTime - startTime) / (endTime - startTime)) * 100)));
+}
+
 export default async function PlanDetailPage({ params }: { params: Promise<{ planId: string }> }) {
   const { planId } = await params;
   const { supabase, membership } = await getCurrentWorkspace();
@@ -165,6 +186,7 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ pla
   }
 
   if (!plan) notFound();
+  const strategy = planStrategy(plan.plan_json);
   const assetsByItem = generatedAssets.reduce<Record<string, GeneratedAssetLike[]>>((acc, asset) => {
     if (!asset.content_item_id) return acc;
     acc[asset.content_item_id] = [...(acc[asset.content_item_id] ?? []), asset];
@@ -182,7 +204,7 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ pla
         <div>
           <small className="muted">{plan.brands?.name ?? 'Marca'} · {formatDate(plan.period_start)} a {formatDate(plan.period_end)}</small>
           <h1>{plan.title}</h1>
-          <p className="muted">{jsonValue(plan.plan_json?.objective)}</p>
+          <p className="muted">{strategy.objective}</p>
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <Link className="button secondary" href="/plans">Voltar</Link>
@@ -192,7 +214,71 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ pla
         </div>
       </div>
 
-      <section className="grid two">
+      <section className="plan-overview">
+        <article className="panel plan-summary">
+          <small className="muted">Resumo estrategico</small>
+          <h2>{strategy.objective}</h2>
+          <div className="summary-tags">
+            {strategy.channels.map((channel) => <span key={channel}>{channel}</span>)}
+            <span>{strategy.frequency}</span>
+          </div>
+          <div className="grid two">
+            <div>
+              <small className="muted">Pilares</small>
+              <p>{strategy.pillars.length ? strategy.pillars.join(', ') : 'Nao definidos'}</p>
+            </div>
+            <div>
+              <small className="muted">Campanha</small>
+              <p>{strategy.campaigns}</p>
+            </div>
+          </div>
+          <div>
+            <small className="muted">Restricoes</small>
+            <p>{strategy.restrictions}</p>
+          </div>
+        </article>
+
+        <article className="panel plan-scoreboard">
+          <div><strong>{items.length}</strong><span>itens</span></div>
+          <div><strong>{generatedAssets.length}</strong><span>previews</span></div>
+          <div><strong>{creativeDocuments.length}</strong><span>criativos</span></div>
+          <div><strong>{statusLabel(plan.status)}</strong><span>status</span></div>
+        </article>
+      </section>
+
+      <section className="panel plan-timeline">
+        <div className="toolbar">
+          <div>
+            <small className="muted">Linha editorial</small>
+            <h2>Cronograma visual</h2>
+          </div>
+          <span className="muted">{formatDate(plan.period_start)} a {formatDate(plan.period_end)}</span>
+        </div>
+        <div className="timeline-rail">
+          {items.map((item) => (
+            <Link
+              className="timeline-marker"
+              href={`#item-${item.id}`}
+              key={item.id}
+              style={{ left: `${itemOffsetPercent(item.scheduled_for, plan.period_start, plan.period_end)}%` }}
+              title={item.title}
+            >
+              <span />
+              <strong>{new Date(item.scheduled_for ?? plan.period_start).getDate()}</strong>
+            </Link>
+          ))}
+        </div>
+        <div className="timeline-list">
+          {items.map((item) => (
+            <Link href={`#item-${item.id}`} key={item.id}>
+              <strong>{formatDate(item.scheduled_for)}</strong>
+              <span>{item.title}</span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      <section className="grid two" style={{ marginTop: 18 }}>
         <form action={createContentItem.bind(null, plan.id)} className="panel grid">
           <h2>Novo item</h2>
           {isDemoMode() ? <p className="muted">No demo, o item nao e persistido; o fluxo real grava em content_items.</p> : null}
@@ -236,11 +322,18 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ pla
         </form>
 
         <div className="panel grid">
-          <h2>Contrato do plano</h2>
-          <pre>{JSON.stringify(plan.plan_json ?? { schema_version: 1 }, null, 2)}</pre>
+          <h2>Resumo operacional</h2>
           <div>
             <small className="muted">Status atual</small>
             <p style={{ color: statusColor(plan.status), fontWeight: 700 }}>{statusLabel(plan.status)}</p>
+          </div>
+          <div>
+            <small className="muted">Objetivo</small>
+            <p>{strategy.objective}</p>
+          </div>
+          <div>
+            <small className="muted">Canais e frequencia</small>
+            <p>{strategy.channels.join(', ') || 'Sem canais'} - {strategy.frequency}</p>
           </div>
           <form action={archiveContentPlan.bind(null, plan.id)}>
             <button className="secondary" type="submit">Arquivar plano</button>
@@ -260,8 +353,13 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ pla
             </div>
             <div className="grid two">
               <div>
-                <small className="muted">Copy JSON</small>
-                <pre>{JSON.stringify(item.copy_json ?? { schema_version: 1 }, null, 2)}</pre>
+                <small className="muted">Resumo do item</small>
+                <div className="item-copy-summary">
+                  <p><strong>Hook:</strong> {jsonValue(item.copy_json?.hook)}</p>
+                  <p><strong>Legenda:</strong> {jsonValue(item.copy_json?.caption)}</p>
+                  <p><strong>CTA:</strong> {jsonValue(item.copy_json?.cta)}</p>
+                  <p><strong>Template:</strong> {jsonValue(item.copy_json?.template_id)}</p>
+                </div>
               </div>
               <form action={updateContentItemStatus.bind(null, item.id, plan.id)} className="grid">
                 <label>
@@ -326,8 +424,11 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ pla
                         Abrir no editor
                       </Link>
                     ) : null}
-                    <p className="muted">Status: {statusLabel(asset.status)} · {asset.storage_path ?? 'sem arquivo ainda'}</p>
-                    <pre>{JSON.stringify(asset.render_payload_json ?? { schema_version: 1 }, null, 2)}</pre>
+                    <p className="muted">Status: {statusLabel(asset.status)} - {asset.storage_path ?? 'sem arquivo ainda'}</p>
+                    <div className="item-copy-summary">
+                      <p><strong>Template:</strong> {jsonValue(asset.render_payload_json?.template_id)}</p>
+                      <p><strong>Formato:</strong> {jsonValue(asset.render_payload_json?.output_format)}</p>
+                    </div>
                   </article>
                 ))}
                 {(assetsByItem[item.id] ?? []).length === 0 ? <p className="muted">Nenhum preview renderizado para este item.</p> : null}

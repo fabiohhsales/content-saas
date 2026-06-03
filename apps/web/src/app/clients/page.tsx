@@ -3,7 +3,6 @@ import { redirect } from 'next/navigation';
 import { AppShell } from '@/components/app-shell';
 import { getCurrentWorkspace } from '@/lib/auth';
 import { demoAssets, demoBrands, demoContentPlans, demoCreativeDocuments, demoTemplates, isDemoMode } from '@/lib/demo';
-import { createBrand } from '../brands/actions';
 
 type ClientRow = {
   id: string;
@@ -49,7 +48,12 @@ function progressPercent(steps: Array<{ done: boolean }>) {
   return Math.round((steps.filter((step) => step.done).length / steps.length) * 100);
 }
 
-export default async function ClientsPage() {
+export default async function ClientsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; status?: string }>;
+}) {
+  const filters = await searchParams;
   const { supabase, membership } = await getCurrentWorkspace();
   if (!membership) redirect('/onboarding');
 
@@ -109,77 +113,79 @@ export default async function ClientsPage() {
     }));
   }
 
+  const visibleClients = clients.filter((client) => {
+    const query = (filters.q ?? '').trim().toLowerCase();
+    const matchesQuery = !query
+      || client.name.toLowerCase().includes(query)
+      || (client.industry ?? '').toLowerCase().includes(query);
+    const matchesStatus = !filters.status || client.status === filters.status;
+    return matchesQuery && matchesStatus;
+  });
+  const portfolioStats = visibleClients.reduce(
+    (acc, client) => {
+      const stats = statsByClient[client.id] ?? { assets: 0, plans: 0, documents: 0, templates: 0 };
+      acc.assets += stats.assets;
+      acc.plans += stats.plans;
+      acc.documents += stats.documents;
+      if (client.status === 'active') acc.active += 1;
+      if (client.status === 'draft') acc.draft += 1;
+      return acc;
+    },
+    { active: 0, draft: 0, assets: 0, plans: 0, documents: 0 },
+  );
+
   return (
     <AppShell>
-      <div className="toolbar">
+      <section className="portfolio-hero">
         <div>
           <small className="muted">Operacao cliente-first</small>
           <h1>Clientes</h1>
-          <p className="muted">Comece pelo setup visual do cliente, conecte assets/templates e avance para estrategia, geracao e revisao.</p>
+          <p className="muted">Visao geral do portfolio: setup, identidade, cronogramas, criativos e pendencias de cada cliente.</p>
         </div>
-        <Link className="button secondary" href="/plans">Ver cronogramas</Link>
-      </div>
+        <div className="client-actions">
+          <Link className="button" href="/clients/new">Novo cliente</Link>
+          <Link className="button secondary" href="/plans">Ver cronogramas</Link>
+        </div>
+      </section>
 
-      <section className="client-dashboard">
-        <form action={createBrand} className="panel grid client-create">
-          <div>
-            <small className="muted">Novo cliente</small>
-            <h2>Setup inicial</h2>
-            {isDemoMode() ? <p className="muted">No demo, este formulario abre o cliente ficticio preenchido.</p> : null}
-          </div>
+      <section className="portfolio-summary">
+        <div><strong>{visibleClients.length}</strong><span>clientes filtrados</span></div>
+        <div><strong>{portfolioStats.active}</strong><span>ativos</span></div>
+        <div><strong>{portfolioStats.assets}</strong><span>assets</span></div>
+        <div><strong>{portfolioStats.plans}</strong><span>cronogramas</span></div>
+        <div><strong>{portfolioStats.documents}</strong><span>criativos</span></div>
+      </section>
+
+      <section className="panel portfolio-filters">
+        <form className="grid two" action="/clients">
           <label>
-            Nome do cliente
-            <input name="name" required minLength={2} placeholder="Clinica Aurora" />
+            Buscar cliente
+            <input name="q" defaultValue={filters.q ?? ''} placeholder="Nome ou segmento" />
           </label>
           <label>
-            Segmento
-            <input name="industry" placeholder="Saude, estetica, varejo..." />
-          </label>
-          <div className="grid two compact-fields">
-            <label>
-              Cor primaria RGB/HEX
-              <input name="primary_color" type="color" defaultValue="#0f766e" />
-            </label>
-            <label>
-              Cor secundaria RGB/HEX
-              <input name="secondary_color" type="color" defaultValue="#115e59" />
-            </label>
-          </div>
-          <label>
-            Fonte base
-            <select name="font_family" defaultValue="Arial">
-              <option value="Arial">Arial</option>
-              <option value="Inter">Inter</option>
-              <option value="Helvetica">Helvetica</option>
-              <option value="Georgia">Georgia</option>
-              <option value="Montserrat">Montserrat</option>
-              <option value="Poppins">Poppins</option>
+            Status
+            <select name="status" defaultValue={filters.status ?? ''}>
+              <option value="">Todos</option>
+              <option value="active">Ativos</option>
+              <option value="draft">Em setup</option>
             </select>
           </label>
-          <label>
-            Posicionamento
-            <textarea name="positioning" placeholder="Como esse cliente quer ser percebido?" />
-          </label>
-          <label>
-            Voz e restricoes
-            <textarea name="voice_notes" placeholder="Tom, palavras proibidas, promessas que devem ser evitadas..." />
-          </label>
-          <label>
-            Observacoes visuais
-            <textarea name="visual_notes" placeholder="Uso de logo, estilo de foto, preferencias de capa, referencias..." />
-          </label>
-          <button type="submit">Criar cliente e iniciar onboarding</button>
+          <div className="client-actions">
+            <button type="submit">Filtrar</button>
+            <Link className="button secondary" href="/clients">Limpar</Link>
+          </div>
         </form>
+      </section>
 
-        <div className="grid">
-          {clients.map((client) => {
+      <section className="client-portfolio-grid">
+          {visibleClients.map((client) => {
             const stats = statsByClient[client.id] ?? { assets: 0, plans: 0, documents: 0, templates: 0 };
             const steps = setupSteps(client, stats);
             const percent = progressPercent(steps);
             const clientIdentity = identity(client);
 
             return (
-              <article className="client-card" key={client.id}>
+              <article className="client-card client-card-polished" key={client.id}>
                 <div className="client-card-header">
                   <div>
                     <small className="muted">{client.industry || 'Segmento nao definido'} - {client.status}</small>
@@ -190,6 +196,7 @@ export default async function ClientsPage() {
                     <span style={{ background: clientIdentity.secondary_color }} />
                   </div>
                 </div>
+                <p className="muted">{client.positioning || 'Briefing ainda sem posicionamento consolidado.'}</p>
 
                 <div className="client-progress">
                   <span style={{ width: `${percent}%` }} />
@@ -220,8 +227,7 @@ export default async function ClientsPage() {
               </article>
             );
           })}
-          {clients.length === 0 ? <p className="muted">Nenhum cliente cadastrado ainda.</p> : null}
-        </div>
+          {visibleClients.length === 0 ? <p className="muted">Nenhum cliente encontrado para os filtros atuais.</p> : null}
       </section>
     </AppShell>
   );

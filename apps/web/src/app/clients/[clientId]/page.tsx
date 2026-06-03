@@ -204,6 +204,21 @@ export default async function ClientWorkspacePage({ params }: { params: Promise<
         </div>
       </div>
 
+      <section className="client-command-strip">
+        <div>
+          <small className="muted">Identidade</small>
+          <div className="brand-token-row">
+            <span style={{ background: clientIdentity.primary_color }} />
+            <span style={{ background: clientIdentity.secondary_color }} />
+            <strong>{clientIdentity.font_family}</strong>
+          </div>
+        </div>
+        <div><strong>{assets.length}</strong><span>assets</span></div>
+        <div><strong>{templates.length}</strong><span>templates disponiveis</span></div>
+        <div><strong>{plans.length}</strong><span>cronogramas</span></div>
+        <div><strong>{documents.length}</strong><span>criativos</span></div>
+      </section>
+
       <section className="panel client-flow-panel">
         <div>
           <small className="muted">Progresso operacional</small>

@@ -609,13 +609,15 @@ Rotas demo verificadas com HTTP 200:
 
 - Navegacao demo local.
 - Painel cliente-first inicial em `/clients`, com setup visual, progresso e atalhos para assets, estrategia, editor e templates.
-- Hub interno do cliente em `/clients/[clientId]`, conectando briefing, identidade, uploads, memoria, cronograma, templates e criativos em uma unica tela.
+- Hub interno do cliente em `/clients/[clientId]`, conectando briefing, identidade, uploads, memoria, cronograma, templates e criativos em uma unica tela, com faixa visual de identidade e metricas.
+- Setup inicial separado em `/clients/new`, deixando `/clients` como visao de portfolio.
 - Upload estruturado com metadata de asset para papel no design, variante, orientacao, tags e regras de uso.
 - Presets de upload no hub do cliente para logo principal, logo secundaria, capa/fundo, foto aprovada, fonte e referencia visual.
 - Vinculo inicial de templates por cliente em `brand_templates`, com botoes para usar/remover no hub do cliente.
 - Briefing estrategico guiado em `/clients/[clientId]` e `/plans`, com canais, frequencia, pilares, campanhas, templates preferidos e restricoes.
 - Contrato `GenerateContentPlanInputSchema` aceita `strategy` versionado para transportar o briefing rico ate o orchestrator.
 - Transicao de `content_items` para `creative_documents` em `/plans/[planId]`, permitindo criar/abrir criativo editavel no editor visual.
+- `/plans/[planId]` mostra resumo estrategico, metricas e cronograma visual tipo Gantt simples no lugar de JSON tecnico exposto.
 - Estrutura de marca e assets.
 - Biblioteca inicial de templates.
 - Central inicial de aprovacoes humanas.

@@ -82,6 +82,13 @@ Quinta entrega implementada:
 - Cada `content_item` pode criar um `creative_document` inicial com canvas, campos editaveis e template de referencia.
 - Quando o documento ja existe, a tela mostra atalho direto para `/editor/[documentId]`.
 
+Sexta entrega implementada:
+
+- `/clients` passou a ser visao de portfolio com filtros, resumo e cards de clientes.
+- Setup inicial foi separado em `/clients/new`.
+- `/clients/[clientId]` ganhou faixa superior de identidade e metricas.
+- `/plans/[planId]` trocou JSON tecnico por resumo visual e cronograma tipo Gantt simples.
+
 ### 3.2 Onboarding do cliente
 
 Precisa virar um wizard natural:
