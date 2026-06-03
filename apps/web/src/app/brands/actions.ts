@@ -20,6 +20,21 @@ const BrandFormSchema = z.object({
   visual_notes: z.string().optional(),
 });
 
+const AssetMetadataFormSchema = z.object({
+  category: BrandAssetCategorySchema,
+  asset_role: z.string().optional(),
+  variant: z.string().optional(),
+  orientation: z.string().optional(),
+  tags: z.string().optional(),
+  usage_notes: z.string().optional(),
+});
+
+const BrandTemplateFormSchema = z.object({
+  template_id: z.string().uuid(),
+  role: z.string().optional(),
+  usage_notes: z.string().optional(),
+});
+
 function requiredWorkspaceId(membership: Awaited<ReturnType<typeof getCurrentWorkspace>>['membership']) {
   const workspaceId = membership?.workspace_id;
   if (!workspaceId) throw new Error('Workspace is required');
@@ -42,6 +57,22 @@ function brandMetadata(input: z.infer<typeof BrandFormSchema>, previous?: Record
       font_family: input.font_family ?? '',
       visual_notes: input.visual_notes ?? '',
     },
+  };
+}
+
+function assetMetadata(input: z.infer<typeof AssetMetadataFormSchema>) {
+  const tags = (input.tags ?? '')
+    .split(',')
+    .map((tag) => tag.trim())
+    .filter(Boolean);
+
+  return {
+    schema_version: 1,
+    asset_role: input.asset_role ?? '',
+    variant: input.variant ?? '',
+    orientation: input.orientation ?? '',
+    tags,
+    usage_notes: input.usage_notes ?? '',
   };
 }
 
@@ -178,13 +209,20 @@ export async function uploadBrandAsset(brandId: string, formData: FormData) {
 
   const { supabase, user, membership } = await getCurrentWorkspace();
   const workspaceId = requiredWorkspaceId(membership);
-  const category = BrandAssetCategorySchema.parse(formData.get('category'));
+  const metadataInput = AssetMetadataFormSchema.parse({
+    category: formData.get('category'),
+    asset_role: optionalText(formData.get('asset_role')),
+    variant: optionalText(formData.get('variant')),
+    orientation: optionalText(formData.get('orientation')),
+    tags: optionalText(formData.get('tags')),
+    usage_notes: optionalText(formData.get('usage_notes')),
+  });
   const file = formData.get('file');
   if (!(file instanceof File) || file.size === 0) {
     throw new Error('Arquivo obrigatorio');
   }
 
-  const storagePath = brandAssetPath(workspaceId, brandId, category, file.name);
+  const storagePath = brandAssetPath(workspaceId, brandId, metadataInput.category, file.name);
   const { error: uploadError } = await supabase.storage
     .from('brand-assets')
     .upload(storagePath, file, {
@@ -197,20 +235,81 @@ export async function uploadBrandAsset(brandId: string, formData: FormData) {
   const { error: insertError } = await supabase.from('brand_assets').insert({
     workspace_id: workspaceId,
     brand_id: brandId,
-    category,
+    category: metadataInput.category,
     status: 'ready',
     storage_bucket: 'brand-assets',
     storage_path: storagePath,
     file_name: file.name,
     mime_type: file.type || 'application/octet-stream',
     size_bytes: file.size,
-    metadata: { schema_version: 1 },
+    metadata: assetMetadata(metadataInput),
     created_by: user.id,
   });
 
   if (insertError) throw new Error(insertError.message);
   revalidatePath(`/brands/${brandId}/assets`);
   revalidatePath(`/brands/${brandId}/onboarding`);
+  revalidatePath(`/clients/${brandId}`);
+}
+
+export async function linkBrandTemplate(brandId: string, formData: FormData) {
+  if (isDemoMode()) {
+    revalidatePath(`/clients/${brandId}`);
+    return;
+  }
+
+  const { supabase, user, membership } = await getCurrentWorkspace();
+  const workspaceId = requiredWorkspaceId(membership);
+  const input = BrandTemplateFormSchema.parse({
+    template_id: formData.get('template_id'),
+    role: optionalText(formData.get('role')),
+    usage_notes: optionalText(formData.get('usage_notes')),
+  });
+
+  const { data: template, error: templateError } = await supabase
+    .from('templates')
+    .select('id')
+    .eq('id', input.template_id)
+    .or(`workspace_id.is.null,workspace_id.eq.${workspaceId}`)
+    .single();
+
+  if (templateError || !template) throw new Error(templateError?.message ?? 'Template not found');
+
+  const { error } = await supabase
+    .from('brand_templates')
+    .upsert({
+      workspace_id: workspaceId,
+      brand_id: brandId,
+      template_id: template.id,
+      status: 'active',
+      metadata: {
+        schema_version: 1,
+        role: input.role ?? 'primary',
+        usage_notes: input.usage_notes ?? '',
+      },
+      created_by: user.id,
+    }, { onConflict: 'brand_id,template_id' });
+
+  if (error) throw new Error(error.message);
+  revalidatePath(`/clients/${brandId}`);
+}
+
+export async function archiveBrandTemplate(brandId: string, templateId: string) {
+  if (isDemoMode()) {
+    revalidatePath(`/clients/${brandId}`);
+    return;
+  }
+
+  const { supabase, membership } = await getCurrentWorkspace();
+  const workspaceId = requiredWorkspaceId(membership);
+  const { error } = await supabase
+    .from('brand_templates')
+    .update({ status: 'archived' })
+    .eq('workspace_id', workspaceId)
+    .eq('brand_id', brandId)
+    .eq('template_id', templateId);
+
+  if (error) throw new Error(error.message);
   revalidatePath(`/clients/${brandId}`);
 }
 

@@ -98,6 +98,7 @@ export const demoAssets = [
     file_name: 'logo-principal.png',
     mime_type: 'image/png',
     size_bytes: 84210,
+    metadata: { schema_version: 1, asset_role: 'primary', variant: 'horizontal', orientation: 'transparent', tags: ['logo', 'principal'] },
     signedUrl: assetImage('Logo Aurora', '#f7f7f4', '#0f766e'),
   },
   {
@@ -108,6 +109,7 @@ export const demoAssets = [
     file_name: 'consultorio-premium.jpg',
     mime_type: 'image/jpeg',
     size_bytes: 322048,
+    metadata: { schema_version: 1, asset_role: 'cover', variant: 'consultorio', orientation: 'landscape', tags: ['foto', 'ambiente'] },
     signedUrl: assetImage('Consultório', '#eef4f3', '#115e59'),
   },
   {
@@ -118,6 +120,7 @@ export const demoAssets = [
     file_name: 'referencia-feed-editorial.png',
     mime_type: 'image/png',
     size_bytes: 210944,
+    metadata: { schema_version: 1, asset_role: 'support', variant: 'feed editorial', orientation: 'square', tags: ['referencia', 'editorial'] },
     signedUrl: assetImage('Referência Visual', '#f1f5f9', '#344054'),
   },
   {
@@ -128,6 +131,7 @@ export const demoAssets = [
     file_name: 'briefing-marca.pdf',
     mime_type: 'application/pdf',
     size_bytes: 128000,
+    metadata: { schema_version: 1, asset_role: 'briefing', variant: 'documento', orientation: '', tags: ['briefing'] },
     signedUrl: null,
   },
 ];

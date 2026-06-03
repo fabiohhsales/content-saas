@@ -25,7 +25,7 @@ export default async function BrandAssetsPage({
             <h1>Biblioteca de assets</h1>
             <p className="muted">{brand.name}</p>
           </div>
-          <Link className="button secondary" href={`/brands/${brand.id}`}>Voltar</Link>
+          <Link className="button secondary" href={`/clients/${brand.id}`}>Voltar ao cliente</Link>
         </div>
 
         <form action={uploadBrandAsset.bind(null, brand.id)} className="panel grid" style={{ marginBottom: 18 }}>
@@ -48,6 +48,26 @@ export default async function BrandAssetsPage({
               <input name="file" type="file" />
             </label>
           </div>
+          <div className="grid two">
+            <label>
+              Papel no design
+              <select name="asset_role" defaultValue="primary">
+                <option value="primary">Principal</option>
+                <option value="secondary">Secundario</option>
+                <option value="cover">Capa/fundo</option>
+                <option value="avatar">Avatar/retrato</option>
+                <option value="support">Apoio visual</option>
+              </select>
+            </label>
+            <label>
+              Variante
+              <input name="variant" placeholder="horizontal, negativo, story..." />
+            </label>
+          </div>
+          <label>
+            Regras de uso
+            <textarea name="usage_notes" placeholder="Tags, recorte permitido, fundo ideal, restricoes..." />
+          </label>
           <button type="submit">Simular envio</button>
         </form>
 
@@ -68,7 +88,7 @@ export default async function BrandAssetsPage({
                   : <span className="muted">{asset.mime_type}</span>}
               </div>
               <strong>{asset.file_name}</strong>
-              <p className="muted">{asset.category} · {Math.round(asset.size_bytes / 1024)} KB</p>
+              <p className="muted">{asset.category} - {asset.metadata?.asset_role ?? 'sem papel'} - {Math.round(asset.size_bytes / 1024)} KB</p>
             </article>
           ))}
           {signedAssets.length === 0 ? <p className="muted">Nenhum asset encontrado.</p> : null}
@@ -113,7 +133,7 @@ export default async function BrandAssetsPage({
           <h1>Biblioteca de assets</h1>
           <p className="muted">{brand.name}</p>
         </div>
-        <Link className="button secondary" href={`/brands/${brand.id}`}>Voltar</Link>
+        <Link className="button secondary" href={`/clients/${brand.id}`}>Voltar ao cliente</Link>
       </div>
 
       <form action={uploadBrandAsset.bind(null, brand.id)} className="panel grid" style={{ marginBottom: 18 }}>
@@ -135,6 +155,42 @@ export default async function BrandAssetsPage({
             <input name="file" type="file" required />
           </label>
         </div>
+        <div className="grid two">
+          <label>
+            Papel no design
+            <select name="asset_role" defaultValue="primary">
+              <option value="primary">Principal</option>
+              <option value="secondary">Secundario</option>
+              <option value="cover">Capa/fundo</option>
+              <option value="avatar">Avatar/retrato</option>
+              <option value="support">Apoio visual</option>
+            </select>
+          </label>
+          <label>
+            Variante
+            <input name="variant" placeholder="horizontal, negativo, story..." />
+          </label>
+        </div>
+        <div className="grid two">
+          <label>
+            Orientacao
+            <select name="orientation" defaultValue="">
+              <option value="">Nao definida</option>
+              <option value="square">Quadrada</option>
+              <option value="portrait">Vertical</option>
+              <option value="landscape">Horizontal</option>
+              <option value="transparent">Transparente</option>
+            </select>
+          </label>
+          <label>
+            Tags
+            <input name="tags" placeholder="premium, medico, fundo claro" />
+          </label>
+        </div>
+        <label>
+          Regras de uso
+          <textarea name="usage_notes" placeholder="Quando usar, quando evitar, recorte permitido, fundo ideal..." />
+        </label>
         <button type="submit">Enviar</button>
       </form>
 
@@ -155,7 +211,7 @@ export default async function BrandAssetsPage({
                 : <span className="muted">{asset.mime_type}</span>}
             </div>
             <strong>{asset.file_name}</strong>
-            <p className="muted">{asset.category} · {Math.round(asset.size_bytes / 1024)} KB</p>
+            <p className="muted">{asset.category} - {asset.metadata?.asset_role ?? 'sem papel'} - {Math.round(asset.size_bytes / 1024)} KB</p>
           </article>
         ))}
         {signedAssets.length === 0 ? <p className="muted">Nenhum asset encontrado.</p> : null}

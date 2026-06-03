@@ -62,6 +62,13 @@ Segunda entrega implementada:
 - Botoes conectados aos server actions existentes para salvar briefing, enviar assets, ativar setup, gerar memoria e gerar plano.
 - Links de transicao para biblioteca completa, planos, templates, editor e dados avancados.
 
+Terceira entrega implementada:
+
+- Upload de asset passou a aceitar metadata operacional: papel no design, variante, orientacao, tags e regras de uso.
+- Biblioteca completa de assets tambem coleta e mostra essa metadata.
+- Hub do cliente passou a vincular/remover templates via `brand_templates`.
+- Tipos parciais do Supabase foram atualizados para incluir `templates` e `brand_templates`.
+
 ### 3.2 Onboarding do cliente
 
 Precisa virar um wizard natural:
@@ -95,6 +102,14 @@ Banco recomendado:
 - Guardar `metadata.identity` em `brands`.
 - Guardar dimensoes, tags, variante de logo e orientacao em `brand_assets.metadata`.
 
+Primeiro bloco implementado:
+
+- `brand_assets.metadata.asset_role`
+- `brand_assets.metadata.variant`
+- `brand_assets.metadata.orientation`
+- `brand_assets.metadata.tags`
+- `brand_assets.metadata.usage_notes`
+
 ### 3.4 Templates/subtemplates
 
 Fluxo desejado:
@@ -104,6 +119,12 @@ Fluxo desejado:
 - Usuario pode subir subtemplates ou criar placeholders.
 - Cada template tem slots obrigatorios para logo, imagem, headline, CTA e cor.
 - Editor visual abre sempre a partir de um `creative_document`.
+
+Primeiro bloco implementado:
+
+- Botao "Usar neste cliente" no hub `/clients/[clientId]`.
+- Persistencia em `brand_templates`.
+- Botao "Remover" arquiva o vinculo sem apagar o template global.
 
 ### 3.5 Estrategia e cronograma
 
@@ -164,8 +185,8 @@ Todos os botoes devem deixar claro:
 ## 5. Proximas entregas recomendadas
 
 1. Converter o hub `/clients/[clientId]` em wizard multi-step com estado salvo e validacoes por etapa.
-2. Melhorar upload para logo/capa/fonte com metadata de variante, orientacao, tags e uso permitido.
-3. Criar vinculacao de templates por cliente em `brand_templates`.
+2. Separar upload especializado para logo principal, logo secundaria, capa/fundo, foto, fonte e documento.
+3. Criar subtemplates/editaveis do cliente em cima dos templates globais.
 4. Evoluir estrategia para capturar canais, frequencia, pilares, campanhas e templates preferidos.
 5. Conectar criacao de `creative_documents` a partir de item/template.
 6. Adicionar testes de botoes principais no web.

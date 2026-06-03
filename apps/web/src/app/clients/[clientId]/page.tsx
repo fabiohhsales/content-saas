@@ -11,7 +11,14 @@ import {
   getDemoBrand,
   isDemoMode,
 } from '@/lib/demo';
-import { completeBrandOnboarding, requestBrandMemory, updateBrand, uploadBrandAsset } from '../../brands/actions';
+import {
+  archiveBrandTemplate,
+  completeBrandOnboarding,
+  linkBrandTemplate,
+  requestBrandMemory,
+  updateBrand,
+  uploadBrandAsset,
+} from '../../brands/actions';
 import { requestGeneratedContentPlan } from '../../plans/actions';
 
 type ClientRow = {
@@ -30,6 +37,7 @@ type AssetRow = {
   file_name: string;
   mime_type: string;
   size_bytes: number;
+  metadata?: Record<string, any> | null;
   signedUrl?: string | null;
 };
 
@@ -66,7 +74,8 @@ export default async function ClientWorkspacePage({ params }: { params: Promise<
   let plans: Array<{ id: string; title: string; status: string; period_start?: string | null; period_end?: string | null }> = [];
   let memories: Array<{ id: string; version: number; status: string; memory_json?: Record<string, any> }> = [];
   let documents: Array<{ id: string; title: string; status: string; template_ref: string }> = [];
-  let templates: Array<{ template_id: string; name: string; type: string; recommended_use?: string | null }> = [];
+  let templates: Array<{ id?: string; template_id: string; name: string; type: string; recommended_use?: string | null }> = [];
+  let linkedTemplateIds = new Set<string>();
 
   if (isDemoMode()) {
     client = getDemoBrand(clientId) as ClientRow;
@@ -75,6 +84,7 @@ export default async function ClientWorkspacePage({ params }: { params: Promise<
     memories = demoMemories.filter((memory) => memory.brand_id === client!.id);
     documents = demoCreativeDocuments.filter((document) => document.brand_id === client!.id);
     templates = demoTemplates;
+    linkedTemplateIds = new Set(demoTemplates.slice(0, 2).map((template) => template.id));
   } else {
     const { data: brand } = await supabase
       .from('brands')
@@ -86,10 +96,17 @@ export default async function ClientWorkspacePage({ params }: { params: Promise<
     if (!brand) notFound();
     client = brand as ClientRow;
 
-    const [{ data: assetRows }, { data: planRows }, { data: memoryRows }, { data: documentRows }, { data: templateRows }] = await Promise.all([
+    const [
+      { data: assetRows },
+      { data: planRows },
+      { data: memoryRows },
+      { data: documentRows },
+      { data: templateRows },
+      { data: brandTemplateRows },
+    ] = await Promise.all([
       supabase
         .from('brand_assets')
-        .select('id, category, file_name, mime_type, size_bytes, storage_bucket, storage_path')
+        .select('id, category, file_name, mime_type, size_bytes, storage_bucket, storage_path, metadata')
         .eq('workspace_id', membership.workspace_id)
         .eq('brand_id', client.id)
         .neq('status', 'archived')
@@ -120,10 +137,15 @@ export default async function ClientWorkspacePage({ params }: { params: Promise<
         .limit(5),
       supabase
         .from('templates')
-        .select('template_id, name, type, recommended_use')
+        .select('id, template_id, name, type, metadata')
         .or(`workspace_id.is.null,workspace_id.eq.${membership.workspace_id}`)
-        .neq('status', 'archived')
         .limit(5),
+      supabase
+        .from('brand_templates')
+        .select('template_id, status, metadata')
+        .eq('workspace_id', membership.workspace_id)
+        .eq('brand_id', client.id)
+        .eq('status', 'active'),
     ]);
 
     assets = await Promise.all((assetRows ?? []).map(async (asset: any) => {
@@ -133,7 +155,14 @@ export default async function ClientWorkspacePage({ params }: { params: Promise<
     plans = (planRows ?? []) as typeof plans;
     memories = (memoryRows ?? []) as typeof memories;
     documents = (documentRows ?? []) as typeof documents;
-    templates = (templateRows ?? []) as typeof templates;
+    templates = (templateRows ?? []).map((template: any) => ({
+      id: template.id,
+      template_id: template.template_id,
+      name: template.name,
+      type: template.type,
+      recommended_use: template.metadata?.recommended_use ?? null,
+    }));
+    linkedTemplateIds = new Set((brandTemplateRows ?? []).map((row: any) => row.template_id));
   }
 
   if (!client) notFound();
@@ -144,6 +173,7 @@ export default async function ClientWorkspacePage({ params }: { params: Promise<
     { label: 'Identidade visual', done: Boolean(clientIdentity.primary_color && clientIdentity.font_family) },
     { label: 'Assets aprovados', done: assets.length > 0 },
     { label: 'Memoria de marca', done: memories.length > 0 },
+    { label: 'Templates vinculados', done: linkedTemplateIds.size > 0 },
     { label: 'Estrategia/cronograma', done: plans.length > 0 },
     { label: 'Criativos editaveis', done: documents.length > 0 },
   ];
@@ -256,6 +286,42 @@ export default async function ClientWorkspacePage({ params }: { params: Promise<
                 <input name="file" type="file" required={!isDemoMode()} />
               </label>
             </div>
+            <div className="grid two">
+              <label>
+                Papel no design
+                <select name="asset_role" defaultValue="primary">
+                  <option value="primary">Principal</option>
+                  <option value="secondary">Secundario</option>
+                  <option value="cover">Capa/fundo</option>
+                  <option value="avatar">Avatar/retrato</option>
+                  <option value="support">Apoio visual</option>
+                </select>
+              </label>
+              <label>
+                Variante
+                <input name="variant" placeholder="horizontal, negativo, story..." />
+              </label>
+            </div>
+            <div className="grid two">
+              <label>
+                Orientacao
+                <select name="orientation" defaultValue="">
+                  <option value="">Nao definida</option>
+                  <option value="square">Quadrada</option>
+                  <option value="portrait">Vertical</option>
+                  <option value="landscape">Horizontal</option>
+                  <option value="transparent">Transparente</option>
+                </select>
+              </label>
+              <label>
+                Tags
+                <input name="tags" placeholder="premium, medico, fundo claro" />
+              </label>
+            </div>
+            <label>
+              Regras de uso
+              <textarea name="usage_notes" placeholder="Quando usar, quando evitar, recorte permitido, fundo ideal..." />
+            </label>
             <button type="submit">Enviar asset</button>
           </form>
           <div className="asset-strip">
@@ -267,7 +333,9 @@ export default async function ClientWorkspacePage({ params }: { params: Promise<
                     : <span className="muted">{asset.category}</span>}
                 </div>
                 <strong>{asset.file_name}</strong>
-                <small className="muted">{asset.category} - {Math.round(asset.size_bytes / 1024)} KB</small>
+                <small className="muted">
+                  {asset.category} - {asset.metadata?.asset_role || 'sem papel'} - {Math.round(asset.size_bytes / 1024)} KB
+                </small>
               </article>
             ))}
           </div>
@@ -330,11 +398,25 @@ export default async function ClientWorkspacePage({ params }: { params: Promise<
             <h2>Biblioteca disponivel</h2>
           </div>
           {templates.slice(0, 4).map((template) => (
-            <Link className="card" href={`/templates/${template.template_id}`} key={template.template_id}>
-              <small className="muted">{template.type}</small>
+            <article className="card" key={template.template_id}>
+              <small className="muted">{template.type} - {template.id && linkedTemplateIds.has(template.id) ? 'vinculado' : 'global'}</small>
               <strong>{template.name}</strong>
               <p className="muted">{template.recommended_use ?? 'Contrato pronto para campos, assets e render.'}</p>
-            </Link>
+              <div className="client-actions">
+                <Link className="button secondary" href={`/templates/${template.template_id}`}>Ver contrato</Link>
+                {template.id && linkedTemplateIds.has(template.id) ? (
+                  <form action={archiveBrandTemplate.bind(null, client.id, template.id)}>
+                    <button className="secondary" type="submit">Remover</button>
+                  </form>
+                ) : (
+                  <form action={linkBrandTemplate.bind(null, client.id)} className="inline-form">
+                    <input type="hidden" name="template_id" value={template.id ?? ''} />
+                    <input type="hidden" name="role" value="primary" />
+                    <button type="submit" disabled={!template.id}>Usar neste cliente</button>
+                  </form>
+                )}
+              </div>
+            </article>
           ))}
           <Link className="button secondary" href="/templates">Abrir templates globais</Link>
         </div>

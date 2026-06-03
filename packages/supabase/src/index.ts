@@ -35,6 +35,16 @@ export type Database = {
         Insert: { id?: string; workspace_id: string; brand_id: string; version: number; status?: string; memory_json: Json; generated_by_job_run_id?: string | null; created_by?: string | null };
         Update: Partial<Database['public']['Tables']['brand_memories']['Insert']>;
       };
+      templates: {
+        Row: { id: string; workspace_id: string | null; template_id: string; name: string; type: string; schema_json: Json; render_contract_json: Json; metadata: Json; created_by: string | null; created_at: string; updated_at: string };
+        Insert: { id?: string; workspace_id?: string | null; template_id: string; name: string; type: string; schema_json: Json; render_contract_json?: Json; metadata?: Json; created_by?: string | null };
+        Update: Partial<Database['public']['Tables']['templates']['Insert']>;
+      };
+      brand_templates: {
+        Row: { id: string; workspace_id: string; brand_id: string; template_id: string; status: string; metadata: Json; created_by: string | null; created_at: string; updated_at: string };
+        Insert: { id?: string; workspace_id: string; brand_id: string; template_id: string; status?: string; metadata?: Json; created_by?: string | null };
+        Update: Partial<Database['public']['Tables']['brand_templates']['Insert']>;
+      };
       content_plans: {
         Row: { id: string; workspace_id: string; brand_id: string; title: string; period_start: string; period_end: string; status: string; plan_json: Json; metadata: Json; created_by: string | null; created_at: string; updated_at: string };
         Insert: { id?: string; workspace_id: string; brand_id: string; title: string; period_start: string; period_end: string; status?: string; plan_json?: Json; metadata?: Json; created_by?: string | null };
