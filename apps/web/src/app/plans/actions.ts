@@ -13,6 +13,12 @@ const ContentPlanFormSchema = z.object({
   period_start: z.string().min(1),
   period_end: z.string().min(1),
   objective: z.string().optional(),
+  channels: z.string().optional(),
+  frequency: z.string().optional(),
+  pillars: z.string().optional(),
+  campaigns: z.string().optional(),
+  preferred_templates: z.string().optional(),
+  restrictions: z.string().optional(),
 });
 
 const ContentItemFormSchema = z.object({
@@ -37,6 +43,38 @@ function optionalText(value: FormDataEntryValue | null) {
   return text.length > 0 ? text : undefined;
 }
 
+function listFromText(value?: string) {
+  return (value ?? '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function strategicBriefing(input: z.infer<typeof ContentPlanFormSchema>) {
+  const data = {
+    schema_version: 1,
+    objective: input.objective ?? '',
+    channels: listFromText(input.channels),
+    frequency: input.frequency ?? '',
+    pillars: listFromText(input.pillars),
+    campaigns: input.campaigns ?? '',
+    preferred_templates: listFromText(input.preferred_templates),
+    restrictions: input.restrictions ?? '',
+  };
+
+  const summary = [
+    data.objective ? `Objetivo: ${data.objective}` : '',
+    data.channels.length ? `Canais: ${data.channels.join(', ')}` : '',
+    data.frequency ? `Frequencia: ${data.frequency}` : '',
+    data.pillars.length ? `Pilares: ${data.pillars.join(', ')}` : '',
+    data.campaigns ? `Campanhas/ofertas: ${data.campaigns}` : '',
+    data.preferred_templates.length ? `Templates preferidos: ${data.preferred_templates.join(', ')}` : '',
+    data.restrictions ? `Restricoes: ${data.restrictions}` : '',
+  ].filter(Boolean).join('\n');
+
+  return { data, summary };
+}
+
 export async function createContentPlan(formData: FormData) {
   if (isDemoMode()) {
     redirect('/plans/demo-plan-aurora-2026-06');
@@ -50,7 +88,14 @@ export async function createContentPlan(formData: FormData) {
     period_start: formData.get('period_start'),
     period_end: formData.get('period_end'),
     objective: optionalText(formData.get('objective')),
+    channels: optionalText(formData.get('channels')),
+    frequency: optionalText(formData.get('frequency')),
+    pillars: optionalText(formData.get('pillars')),
+    campaigns: optionalText(formData.get('campaigns')),
+    preferred_templates: optionalText(formData.get('preferred_templates')),
+    restrictions: optionalText(formData.get('restrictions')),
   });
+  const briefing = strategicBriefing(input);
 
   const { data, error } = await supabase
     .from('content_plans')
@@ -64,6 +109,7 @@ export async function createContentPlan(formData: FormData) {
       plan_json: {
         schema_version: 1,
         objective: input.objective ?? '',
+        strategy: briefing.data,
         source: 'manual',
       },
       created_by: user.id,
@@ -83,7 +129,14 @@ export async function requestGeneratedContentPlan(formData: FormData) {
     period_start: formData.get('period_start'),
     period_end: formData.get('period_end'),
     objective: optionalText(formData.get('objective')),
+    channels: optionalText(formData.get('channels')),
+    frequency: optionalText(formData.get('frequency')),
+    pillars: optionalText(formData.get('pillars')),
+    campaigns: optionalText(formData.get('campaigns')),
+    preferred_templates: optionalText(formData.get('preferred_templates')),
+    restrictions: optionalText(formData.get('restrictions')),
   });
+  const briefing = strategicBriefing(input);
 
   if (isDemoMode()) {
     redirect('/jobs?queue=content-plan');
@@ -107,7 +160,7 @@ export async function requestGeneratedContentPlan(formData: FormData) {
       requested_by: user.id,
       period_start: input.period_start,
       period_end: input.period_end,
-      objective: input.objective,
+      objective: briefing.summary || input.objective,
     }),
     cache: 'no-store',
   });

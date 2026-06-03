@@ -277,6 +277,26 @@ pre {
   grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
 }
 
+.upload-preset-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.upload-preset {
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+}
+
+.upload-preset input[type="file"] {
+  font-size: 12px;
+  max-width: 100%;
+}
+
 .asset-preview.small {
   height: 110px;
   min-height: 110px;

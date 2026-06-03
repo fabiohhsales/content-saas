@@ -133,6 +133,20 @@ export default async function PlansPage({
             Objetivo
             <textarea name="objective" placeholder="Objetivo editorial, foco comercial, publico ou campanha." />
           </label>
+          <div className="grid two">
+            <label>
+              Canais
+              <input name="channels" placeholder="Instagram, LinkedIn..." />
+            </label>
+            <label>
+              Frequencia
+              <input name="frequency" placeholder="3 posts/semana" />
+            </label>
+          </div>
+          <label>
+            Pilares
+            <input name="pillars" placeholder="educacao, prova social, conversao" />
+          </label>
           <button type="submit">Criar plano</button>
         </form>
 
@@ -160,6 +174,24 @@ export default async function PlansPage({
             <label>
               Objetivo
               <textarea name="objective" placeholder="Ex: gerar autoridade e leads qualificados no mes." />
+            </label>
+            <div className="grid two">
+              <label>
+                Canais
+                <input name="channels" placeholder="Instagram, LinkedIn..." />
+              </label>
+              <label>
+                Frequencia
+                <input name="frequency" placeholder="3 posts/semana" />
+              </label>
+            </div>
+            <label>
+              Pilares
+              <input name="pillars" placeholder="educacao, bastidores, conversao" />
+            </label>
+            <label>
+              Campanhas e restricoes
+              <textarea name="campaigns" placeholder="Ofertas, datas, restricoes legais ou temas obrigatorios." />
             </label>
             <button type="submit">Gerar plano</button>
           </form>

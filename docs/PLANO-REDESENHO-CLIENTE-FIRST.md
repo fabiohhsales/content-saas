@@ -69,6 +69,13 @@ Terceira entrega implementada:
 - Hub do cliente passou a vincular/remover templates via `brand_templates`.
 - Tipos parciais do Supabase foram atualizados para incluir `templates` e `brand_templates`.
 
+Quarta entrega implementada:
+
+- Hub do cliente ganhou presets de upload para logo principal, logo secundaria, capa/fundo, foto aprovada, fonte e referencia visual.
+- Briefing de estrategia ganhou campos de canais, frequencia, pilares, campanhas/ofertas, templates preferidos e restricoes.
+- `/plans` tambem recebeu campos estrategicos para manter o fluxo consistente fora do hub do cliente.
+- `requestGeneratedContentPlan` continua usando o contrato atual do orchestrator, mas envia um resumo estruturado no campo `objective` enquanto o contrato rico dedicado nao existe.
+
 ### 3.2 Onboarding do cliente
 
 Precisa virar um wizard natural:
@@ -109,6 +116,15 @@ Primeiro bloco implementado:
 - `brand_assets.metadata.orientation`
 - `brand_assets.metadata.tags`
 - `brand_assets.metadata.usage_notes`
+
+Presets implementados no hub:
+
+- Logo principal.
+- Logo secundaria.
+- Capa ou fundo.
+- Foto aprovada.
+- Fonte da marca.
+- Referencia visual.
 
 ### 3.4 Templates/subtemplates
 
@@ -185,9 +201,8 @@ Todos os botoes devem deixar claro:
 ## 5. Proximas entregas recomendadas
 
 1. Converter o hub `/clients/[clientId]` em wizard multi-step com estado salvo e validacoes por etapa.
-2. Separar upload especializado para logo principal, logo secundaria, capa/fundo, foto, fonte e documento.
-3. Criar subtemplates/editaveis do cliente em cima dos templates globais.
-4. Evoluir estrategia para capturar canais, frequencia, pilares, campanhas e templates preferidos.
-5. Conectar criacao de `creative_documents` a partir de item/template.
-6. Adicionar testes de botoes principais no web.
-7. Rodar Supabase local/real para validar RLS e Storage de ponta a ponta.
+2. Criar subtemplates/editaveis do cliente em cima dos templates globais.
+3. Criar contrato rico para `generate_content_plan` em vez de empacotar estrategia em `objective`.
+4. Conectar criacao de `creative_documents` a partir de item/template.
+5. Adicionar testes de botoes principais no web.
+6. Rodar Supabase local/real para validar RLS e Storage de ponta a ponta.

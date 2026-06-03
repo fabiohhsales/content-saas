@@ -64,6 +64,15 @@ function formatDate(value?: string | null) {
   }).format(new Date(`${value}T00:00:00`));
 }
 
+const assetPresets = [
+  { title: 'Logo principal', category: 'logo', asset_role: 'primary', variant: 'principal', orientation: 'transparent', accept: 'image/png,image/svg+xml' },
+  { title: 'Logo secundaria', category: 'logo', asset_role: 'secondary', variant: 'secundaria', orientation: 'transparent', accept: 'image/png,image/svg+xml' },
+  { title: 'Capa ou fundo', category: 'photo', asset_role: 'cover', variant: 'capa', orientation: 'landscape', accept: 'image/png,image/jpeg' },
+  { title: 'Foto aprovada', category: 'photo', asset_role: 'avatar', variant: 'foto', orientation: 'portrait', accept: 'image/png,image/jpeg' },
+  { title: 'Fonte da marca', category: 'font', asset_role: 'font', variant: 'principal', orientation: '', accept: '.otf,.ttf,.woff,.woff2' },
+  { title: 'Referencia visual', category: 'reference', asset_role: 'support', variant: 'referencia', orientation: 'square', accept: 'image/png,image/jpeg,application/pdf' },
+];
+
 export default async function ClientWorkspacePage({ params }: { params: Promise<{ clientId: string }> }) {
   const { clientId } = await params;
   const { supabase, membership } = await getCurrentWorkspace();
@@ -268,7 +277,26 @@ export default async function ClientWorkspacePage({ params }: { params: Promise<
             <small className="muted">2. Biblioteca da marca</small>
             <h2>Assets estruturados</h2>
           </div>
+          <div className="upload-preset-grid">
+            {assetPresets.map((preset) => (
+              <form action={uploadBrandAsset.bind(null, client.id)} className="upload-preset" key={preset.title}>
+                <div>
+                  <strong>{preset.title}</strong>
+                  <small className="muted">{preset.category} - {preset.asset_role}</small>
+                </div>
+                <input type="hidden" name="category" value={preset.category} />
+                <input type="hidden" name="asset_role" value={preset.asset_role} />
+                <input type="hidden" name="variant" value={preset.variant} />
+                <input type="hidden" name="orientation" value={preset.orientation} />
+                <input type="hidden" name="tags" value={`${preset.category}, ${preset.asset_role}, ${preset.variant}`} />
+                <input type="hidden" name="usage_notes" value={`Asset enviado pelo preset ${preset.title}.`} />
+                <input name="file" type="file" accept={preset.accept} required={!isDemoMode()} />
+                <button type="submit">Enviar</button>
+              </form>
+            ))}
+          </div>
           <form action={uploadBrandAsset.bind(null, client.id)} className="grid">
+            <h3>Upload personalizado</h3>
             <div className="grid two">
               <label>
                 Categoria
@@ -386,6 +414,34 @@ export default async function ClientWorkspacePage({ params }: { params: Promise<
             Objetivo
             <textarea name="objective" placeholder="Campanha, foco comercial, canais e prioridade editorial." />
           </label>
+          <div className="grid two">
+            <label>
+              Canais
+              <input name="channels" placeholder="Instagram, LinkedIn, TikTok" />
+            </label>
+            <label>
+              Frequencia
+              <input name="frequency" placeholder="3 posts/semana, 1 carrossel/semana..." />
+            </label>
+          </div>
+          <label>
+            Pilares de conteudo
+            <input name="pillars" placeholder="educacao, prova social, conversao" />
+          </label>
+          <label>
+            Ofertas e campanhas
+            <textarea name="campaigns" placeholder="Procedimentos, datas comerciais, lancamentos ou pautas prioritarias." />
+          </label>
+          <div className="grid two">
+            <label>
+              Templates preferidos
+              <input name="preferred_templates" placeholder="photo-overlay-01, paper-editorial-01" />
+            </label>
+            <label>
+              Restricoes
+              <input name="restrictions" placeholder="Evitar antes/depois, promessas absolutas..." />
+            </label>
+          </div>
           <button type="submit">Gerar cronograma</button>
           <Link className="button secondary" href={`/plans?brand_id=${client.id}`}>Ver planos do cliente</Link>
         </form>
